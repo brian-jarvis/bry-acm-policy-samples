@@ -26,6 +26,9 @@ spec:
     config:
       nodeSelector:
         node-role.kubernetes.io/{{ hasNodesWithExactRoles "infra" | ternary "infra" "worker" }}: ""
+      tolerations:
+        - operator: Exists
+          key: node-role.kubernetes.io/infra
       # env:
       # - name: PLATFORM
       #   value: "HyperShift"
