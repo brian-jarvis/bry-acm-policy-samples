@@ -85,10 +85,12 @@ spec:
     - name: cluster-ca-certs
       configMap:
         name: cluster-ca-certs
+        items:
+        - key: ca-bundle.crt
+          path: clusterchain.pem
     volumeMounts:
     - name: cluster-ca-certs
-      mountPath: /etc/ssl/certs/clusterchain.pem
-      subPath: ca-bundle.crt
+      mountPath: /etc/ssl/certs
   resourceExclusions: |
     - apiGroups:
       - tekton.dev
@@ -130,10 +132,12 @@ spec:
     - name: cluster-ca-certs
       configMap:
         name: cluster-ca-certs
+        items:
+        - key: ca-bundle.crt
+          path: clusterchain.pem
     volumeMounts:
     - name: cluster-ca-certs
-      mountPath: /etc/ssl/certs/clusterchain.pem
-      subPath: ca-bundle.crt
+      mountPath: /etc/ssl/certs
   notifications:
     enabled: true
   # end default argocd

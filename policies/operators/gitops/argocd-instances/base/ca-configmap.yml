@@ -2,7 +2,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  annotations:
+  labels:
     config.openshift.io/inject-trusted-cabundle: true
   name: cluster-ca-certs
   namespace: gitops
