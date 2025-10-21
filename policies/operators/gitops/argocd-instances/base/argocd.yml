@@ -132,12 +132,10 @@ spec:
     - name: cluster-ca-certs
       configMap:
         name: cluster-ca-certs
-        items:
-        - key: ca-bundle.crt
-          path: clusterchain.pem
     volumeMounts:
     - name: cluster-ca-certs
-      mountPath: /etc/ssl/certs
+      mountPath: /etc/ssl/certs/ca-bundle-cluster.crt
+      subPath: ca-bundle.crt
   notifications:
     enabled: true
   # end default argocd
