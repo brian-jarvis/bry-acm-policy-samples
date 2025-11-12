@@ -14,13 +14,15 @@ object-templates-raw: |
         name: {{ $cd.spec.clusterMetadata.adminPasswordSecretRef.name }}
         namespace: {{ $cd.metadata.namespace }}
 
+      {{- $recreateOption := "IfRequired" }}
       {{- if $cd.spec.preserveOnDelete }}
         {{- $_ := unset $cd.spec.clusterMetadata "adminPasswordSecretRef" }}
+        {{- $recreateOption = "Always" }}
       {{- else }}
         {{- $_ := set $cd.spec "preserveOnDelete" true }}
       {{- end }}
   - complianceType: mustonlyhave
-    recreateOption: IfRequired
+    recreateOption: {{ $recreateOption }}
     objectDefinition:
       apiVersion: hive.openshift.io/v1
       kind: ClusterDeployment
