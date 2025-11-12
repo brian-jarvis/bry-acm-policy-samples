@@ -14,7 +14,11 @@ object-templates-raw: |
         name: {{ $cd.spec.clusterMetadata.adminPasswordSecretRef.name }}
         namespace: {{ $cd.metadata.namespace }}
 
-      {{ $_ := unset $cd.spec.clusterMetadata "adminPasswordSecretRef" }}
+      {{- if $cd.spec.preserveOnDelete }}
+        {{- $_ := unset $cd.spec.clusterMetadata "adminPasswordSecretRef" }}
+      {{- else }}
+        {{- $_ := set $cd.spec "preserveOnDelete" true }}
+      {{- end }}
   - complianceType: mustonlyhave
     recreateOption: IfRequired
     objectDefinition:
