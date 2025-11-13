@@ -15,7 +15,7 @@ object-templates-raw: |
         namespace: {{ $cd.metadata.namespace }}
 
       {{- $recreateOption := "IfRequired" }}
-      {{- if and $cd.spec.preserveOnDelete }}
+      {{- if and $cd.spec.preserveOnDelete $cd.spec.installed }}
         {{- $_ := unset $cd.spec.clusterMetadata "adminPasswordSecretRef" }}
         {{- $recreateOption = "Always" }}
       {{- else }}
