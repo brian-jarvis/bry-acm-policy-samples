@@ -23,3 +23,7 @@ spec:
     namespace: openshift-secondary-scheduler-operator
     source: redhat-operators
     sourceNamespace: openshift-marketplace
+  operatorGroup:
+    name: openshift-secondary-scheduler-operator
+    targetNamespaces:
+    - openshift-secondary-scheduler-operator
