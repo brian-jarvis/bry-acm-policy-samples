@@ -1,0 +1,11 @@
+---
+apiVersion: operator.openshift.io/v1
+kind: SecondaryScheduler
+metadata:
+  name: scheduler-noderesourcesfit-disabled
+  namespace: openshift-secondary-scheduler-operator
+spec:
+  logLevel: Normal
+  operatorLogLevel: Normal
+  managementState: Managed
+  schedulerConfig: scheduler-noderesourcesfit-disabled

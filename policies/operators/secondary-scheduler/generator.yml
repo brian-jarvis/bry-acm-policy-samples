@@ -35,6 +35,11 @@ policies:
 
       - path: operatorpolicy.yml
 
+      - path: ./example/configmap.yml
+        name: example-schedule-config
+
+      - path: ./example/secondaryscheduler.yml
+        name: secondary-scheduler
 
 policySets:
   - name: secondary-scheduler-operator
