@@ -2,7 +2,8 @@
 apiVersion: operator.openshift.io/v1
 kind: SecondaryScheduler
 metadata:
-  name: scheduler-noderesourcesfit-disabled
+  ## This must be named cluster -- boo design
+  name: cluster
   namespace: openshift-secondary-scheduler-operator
 spec:
   logLevel: Normal
