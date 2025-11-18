@@ -13,6 +13,6 @@ data:
     profiles:
       - schedulerName: secondary-scheduler
         plugins:
-          score:
+          multiPoint:
             disabled:
               - name: NodeResourcesFit
