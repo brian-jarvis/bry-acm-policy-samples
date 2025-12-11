@@ -3,6 +3,8 @@ apiVersion: observability.open-cluster-management.io/v1beta2
 kind: MultiClusterObservability
 metadata:
   name: observability
+  annotations:
+    mco-disable-alerting: true
 spec:
   observabilityAddonSpec: {}
 
