@@ -7,7 +7,21 @@ spec:
   remediationAction: enforce
   severity: low
   object-templates-raw: |
-    {{- $obsHubInfoSecret := (lookup "v1" "Secret" (eq (fromClusterClaim "name") "local-cluster" | ternary "open-cluster-management-observability" "open-cluster-management-addon-observability") "hub-info-secret") }}
+    {{- $isLocalCluster := (ne "" "{{hub index .ManagedClusterLabels "local-cluster" hub}}") }}
+    {{- $obsEnabled := false }}
+    {{- $hubInfo := "" }}
+    {{- $secretSuffix := ""}}
+
+    {{- $obsHubInfoSecret := (lookup "v1" "Secret" ($isLocalCluster | ternary "open-cluster-management-observability" "open-cluster-management-addon-observability") "hub-info-secret") }}
+    {{- if $obsHubInfoSecret }}
+      {{- $obsEnabled = true }}
+      {{- $hubInfo = (index $obsHubInfoSecret.data "hub-info.yaml") | base64dec | fromYaml }}
+      {{- if (index $hubInfo "hub-cluster-id") }}
+        {{- $secretSuffix = (printf "-%s" (index $hubInfo "hub-cluster-id")) }}
+      {{- else if (index $hubInfo "hub-cluster-domain") }}
+        {{- $secretSuffix = (printf "-%s" (index $hubInfo "hub-cluster-domain")) }}
+      {{- end }}
+    {{- end }}
 
     - complianceType: musthave
       objectDefinition:
@@ -53,27 +67,19 @@ spec:
                 - operator: Exists
                   key: node-role.kubernetes.io/infra
 
-    {{- if not (empty $obsHubInfoSecret ) }}
-      {{- $hubInfo := (index $obsHubInfoSecret.data "hub-info.yaml") | base64dec }}
-      {{- $amURL := "" }}
-      {{- range $v := (split "\n" $hubInfo)}}
-        {{- if (contains "alertmanager-endpoint" $v) }}
-          {{- $amURL = (split " " $v)._1 }}
-          {{- break }}
-        {{- end }}
-      {{- end }}
+    {{- if $obsEnabled }}
               additionalAlertmanagerConfigs:
               - apiVersion: v2
                 bearerToken:
                   key: token
-                  name: observability-alertmanager-accessor
+                  name: observability-alertmanager-accessor{{ $secretSuffix }}
                 scheme: https
                 staticConfigs:
-                - {{ trimAll "https://" $amURL }}
+                - {{ trimAll "/" (printf "alertmanager-open-cluster-management-observability.%s" (regexFind "apps.*?/" (index $hubInfo "observatorium-api-endpoint"))) }}
                 tlsConfig:
                   ca:
                     key: service-ca.crt
-                    name: hub-alertmanager-router-ca
+                    name: hub-alertmanager-router-ca{{ $secretSuffix }}
                   insecureSkipVerify: false
     {{- end }}
               externalLabels:

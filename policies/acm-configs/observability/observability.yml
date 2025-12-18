@@ -4,9 +4,22 @@ kind: MultiClusterObservability
 metadata:
   name: observability
   annotations:
-    mco-disable-alerting: true
+    mco-disable-alerting: 'true'
+
 spec:
   observabilityAddonSpec: {}
+
+  ## to enable MCOA set the below to true and remove the annotation above.
+  ## Note this should not be done before 2.15.1 release has verified to fix MCOA
+  capabilities:
+    platform:
+      metrics:
+        default:
+          enabled: false
+    userWorkloads:
+      metrics:
+        default:
+          enabled: false
 
   storageConfig:
     metricObjectStorage:
