@@ -1,0 +1,22 @@
+---
+object-templates-raw: |
+  {{- range $mc := (lookup "cluster.open-cluster-management.io/v1" "ManagedCluster" "" "" "ocp-virt=enabled").items }}
+  - complianceType: musthave
+    objectDefinition:
+      apiVersion: cluster.open-cluster-management.io/v1beta1
+      kind: Placement
+      metadata:
+        name: '{{ printf "virt-%s" $mc.metadata.name }}'
+        namespace: virt-rbac-hub
+      spec:
+        tolerations:
+          - key: cluster.open-cluster-management.io/unreachable
+            operator: Exists
+          - key: cluster.open-cluster-management.io/unavailable
+            operator: Exists
+        predicates:
+          - requiredClusterSelector:
+              labelSelector:
+                matchLabels:
+                  name: '{{ $mc.metadata.name }}'
+  {{- end }}

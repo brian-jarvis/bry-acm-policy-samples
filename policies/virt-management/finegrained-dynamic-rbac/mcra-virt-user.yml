@@ -1,0 +1,25 @@
+---
+object-templates-raw: |
+  {{- range $mcv := (lookup "view.open-cluster-management.io/v1beta1" "ManagedClusterView" "" "" "virt-user-details").items }}
+  {{- range $vm := (index $mcv.status.result.data $mcv.metadata.namespace | fromYaml) }}
+  - complianceType: musthave
+    objectDefinition:
+      apiVersion: rbac.open-cluster-management.io/v1beta1
+      kind: MulticlusterRoleAssignment
+      metadata:
+        name: '{{ printf "%s-%s-operator" $vm.name $vm.namespace | lower }}'
+        namespace: virt-rbac-hub
+      spec:
+        subject:
+          kind: User
+          name: '{{ $vm.user }}'
+        roleAssignments:
+          - name: '{{ printf "%s-%s-operator" $vm.name $vm.namespace | lower }}'
+            clusterRole: '{{ printf "%s-%s-operator" $vm.name $vm.namespace | lower }}'
+            clusterSelection:
+              type: placements
+              placements:
+                - name: '{{ printf "virt-%s" $mcv.metadata.namespace }}'
+                  namespace: virt-rbac-hub
+  {{- end }}
+  {{- end }}

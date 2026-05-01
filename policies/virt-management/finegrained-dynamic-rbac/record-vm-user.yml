@@ -1,0 +1,20 @@
+---
+object-templates-raw: |
+  {{- $entryTpl := `
+  - name: %s
+    namespace: %s
+    user: %s
+  ` }}
+  {{- $vmEntries := "" }}
+  {{- range $vm := (lookup "kubevirt.io/v1" "VirtualMachine" "" "" "user").items }}
+    {{- $vmEntries = printf "%s%s" $vmEntries (printf $entryTpl $vm.metadata.name $vm.metadata.namespace (index $vm.metadata.labels "user")) }}
+  {{- end }}
+  - complianceType: mustonlyhave
+    objectDefinition:
+      apiVersion: v1
+      kind: ConfigMap
+      metadata:
+        name: virt-user-details
+        namespace: default
+      data:
+        {{hub $.ManagedClusterName hub}}: '{{ $vmEntries | toRawJson | toLiteral }}'

@@ -1,0 +1,31 @@
+---
+object-templates-raw: |
+  {{- range $vm := (lookup "kubevirt.io/v1" "VirtualMachine" "" "" "user").items }}
+  - complianceType: mustonlyhave
+    objectDefinition:
+      apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        name: '{{ printf "%s-%s-operator" $vm.metadata.name $vm.metadata.namespace | lower }}'
+      rules:
+        - apiGroups:
+            - "kubevirt.io"
+          resources:
+            - "virtualmachines"
+          resourceNames:
+            - '{{ $vm.metadata.name }}'
+          verbs:
+            - "get"
+            - "update"
+            - "patch"
+        - apiGroups:
+            - "subresources.kubevirt.io"
+          resources:
+            - "virtualmachines/start"
+            - "virtualmachines/stop"
+            - "virtualmachines/restart"
+          resourceNames:
+            - '{{ $vm.metadata.name }}'
+          verbs:
+            - "update"
+  {{- end }}

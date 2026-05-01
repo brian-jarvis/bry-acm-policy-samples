@@ -1,0 +1,20 @@
+---
+object-templates-raw: |
+  {{- $clusterSets := dict }}
+  {{- range $mc := (lookup "cluster.open-cluster-management.io/v1" "ManagedCluster" "" "" "ocp-virt=enabled").items }}
+    {{- $csName := index $mc.metadata.labels "cluster.open-cluster-management.io/clusterset" }}
+    {{- if $csName }}
+      {{- $_ := set $clusterSets $csName true }}
+    {{- end }}
+  {{- end }}
+  {{- range $csName, $_ := $clusterSets }}
+  - complianceType: musthave
+    objectDefinition:
+      apiVersion: cluster.open-cluster-management.io/v1beta2
+      kind: ManagedClusterSetBinding
+      metadata:
+        name: '{{ $csName }}'
+        namespace: virt-rbac-hub
+      spec:
+        clusterSet: '{{ $csName }}'
+  {{- end }}

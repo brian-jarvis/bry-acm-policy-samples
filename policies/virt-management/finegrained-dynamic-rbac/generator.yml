@@ -1,0 +1,66 @@
+---
+apiVersion: policy.open-cluster-management.io/v1
+kind: PolicyGenerator
+metadata:
+  name: gen-finegrained-dynamic-rbac
+policyDefaults:
+  namespace: bry-tam-policies
+  remediationAction: enforce
+  consolidateManifests: false
+  policySets:
+    - virt-dynamic-rbac
+  categories:
+    - "CM Configuration Management"
+  controls:
+    - "CM-2 Baseline Configuration"
+  standards:
+    - "NIST SP 800-53"
+  policyLabels:
+    policy_gen.name: finegrained-dynamic-rbac
+
+placementBindingDefaults:
+  name: "virt-dynamic-rbac-binding"
+
+policies:
+  - name: finegrained-dynamic-rbac
+    description: "Fine-grained dynamic RBAC for OpenShift Virtualization resources."
+    manifests:
+      - path: record-vm-user.yml
+        name: finegrained-dynamic-rbac-user-record
+
+      - path: clusterrole.yml
+        name: finegrained-dynamic-rbac-clusterrole
+
+  - name: finegrained-dynamic-rbac-hub
+    description: "Creates a ManagedClusterView on the hub to read the virt-user-details ConfigMap from each virt-enabled managed cluster."
+    policySets:
+      - virt-dynamic-rbac-hub
+    manifests:
+      - path: namespace-hub.yml
+        name: finegrained-dynamic-rbac-namespace-hub
+
+      - path: clusterset-bindings.yml
+        name: finegrained-dynamic-rbac-clusterset-bindings
+
+      - path: placements-hub.yml
+        name: finegrained-dynamic-rbac-placements-hub
+
+      - path: mcv-virt-user-record.yml
+        name: finegrained-dynamic-rbac-mcv-virt-user-record
+
+      - path: mcra-virt-user.yml
+        name: finegrained-dynamic-rbac-mcra-virt-user
+        extraDependencies:
+          - name: finegrained-dynamic-rbac-placements-hub
+            kind: ConfigurationPolicy
+            apiVersion: policy.open-cluster-management.io/v1
+            compliance: Compliant
+
+policySets:
+  - name: virt-dynamic-rbac
+    placement:
+      placementName: "ft-ocp-virt--enabled"
+
+  - name: virt-dynamic-rbac-hub
+    placement:
+      placementName: "env-bound-hub-placement"
