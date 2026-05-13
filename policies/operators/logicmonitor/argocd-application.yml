@@ -26,7 +26,7 @@ spec:
             - (namespace =~ "open-cluster-management-*")
           collector:
             env:
-              COLLECTOR_NON_ROOT: "true"
+              COLLECTOR_NON_ROOT: "false"
             replicas: 2
             size: medium
             labels:
