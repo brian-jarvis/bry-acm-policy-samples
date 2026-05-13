@@ -77,7 +77,6 @@ spec:
             - nodes
             - deployments
             - services
-            - virtualmachines
         # Collectorset Controller Configurations, check https://artifacthub.io/packages/helm/logicmonitor-helm-charts/collectorset-controller?modal=values-schema for schema
         collectorset-controller:
           enabled: true
