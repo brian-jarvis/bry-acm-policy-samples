@@ -29,6 +29,15 @@ spec:
               COLLECTOR_NON_ROOT: "true"
             replicas: 2
             size: medium
+            labels:
+              acm.reloader.enabled: ""
+            annotations:
+              acm.reloader.watchlist: |
+                [
+                  {"kind": "ConfigMap", "name": "lm-container-argus", "apiVersion": "v1"},
+                  {"kind": "Secret", "name": "logicmonitor-credentials",  "apiVersion": "v1"},
+                  {"kind": "CollectorSet", "name": "lm-container-argus",  "apiVersion": "logicmonitor.com/v1beta1"}
+                ]
           resources:
             limits:
               cpu: "1500m"
@@ -59,6 +68,15 @@ spec:
           jobs:
             eventMode: "logs"
             tenantIdentifier: "argus"
+          labels:
+            acm.reloader.enabled: ""
+          annotations:
+            acm.reloader.watchlist: |
+              [
+                {"kind": "ConfigMap", "name": "lm-container-argus", "apiVersion": "v1"},
+                {"kind": "Secret", "name": "logicmonitor-credentials",  "apiVersion": "v1"},
+                {"kind": "CollectorSet", "name": "lm-container-argus",  "apiVersion": "logicmonitor.com/v1beta1"}
+              ]
         lm-logs:
           enabled: false
         kube-state-metrics:
@@ -89,6 +107,15 @@ spec:
               cpu: "1000m"
               memory: "1Gi"
               ephemeral-storage: "100Mi"
+          labels:
+            acm.reloader.enabled: ""
+          annotations:
+            acm.reloader.watchlist: |
+              [
+                {"kind": "ConfigMap", "name": "lm-container-argus", "apiVersion": "v1"},
+                {"kind": "Secret", "name": "logicmonitor-credentials",  "apiVersion": "v1"},
+                {"kind": "CollectorSet", "name": "lm-container-argus",  "apiVersion": "logicmonitor.com/v1beta1"}
+              ]
         global:
           userDefinedSecret: logicmonitor-credentials
           companyDomain: 'logicmonitor.com'
