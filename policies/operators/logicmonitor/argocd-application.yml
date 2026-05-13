@@ -2,8 +2,6 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  annotations:
-    argocd.argoproj.io/compare-options: ServerSideDiff=true,IncludeMutationWebhook=true
   name: lm-container
   namespace: openshift-gitops
 spec:
@@ -20,7 +18,7 @@ spec:
           resourceContainerID: 1
           monitoringMode: Advanced
           # Explicit KSM URL -- bypasses post-install hook discovery that ArgoCD skips
-          ksmUrl: "http://logicmonitor-lm-collector-kube-state-metrics.logicmonitor.svc.cluster.local:8080/metrics"
+          ksmUrl: "http://lm-container-kube-state-metrics.logicmonitor.svc.cluster.local:8080/metrics"
           filters:
             - namespace == "default"
             - namespace == "kube-public"
@@ -28,7 +26,7 @@ spec:
             - (namespace =~ "open-cluster-management-*")
           collector:
             env:
-              COLLECTOR_NON_ROOT: "false"
+              COLLECTOR_NON_ROOT: "true"
             replicas: 2
             size: medium
           resources:
@@ -79,6 +77,7 @@ spec:
             - nodes
             - deployments
             - services
+            - virtualmachines
         # Collectorset Controller Configurations, check https://artifacthub.io/packages/helm/logicmonitor-helm-charts/collectorset-controller?modal=values-schema for schema
         collectorset-controller:
           enabled: true
@@ -121,4 +120,3 @@ spec:
       selfHeal: true
     syncOptions:
       - CreateNamespace=false
-      - ServerSideApply=true
