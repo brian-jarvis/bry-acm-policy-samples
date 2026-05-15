@@ -11,6 +11,8 @@ spec:
     chart: lm-container
     targetRevision: "13.1.0"
     helm:
+      apiVersions:
+        - security.openshift.io/v1
       valuesObject:
         argus:
           clusterName: '{{hub $.ManagedClusterName hub}}'
@@ -26,7 +28,7 @@ spec:
             - (namespace =~ "open-cluster-management-*")
           collector:
             env:
-              COLLECTOR_NON_ROOT: "false"
+              COLLECTOR_NON_ROOT: "true"
             replicas: 2
             size: medium
             labels:
