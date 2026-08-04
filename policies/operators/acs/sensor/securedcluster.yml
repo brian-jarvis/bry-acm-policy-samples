@@ -32,12 +32,6 @@ spec:
       imageFlavor: Regular
     taintToleration: TolerateTaints
   scanner:
-    nodeSelector:
-      node-role.kubernetes.io/{{ hasNodesWithExactRoles "infra" | ternary "infra" "worker" }}: ""
-    tolerations:
-    - key: "node-role.kubernetes.io/infra"
-      operator: "Exists"
-      effect: "NoSchedule"
     analyzer:
       scaling:
         autoScaling: Enabled
