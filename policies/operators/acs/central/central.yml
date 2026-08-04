@@ -54,10 +54,9 @@ spec:
         maxReplicas: 5
         minReplicas: 2
         replicas: 3
-    db:
-      nodeSelector:
-        node-role.kubernetes.io/{{ hasNodesWithExactRoles "infra" | ternary "infra" "worker" }}: ""
-      tolerations:
+    dbNodeSelector:
+      node-role.kubernetes.io/{{ hasNodesWithExactRoles "infra" | ternary "infra" "worker" }}: ""
+    dbTolerations:
       - key: "node-role.kubernetes.io/infra"
         operator: "Exists"
         effect: "NoSchedule"
