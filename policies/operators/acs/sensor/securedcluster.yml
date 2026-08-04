@@ -8,6 +8,12 @@ spec:
   auditLogs:
     collection: Auto
   admissionControl:
+    nodeSelector:
+      node-role.kubernetes.io/{{ hasNodesWithExactRoles "infra" | ternary "infra" "worker" }}: ""
+    tolerations:
+    - key: "node-role.kubernetes.io/infra"
+      operator: "Exists"
+      effect: "NoSchedule"
     listenOnUpdates: true
     bypass: BreakGlassAnnotation
     contactImageScanners: DoNotScanInline
@@ -24,8 +30,24 @@ spec:
     collector:
       collection: EBPF
       imageFlavor: Regular
+      tolerations:
+      - key: "node-role.kubernetes.io/infra"
+        operator: "Exists"
+        effect: "NoSchedule"
     taintToleration: TolerateTaints
   scanner:
+    dbNodeSelector:
+      node-role.kubernetes.io/{{ hasNodesWithExactRoles "infra" | ternary "infra" "worker" }}: ""
+    dbTolerations:
+      - key: "node-role.kubernetes.io/infra"
+        operator: "Exists"
+        effect: "NoSchedule"
+    nodeSelector:
+      node-role.kubernetes.io/{{ hasNodesWithExactRoles "infra" | ternary "infra" "worker" }}: ""
+    tolerations:
+    - key: "node-role.kubernetes.io/infra"
+      operator: "Exists"
+      effect: "NoSchedule"
     analyzer:
       scaling:
         autoScaling: Enabled
@@ -36,8 +58,28 @@ spec:
   scannerV4:
     scannerComponent: AutoSense
     indexer:
+      nodeSelector:
+        node-role.kubernetes.io/{{ hasNodesWithExactRoles "infra" | ternary "infra" "worker" }}: ""
+      tolerations:
+      - key: "node-role.kubernetes.io/infra"
+        operator: "Exists"
+        effect: "NoSchedule"
       scaling:
         autoScaling: Enabled
         maxReplicas: 5
         minReplicas: 1
         replicas: 3
+    matcher:
+      nodeSelector:
+        node-role.kubernetes.io/{{ hasNodesWithExactRoles "infra" | ternary "infra" "worker" }}: ""
+      tolerations:
+      - key: "node-role.kubernetes.io/infra"
+        operator: "Exists"
+        effect: "NoSchedule"
+  sensor:
+    nodeSelector:
+      node-role.kubernetes.io/{{ hasNodesWithExactRoles "infra" | ternary "infra" "worker" }}: ""
+    tolerations:
+    - key: "node-role.kubernetes.io/infra"
+      operator: "Exists"
+      effect: "NoSchedule"
