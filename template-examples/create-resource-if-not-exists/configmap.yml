@@ -1,0 +1,39 @@
+---
+object-templates-raw: |
+  {{- $mcTrigger := `{{hub dig "acm.policy.io/trigger" "" (lookup "cluster.open-cluster-management.io/v1" "ManagedCluster" "" $.ManagedClusterName).metadata.annotations hub}}` }}
+  {{- range $ns := (lookup "v1" "Namespace" "" "" "cyberark-conjur-secrets-managed=true").items }}
+    {{- $nsName := $ns.metadata.name }}
+    {{- $existingCM := lookup "v1" "ConfigMap" $nsName "conjur-connect" }}
+    {{- $lastTrigger := dig "metadata" "annotations" "acm.policy.io/last-trigger" "" $existingCM }}
+    {{- $skip := and (not (empty $existingCM)) (or (empty $mcTrigger) (eq $mcTrigger $lastTrigger)) }}
+    {{- if not $skip }}
+  - complianceType: musthave
+    objectDefinition:
+      apiVersion: v1
+      kind: ConfigMap
+      metadata:
+        name: conjur-connect
+        namespace: '{{ $nsName }}'
+        annotations:
+          acm.policy.io/last-trigger: '{{ $mcTrigger }}'
+        labels:
+          app.kubernetes.io/name: conjur-connect-configmap
+          app.kubernetes.io/part-of: conjur-config
+          conjur.org/name: conjur-connect-configmap
+      data:
+        CONJUR_ACCOUNT: conjur
+        CONJUR_APPLIANCE_URL: https://conjur.rdht.com:8443/api
+        CONJUR_AUTHENTICATOR_ID: '{{ fromClusterClaim "name" }}'
+        CONJUR_AUTHN_URL: 'https://conjur.rdht.com:8443/api/authn-jwt/{{ fromClusterClaim "name" }}'
+        CONJUR_SSL_CERTIFICATE: |-
+          -----BEGIN CERTIFICATE-----
+          MIIGUzCCBTugAwIBAgITJwAAAATALpHMpnr7JAAAAAAABDANBgkqhkiG9w0BAQsF
+          PIjRl1urG+JUcLP0sz5k82hqovsruIRRbykd5DiE5n7chZieXHGF
+          -----END CERTIFICATE-----
+
+          -----BEGIN CERTIFICATE-----
+          MIIEHDCCAwSgAwIBAgIQXCngoMKDHZFLjZnFoLkj3TANBgkqhkiG9w0BAQsFADBK
+          WxJAlIozip0uhIN3QThUs2wyYvmgggRXxSI+LDwsMNKZQC+bJl+STjHo9jYvcyCC
+          -----END CERTIFICATE-----
+    {{- end }}
+  {{- end }}

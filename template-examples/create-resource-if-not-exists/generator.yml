@@ -1,0 +1,36 @@
+---
+apiVersion: policy.open-cluster-management.io/v1
+kind: PolicyGenerator
+metadata:
+  name: gen-create-resource-if-not-exists
+policyDefaults:
+  namespace: bry-tam-policies
+  remediationAction: enforce
+  consolidateManifests: false
+  categories:
+    - "CM Configuration Management"
+  controls:
+    - "CM-2 Baseline Configuration"
+  standards:
+    - "NIST SP 800-53"
+  policyLabels:
+    policy_gen.name: create-resource-if-not-exists
+  severity: low
+  policySets:
+    - create-resource-if-not-exists
+
+placementBindingDefaults:
+  name: "create-resource-if-not-exists-binding"
+
+policies:
+  - name: create-resource-if-not-exists
+    description: "Creates the conjur-connect ConfigMap in every namespace labeled cyberark-conjur-secrets-managed only if it does not already exist, and forces a one-shot reset when the ManagedCluster is annotated with acm.policy.io/trigger."
+    manifests:
+      - path: configmap.yml
+        name: conjur-connect-configmap
+
+
+policySets:
+  - name: create-resource-if-not-exists
+    placement:
+      placementName: "ft-create-resource-if-not-exists--enabled"
