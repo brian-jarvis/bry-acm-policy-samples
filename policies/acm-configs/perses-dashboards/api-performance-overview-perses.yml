@@ -1,0 +1,851 @@
+---
+apiVersion: perses.dev/v1alpha2
+kind: PersesDashboard
+metadata:
+  namespace: open-cluster-management-observability
+  name: api-performance-overview
+  labels:
+    managed-by: bry-tam-policies
+spec:
+  config:
+    display:
+      name: API Performance Dashboard
+    variables:
+    - kind: ListVariable
+      spec:
+        display:
+          name: apiserver
+          hidden: false
+        allowAllValue: true
+        allowMultiple: false
+        plugin:
+          kind: PrometheusLabelValuesVariable
+          spec:
+            labelName: apiserver
+            matchers:
+            - apiserver_request_duration_seconds_bucket
+            datasource:
+              kind: PrometheusDatasource
+              name: rbac-query-proxy-datasource
+        name: apiserver
+    - kind: ListVariable
+      spec:
+        display:
+          name: instance
+          hidden: false
+        allowAllValue: true
+        allowMultiple: false
+        plugin:
+          kind: PrometheusLabelValuesVariable
+          spec:
+            labelName: instance
+            matchers:
+            - apiserver_request_total
+            datasource:
+              kind: PrometheusDatasource
+              name: rbac-query-proxy-datasource
+        name: instance
+    - kind: ListVariable
+      spec:
+        display:
+          name: resource
+          hidden: false
+        allowAllValue: true
+        allowMultiple: false
+        plugin:
+          kind: PrometheusLabelValuesVariable
+          spec:
+            labelName: resource
+            matchers:
+            - apiserver_request_duration_seconds_bucket
+            datasource:
+              kind: PrometheusDatasource
+              name: rbac-query-proxy-datasource
+        name: resource
+    - kind: ListVariable
+      spec:
+        display:
+          name: code
+          hidden: false
+        allowAllValue: true
+        allowMultiple: false
+        plugin:
+          kind: PrometheusLabelValuesVariable
+          spec:
+            labelName: code
+            matchers: []
+            datasource:
+              kind: PrometheusDatasource
+              name: rbac-query-proxy-datasource
+        name: code
+    - kind: ListVariable
+      spec:
+        display:
+          name: verb
+          hidden: false
+        allowAllValue: true
+        allowMultiple: false
+        plugin:
+          kind: PrometheusLabelValuesVariable
+          spec:
+            labelName: verb
+            matchers: []
+            datasource:
+              kind: PrometheusDatasource
+              name: rbac-query-proxy-datasource
+        name: verb
+    - kind: ListVariable
+      spec:
+        display:
+          name: flow-schema
+          hidden: false
+        allowAllValue: true
+        allowMultiple: false
+        plugin:
+          kind: PrometheusLabelValuesVariable
+          spec:
+            labelName: flow_schema
+            matchers: []
+            datasource:
+              kind: PrometheusDatasource
+              name: rbac-query-proxy-datasource
+        name: flow_schema
+    - kind: ListVariable
+      spec:
+        display:
+          name: priority-level
+          hidden: false
+        allowAllValue: true
+        allowMultiple: false
+        plugin:
+          kind: PrometheusLabelValuesVariable
+          spec:
+            labelName: priority_level
+            matchers: []
+            datasource:
+              kind: PrometheusDatasource
+              name: rbac-query-proxy-datasource
+        name: priority_level
+    - kind: ListVariable
+      spec:
+        display:
+          name: interval
+          hidden: false
+        defaultValue: $__auto_interval_interval
+        allowAllValue: true
+        allowMultiple: false
+        plugin:
+          kind: StaticListVariable
+          spec:
+            values:
+            - label: auto
+              value: $__auto_interval_interval
+            - 1m
+            - 5m
+        name: interval
+    panels:
+      '0':
+        kind: Panel
+        spec:
+          display:
+            name: request duration - 99th quantile
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: table
+                position: right
+                values:
+                - max
+              visual:
+                areaOpacity: 0.1
+                connectNulls: false
+                display: line
+                lineWidth: 1
+              yAxis:
+                format:
+                  unit: seconds
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: histogram_quantile(0.99, sum(rate(apiserver_request_duration_seconds_bucket{apiserver=~"$apiserver",instance=~"$instance",resource=~"$resource",subresource!="log",verb=~"$verb",verb!~"WATCH|WATCHLIST|PROXY"}[$interval])) by(verb,le))
+                  seriesNameFormat: '{{verb}}'
+      '1':
+        kind: Panel
+        spec:
+          display:
+            name: request rate - by instance
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: table
+                position: right
+                values:
+                - max
+              visual:
+                areaOpacity: 0.1
+                connectNulls: false
+                display: line
+                lineWidth: 1
+              yAxis:
+                format:
+                  unit: decimal
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: sum(rate(apiserver_request_total{apiserver=~"$apiserver",instance=~"$instance",resource=~"$resource",code=~"$code",verb=~"$verb"}[$interval])) by(instance)
+                  seriesNameFormat: '{{instance}}'
+      '2':
+        kind: Panel
+        spec:
+          display:
+            name: request duration - 99th quantile - by resource
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: table
+                position: right
+                values:
+                - max
+              visual:
+                areaOpacity: 0.1
+                connectNulls: false
+                display: line
+                lineWidth: 1
+              yAxis:
+                format:
+                  unit: seconds
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: histogram_quantile(0.99, sum(rate(apiserver_request_duration_seconds_bucket{apiserver=~"$apiserver",instance=~"$instance",resource=~"$resource",subresource!="log",verb=~"$verb",verb!~"WATCH|WATCHLIST|PROXY"}[$interval])) by(resource,le))
+                  seriesNameFormat: '{{resource}}'
+      '3':
+        kind: Panel
+        spec:
+          display:
+            name: request rate - by resource
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: table
+                position: right
+                values:
+                - max
+              visual:
+                areaOpacity: 0.1
+                connectNulls: false
+                display: line
+                lineWidth: 1
+              yAxis:
+                format:
+                  unit: decimal
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: sum(rate(apiserver_request_total{apiserver=~"$apiserver",instance=~"$instance",resource=~"$resource",code=~"$code",verb=~"$verb"}[$interval])) by(resource)
+                  seriesNameFormat: '{{resource}}'
+      '4':
+        kind: Panel
+        spec:
+          display:
+            name: request duration - read vs write
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: list
+                position: bottom
+              visual:
+                areaOpacity: 0.1
+                connectNulls: false
+                display: line
+                lineWidth: 1
+              yAxis:
+                format:
+                  unit: seconds
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: histogram_quantile(0.99, sum(rate(apiserver_request_duration_seconds_bucket{apiserver=~"$apiserver",instance=~"$instance",resource=~"$resource",verb=~"LIST|GET"}[$interval])) by(le))
+                  seriesNameFormat: read
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: histogram_quantile(0.99, sum(rate(apiserver_request_duration_seconds_bucket{apiserver=~"$apiserver",instance=~"$instance",resource=~"$resource",verb=~"POST|PUT|PATCH|UPDATE|DELETE"}[$interval])) by(le))
+                  seriesNameFormat: write
+      '5':
+        kind: Panel
+        spec:
+          display:
+            name: request rate - read vs write
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: list
+                position: bottom
+              visual:
+                areaOpacity: 0.1
+                connectNulls: false
+                display: line
+                lineWidth: 1
+              yAxis:
+                format:
+                  unit: decimal
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: sum(rate(apiserver_request_total{apiserver=~"$apiserver",instance=~"$instance",resource=~"$resource",verb=~"LIST|GET"}[$interval]))
+                  seriesNameFormat: read
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: sum(rate(apiserver_request_total{apiserver=~"$apiserver",instance=~"$instance",resource=~"$resource",verb=~"POST|PUT|PATCH|UPDATE|DELETE"}[$interval]))
+                  seriesNameFormat: write
+      '6':
+        kind: Panel
+        spec:
+          display:
+            name: requests dropped rate
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: list
+                position: bottom
+              visual:
+                areaOpacity: 0.1
+                connectNulls: false
+                display: line
+                lineWidth: 1
+              yAxis:
+                format:
+                  unit: decimal
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: sum(rate(apiserver_request_terminations_total{instance=~"$instance"}[$interval])) by (verb)
+                  seriesNameFormat: ''
+      '7':
+        kind: Panel
+        spec:
+          display:
+            name: requests terminated rate
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: list
+                position: bottom
+              visual:
+                areaOpacity: 0.1
+                connectNulls: false
+                display: line
+                lineWidth: 1
+              yAxis:
+                format:
+                  unit: decimal
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: sum(rate(apiserver_request_terminations_total{instance=~"$instance",resource=~"$resource",code=~"$code"}[$interval])) by(component)
+                  seriesNameFormat: ''
+      '8':
+        kind: Panel
+        spec:
+          display:
+            name: requests status rate
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: table
+                position: right
+                values:
+                - max
+              visual:
+                areaOpacity: 0.1
+                connectNulls: false
+                display: line
+                lineWidth: 1
+              yAxis:
+                format:
+                  unit: decimal
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: sum(rate(apiserver_request_total{apiserver=~"$apiserver",instance=~"$instance",resource=~"$resource",verb=~"$verb",code=~"$code"}[$interval])) by(code)
+                  seriesNameFormat: '{{code}}'
+      '9':
+        kind: Panel
+        spec:
+          display:
+            name: long running requests
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: table
+                position: right
+                values:
+                - max
+              visual:
+                areaOpacity: 0.1
+                connectNulls: false
+                display: line
+                lineWidth: 1
+              yAxis:
+                format:
+                  unit: decimal
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: sum(apiserver_longrunning_requests{instance=~"$instance",resource=~"$resource",verb=~"$verb"}) by(instance)
+                  seriesNameFormat: '{{instance}}'
+      '10':
+        kind: Panel
+        spec:
+          display:
+            name: request in flight
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: table
+                position: right
+                values:
+                - max
+              visual:
+                areaOpacity: 0.1
+                connectNulls: false
+                display: line
+                lineWidth: 1
+              yAxis:
+                format:
+                  unit: decimal
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: sum(apiserver_current_inflight_requests{instance=~"$instance"}) by (instance,request_kind)
+                  seriesNameFormat: '{{request_kind}}-{{instance}}'
+      '11':
+        kind: Panel
+        spec:
+          display:
+            name: response size - 99th quantile
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: table
+                position: right
+                values:
+                - max
+              visual:
+                areaOpacity: 0.1
+                connectNulls: false
+                display: line
+                lineWidth: 1
+              yAxis:
+                format:
+                  unit: bytes
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: histogram_quantile(0.99, sum(rate(apiserver_response_sizes_bucket{instance=~"$instance",resource=~"$resource",verb=~"$verb"}[$interval])) by(instance,le))
+                  seriesNameFormat: '{{instance}}'
+      '12':
+        kind: Panel
+        spec:
+          display:
+            name: p&f - request queue length
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: table
+                position: right
+                values:
+                - max
+              visual:
+                areaOpacity: 0.1
+                connectNulls: false
+                display: line
+                lineWidth: 1
+              yAxis:
+                format:
+                  unit: decimal
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: histogram_quantile(0.99, sum(rate(apiserver_flowcontrol_request_queue_length_after_enqueue_bucket{instance=~"$instance",flow_schema=~"$flow_schema",priority_level=~"$priority_level"}[$interval])) by(flow_schema, priority_level, le))
+                  seriesNameFormat: '{{flow_schema}}:{{priority_level}}'
+      '13':
+        kind: Panel
+        spec:
+          display:
+            name: p&f - request wait duration - 99th quantile
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: table
+                position: right
+                values:
+                - mean
+                - max
+                - last-number
+              visual:
+                areaOpacity: 0.1
+                connectNulls: false
+                display: line
+                lineWidth: 1
+              yAxis:
+                format:
+                  unit: seconds
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: histogram_quantile(0.99, sum(rate(apiserver_flowcontrol_request_wait_duration_seconds_bucket{instance=~"$instance",flow_schema=~"$flow_schema",priority_level=~"$priority_level"}[5m])) by(flow_schema, priority_level, le))
+                  seriesNameFormat: '{{flow_schema}}:{{priority_level}}'
+      '14':
+        kind: Panel
+        spec:
+          display:
+            name: p&f - request dispatch rate
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: table
+                position: right
+                values:
+                - max
+              visual:
+                areaOpacity: 0.1
+                connectNulls: false
+                display: line
+                lineWidth: 1
+              yAxis:
+                format:
+                  unit: decimal
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: sum(rate(apiserver_flowcontrol_dispatched_requests_total{instance=~"$instance",flow_schema=~"$flow_schema",priority_level=~"$priority_level"}[$interval])) by(flow_schema,priority_level)
+                  seriesNameFormat: '{{flow_schema}}:{{priority_level}}'
+      '15':
+        kind: Panel
+        spec:
+          display:
+            name: p&f - request execution duration
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: table
+                position: right
+                values:
+                - max
+              visual:
+                areaOpacity: 0.1
+                connectNulls: false
+                display: line
+                lineWidth: 1
+              yAxis:
+                format:
+                  unit: seconds
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: histogram_quantile(0.99, sum(rate(apiserver_flowcontrol_request_execution_seconds_bucket{instance=~"$instance",flow_schema=~"$flow_schema",priority_level=~"$priority_level"}[$interval])) by(flow_schema, priority_level, le))
+                  seriesNameFormat: '{{flow_schema}}:{{priority_level}}'
+      '16':
+        kind: Panel
+        spec:
+          display:
+            name: p&f - pending in queue
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: table
+                position: right
+                values:
+                - max
+              visual:
+                areaOpacity: 0.1
+                connectNulls: false
+                display: line
+                lineWidth: 1
+              yAxis:
+                format:
+                  unit: decimal
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: sum(apiserver_flowcontrol_current_inqueue_requests{instance=~"$instance",flow_schema=~"$flow_schema",priority_level=~"$priority_level"}) by (flow_schema,priority_level)
+                  seriesNameFormat: '{{flow_schema}}:{{priority_level}}'
+      '17':
+        kind: Panel
+        spec:
+          display:
+            name: p&f - concurrency limit by kube-apiserver
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: table
+                position: right
+                values:
+                - max
+              visual:
+                areaOpacity: 0.1
+                connectNulls: false
+                display: line
+                lineWidth: 1
+              yAxis:
+                format:
+                  unit: decimal
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: sum(apiserver_flowcontrol_request_concurrency_in_use{instance=~".*:6443",priority_level=~"$priority_level"}) by (instance,flow_schema)
+                  seriesNameFormat: '{{instance}}:{{flow_schema}}'
+    layouts:
+    - kind: Grid
+      spec:
+        display:
+          title: Panel Group 1
+        items:
+        - x: 0
+          y: 0
+          width: 12
+          height: 8
+          content:
+            $ref: '#/spec/panels/0'
+        - x: 12
+          y: 0
+          width: 12
+          height: 8
+          content:
+            $ref: '#/spec/panels/1'
+        - x: 0
+          y: 8
+          width: 12
+          height: 8
+          content:
+            $ref: '#/spec/panels/2'
+        - x: 12
+          y: 8
+          width: 12
+          height: 8
+          content:
+            $ref: '#/spec/panels/3'
+        - x: 0
+          y: 16
+          width: 12
+          height: 8
+          content:
+            $ref: '#/spec/panels/4'
+        - x: 12
+          y: 16
+          width: 12
+          height: 8
+          content:
+            $ref: '#/spec/panels/5'
+        - x: 0
+          y: 24
+          width: 12
+          height: 8
+          content:
+            $ref: '#/spec/panels/6'
+        - x: 12
+          y: 24
+          width: 12
+          height: 8
+          content:
+            $ref: '#/spec/panels/7'
+        - x: 0
+          y: 32
+          width: 12
+          height: 8
+          content:
+            $ref: '#/spec/panels/8'
+        - x: 12
+          y: 32
+          width: 12
+          height: 8
+          content:
+            $ref: '#/spec/panels/9'
+        - x: 0
+          y: 40
+          width: 12
+          height: 8
+          content:
+            $ref: '#/spec/panels/10'
+        - x: 12
+          y: 40
+          width: 12
+          height: 8
+          content:
+            $ref: '#/spec/panels/11'
+        - x: 0
+          y: 48
+          width: 12
+          height: 8
+          content:
+            $ref: '#/spec/panels/12'
+        - x: 12
+          y: 48
+          width: 12
+          height: 8
+          content:
+            $ref: '#/spec/panels/13'
+        - x: 0
+          y: 64
+          width: 12
+          height: 8
+          content:
+            $ref: '#/spec/panels/14'
+        - x: 12
+          y: 64
+          width: 12
+          height: 8
+          content:
+            $ref: '#/spec/panels/15'
+        - x: 0
+          y: 72
+          width: 12
+          height: 8
+          content:
+            $ref: '#/spec/panels/16'
+        - x: 12
+          y: 72
+          width: 12
+          height: 8
+          content:
+            $ref: '#/spec/panels/17'
+    duration: 1h

@@ -1,0 +1,1590 @@
+---
+apiVersion: perses.dev/v1alpha2
+kind: PersesDashboard
+metadata:
+  namespace: open-cluster-management-observability
+  name: etcd-on-cluster-dashboard
+  labels:
+    managed-by: bry-tam-policies
+spec:
+  config:
+    display:
+      name: etcd-cluster-info dashboard
+    variables:
+    - kind: ListVariable
+      spec:
+        display:
+          hidden: false
+        allowAllValue: true
+        allowMultiple: true
+        plugin:
+          kind: PrometheusLabelValuesVariable
+          spec:
+            labelName: pod
+            matchers:
+            - etcd_cluster_version
+            datasource:
+              kind: PrometheusDatasource
+              name: rbac-query-proxy-datasource
+        name: etcd_pod
+    panels:
+      '0_0':
+        kind: Panel
+        spec:
+          display:
+            name: CPU usage
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: table
+                position: bottom
+                values:
+                - mean
+                - max
+              visual:
+                areaOpacity: 0.1
+                connectNulls: false
+                display: line
+                lineWidth: 1
+              yAxis:
+                format:
+                  unit: percent
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: sum(irate(container_cpu_usage_seconds_total{namespace="openshift-etcd", container="etcd",pod=~"$etcd_pod"}[2m])) by (pod) * 100
+                  seriesNameFormat: '{{ pod }}'
+      '0_1':
+        kind: Panel
+        spec:
+          display:
+            name: Memory usage
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: table
+                position: bottom
+                values:
+                - mean
+                - max
+              visual:
+                areaOpacity: 0.1
+                connectNulls: false
+                display: line
+                lineWidth: 1
+              yAxis:
+                format:
+                  unit: bytes
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: sum(avg_over_time(container_memory_working_set_bytes{container="",pod!="", namespace=~"openshift-etcd.*",pod=~"$etcd_pod"}[2m])) BY (pod, namespace)
+                  seriesNameFormat: '{{ pod }}'
+      '0_2':
+        kind: Panel
+        spec:
+          display:
+            name: Disk WAL Sync Duration
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: table
+                position: bottom
+                values:
+                - mean
+                - max
+              visual:
+                areaOpacity: 0.1
+                connectNulls: false
+                display: line
+                lineWidth: 1
+              yAxis:
+                format:
+                  unit: seconds
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: histogram_quantile(0.99, sum(rate(etcd_disk_wal_fsync_duration_seconds_bucket{namespace="openshift-etcd",pod=~"$etcd_pod"}[5m])) by (pod, le))
+                  seriesNameFormat: '{{pod}} WAL fsync'
+      '0_3':
+        kind: Panel
+        spec:
+          display:
+            name: Disk Backend Sync Duration
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: table
+                position: bottom
+                values:
+                - mean
+                - max
+              visual:
+                areaOpacity: 0.1
+                connectNulls: false
+                display: line
+                lineWidth: 1
+              yAxis:
+                format:
+                  unit: seconds
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: histogram_quantile(0.99, sum(rate(etcd_disk_backend_commit_duration_seconds_bucket{namespace="openshift-etcd",pod=~"$etcd_pod"}[5m])) by (pod, le))
+                  seriesNameFormat: '{{pod}} DB fsync'
+      '0_4':
+        kind: Panel
+        spec:
+          display:
+            name: Etcd container disk writes
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: table
+                position: bottom
+                values:
+                - mean
+                - max
+              visual:
+                areaOpacity: 0.1
+                connectNulls: false
+                display: line
+                lineWidth: 1
+              yAxis:
+                format:
+                  unit: bytes/sec
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: rate(container_fs_writes_bytes_total{namespace="openshift-etcd",device!~".+dm.+"}[2m])
+                  seriesNameFormat: '{{ pod }}: {{ device }}'
+      '0_5':
+        kind: Panel
+        spec:
+          display:
+            name: DB Size
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: table
+                position: bottom
+                values:
+                - mean
+                - max
+              visual:
+                areaOpacity: 0.1
+                connectNulls: false
+                display: line
+                lineWidth: 1
+              yAxis:
+                format:
+                  unit: bytes
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: etcd_mvcc_db_total_size_in_bytes{namespace="openshift-etcd",pod=~"$etcd_pod"}
+                  seriesNameFormat: '{{pod}} DB physical size'
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: etcd_mvcc_db_total_size_in_use_in_bytes{namespace="openshift-etcd",pod=~"$etcd_pod"}
+                  seriesNameFormat: '{{pod}} DB logical size'
+      '1_0':
+        kind: Panel
+        spec:
+          display:
+            name: Compaction Duration sum
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: table
+                position: bottom
+                values:
+                - first
+                - min
+                - max
+                - last
+              querySettings:
+              - format:
+                  unit: decimal
+                queryIndex: 0
+              visual:
+                areaOpacity: 0.1
+                connectNulls: false
+                display: line
+                lineWidth: 1
+              yAxis:
+                format:
+                  unit: decimal
+                label: sum
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: delta(etcd_debugging_mvcc_db_compaction_total_duration_milliseconds_sum{namespace="openshift-etcd",pod=~"$etcd_pod"}[1m:30s])/2
+                  seriesNameFormat: 'rate compact sum {{instance}} '
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: etcd_debugging_mvcc_db_compaction_total_duration_milliseconds_sum{namespace="openshift-etcd",pod=~"$etcd_pod"}
+                  seriesNameFormat: 'compact sum {{instance}} '
+      '1_1':
+        kind: Panel
+        spec:
+          display:
+            name: Defrag Duration sum
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: table
+                position: bottom
+                values:
+                - first
+                - min
+                - max
+                - last
+              querySettings:
+              - format:
+                  unit: decimal
+                queryIndex: 0
+              visual:
+                areaOpacity: 0.1
+                connectNulls: false
+                display: line
+                lineWidth: 1
+              yAxis:
+                format:
+                  unit: decimal
+                label: count
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: delta(etcd_disk_backend_defrag_duration_seconds_sum{namespace="openshift-etcd",pod=~"$etcd_pod"}[1m:30s])/2
+                  seriesNameFormat: 'rate defrag sum {{instance}} '
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: etcd_disk_backend_defrag_duration_seconds_sum{namespace="openshift-etcd",pod=~"$etcd_pod"}
+                  seriesNameFormat: 'defrag sum {{instance}} '
+      '1_2':
+        kind: Panel
+        spec:
+          display:
+            name: vmstat major page faults
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: table
+                position: bottom
+                values:
+                - first
+                - min
+                - max
+                - last
+              querySettings:
+              - format:
+                  unit: decimal
+                queryIndex: 0
+              visual:
+                areaOpacity: 0.1
+                connectNulls: false
+                display: line
+                lineWidth: 1
+              yAxis:
+                format:
+                  unit: decimal
+                label: count
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: rate(node_vmstat_pgmajfault[2m])* on (instance) group_left label_replace(kube_node_role{role="control-plane"},"instance","$1","node","(.*)")
+                  seriesNameFormat: 'rate pgmajfault {{instance}} '
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: node_vmstat_pgmajfault * on (instance) group_left label_replace(kube_node_role{role="control-plane"},"instance","$1","node","(.*)")
+                  seriesNameFormat: 'pgmajfault {{instance}} '
+      '2_0':
+        kind: Panel
+        spec:
+          display:
+            name: WAL fsync Duration p99
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: table
+                position: bottom
+                values:
+                - mean
+                - max
+              visual:
+                areaOpacity: 0.1
+                connectNulls: false
+                display: line
+                lineWidth: 1
+              yAxis:
+                format:
+                  unit: seconds
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: histogram_quantile(0.99, sum(rate(etcd_disk_wal_fsync_duration_seconds_bucket{namespace="openshift-etcd",pod=~"$etcd_pod"}[5m])) by (pod, le))
+                  seriesNameFormat: '{{pod}} WAL fsync'
+      '2_1':
+        kind: Panel
+        spec:
+          display:
+            name: WAL fsync Duration sum
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: table
+                position: bottom
+                values:
+                - first
+                - min
+                - max
+                - last
+              querySettings:
+              - format:
+                  unit: decimal
+                queryIndex: 0
+              visual:
+                areaOpacity: 0.1
+                connectNulls: false
+                display: line
+                lineWidth: 1
+              yAxis:
+                format:
+                  unit: decimal
+                label: sum
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: irate(etcd_disk_wal_fsync_duration_seconds_sum{namespace="openshift-etcd",pod=~"$etcd_pod"}[2m])
+                  seriesNameFormat: '2m irate WAL sum {{instance}} '
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: etcd_disk_wal_fsync_duration_seconds_sum{namespace="openshift-etcd",pod=~"$etcd_pod"}
+                  seriesNameFormat: 'WAL sum {{instance}} '
+      '2_2':
+        kind: Panel
+        spec:
+          display:
+            name: WAL fsync Duration count
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: table
+                position: bottom
+                values:
+                - first
+                - min
+                - max
+                - last
+              querySettings:
+              - format:
+                  unit: decimal
+                queryIndex: 0
+              visual:
+                areaOpacity: 0.1
+                connectNulls: false
+                display: line
+                lineWidth: 1
+              yAxis:
+                format:
+                  unit: decimal
+                label: count
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: irate(etcd_disk_wal_fsync_duration_seconds_count{namespace="openshift-etcd",pod=~"$etcd_pod"}[2m])
+                  seriesNameFormat: '2m irate WAL count {{instance}} '
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: etcd_disk_wal_fsync_duration_seconds_count{namespace="openshift-etcd",pod=~"$etcd_pod"}
+                  seriesNameFormat: 'WAL count {{instance}} '
+      '3_0':
+        kind: Panel
+        spec:
+          display:
+            name: Backend Commit Duration
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: table
+                position: bottom
+                values:
+                - mean
+                - max
+              visual:
+                areaOpacity: 0.1
+                connectNulls: false
+                display: line
+                lineWidth: 1
+              yAxis:
+                format:
+                  unit: seconds
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: histogram_quantile(0.99, sum(rate(etcd_disk_backend_commit_duration_seconds_bucket{namespace="openshift-etcd",pod=~"$etcd_pod"}[5m])) by (pod, le))
+                  seriesNameFormat: '{{pod}} DB fsync'
+      '3_1':
+        kind: Panel
+        spec:
+          display:
+            name: Backend Commit Duration sum
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: table
+                position: bottom
+                values:
+                - first
+                - min
+                - max
+                - last
+              querySettings:
+              - format:
+                  unit: decimal
+                queryIndex: 0
+              visual:
+                areaOpacity: 0.1
+                connectNulls: false
+                display: line
+                lineWidth: 1
+              yAxis:
+                format:
+                  unit: decimal
+                label: sum
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: irate(etcd_disk_backend_commit_duration_seconds_sum{namespace="openshift-etcd",pod=~"$etcd_pod"}[2m])
+                  seriesNameFormat: '2m irate WAL sum {{instance}} '
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: etcd_disk_backend_commit_duration_seconds_sum{namespace="openshift-etcd",pod=~"$etcd_pod"}
+                  seriesNameFormat: 'WAL sum {{instance}} '
+      '3_2':
+        kind: Panel
+        spec:
+          display:
+            name: Backend Commit Duration count
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: table
+                position: bottom
+                values:
+                - first
+                - min
+                - max
+                - last
+              querySettings:
+              - format:
+                  unit: decimal
+                queryIndex: 0
+              visual:
+                areaOpacity: 0.1
+                connectNulls: false
+                display: line
+                lineWidth: 1
+              yAxis:
+                format:
+                  unit: decimal
+                label: count
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: irate(etcd_disk_backend_commit_duration_seconds_count{namespace="openshift-etcd",pod=~"$etcd_pod"}[2m])
+                  seriesNameFormat: '2m irate WAL count {{instance}} '
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: etcd_disk_backend_commit_duration_seconds_count{namespace="openshift-etcd",pod=~"$etcd_pod"}
+                  seriesNameFormat: 'WAL count {{instance}} '
+      '4_0':
+        kind: Panel
+        spec:
+          display:
+            name: Container network traffic
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: table
+                position: bottom
+                values:
+                - mean
+                - max
+              visual:
+                areaOpacity: 0.1
+                connectNulls: false
+                display: line
+                lineWidth: 1
+              yAxis:
+                format:
+                  unit: bytes/sec
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: sum(rate(container_network_receive_bytes_total{ namespace=~"openshift-etcd.*"}[2m])) BY (namespace, pod)
+                  seriesNameFormat: rx {{ pod }}
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: sum(rate(container_network_transmit_bytes_total{ namespace=~"openshift-etcd.*"}[2m])) BY (namespace, pod)
+                  seriesNameFormat: tx {{ pod }}
+      '4_1':
+        kind: Panel
+        spec:
+          display:
+            name: p99 peer to peer latency
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: table
+                position: bottom
+                values:
+                - mean
+                - max
+              visual:
+                areaOpacity: 0.1
+                connectNulls: false
+                display: line
+                lineWidth: 1
+              yAxis:
+                format:
+                  unit: seconds
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: histogram_quantile(0.99, rate(etcd_network_peer_round_trip_time_seconds_bucket{namespace="openshift-etcd",pod=~"$etcd_pod"}[2m]))
+                  seriesNameFormat: '{{pod}}'
+      '4_2':
+        kind: Panel
+        spec:
+          display:
+            name: Peer network traffic
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: table
+                position: bottom
+                values:
+                - mean
+                - max
+              visual:
+                areaOpacity: 0.1
+                connectNulls: false
+                display: line
+                lineWidth: 1
+              yAxis:
+                format:
+                  unit: bytes/sec
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: rate(etcd_network_peer_received_bytes_total{namespace="openshift-etcd",pod=~"$etcd_pod"}[2m])
+                  seriesNameFormat: rx {{pod}} Peer Traffic
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: rate(etcd_network_peer_sent_bytes_total{namespace="openshift-etcd",pod=~"$etcd_pod"}[2m])
+                  seriesNameFormat: tx {{pod}} Peer Traffic
+      '4_3':
+        kind: Panel
+        spec:
+          display:
+            name: gRPC network traffic
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: table
+                position: bottom
+                values:
+                - mean
+                - max
+              visual:
+                areaOpacity: 0.1
+                connectNulls: false
+                display: line
+                lineWidth: 1
+              yAxis:
+                format:
+                  unit: bytes/sec
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: rate(etcd_network_client_grpc_received_bytes_total{namespace="openshift-etcd",pod=~"$etcd_pod"}[2m])
+                  seriesNameFormat: rx {{pod}}
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: rate(etcd_network_client_grpc_sent_bytes_total{namespace="openshift-etcd",pod=~"$etcd_pod"}[2m])
+                  seriesNameFormat: tx {{pod}}
+      '4_4':
+        kind: Panel
+        spec:
+          display:
+            name: Active Streams
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: table
+                position: bottom
+              visual:
+                areaOpacity: 0.1
+                connectNulls: false
+                display: line
+                lineWidth: 1
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: sum(grpc_server_started_total{namespace="openshift-etcd",grpc_service="etcdserverpb.Watch",grpc_type="bidi_stream"}) - sum(grpc_server_handled_total{namespace="openshift-etcd",grpc_service="etcdserverpb.Watch",grpc_type="bidi_stream"})
+                  seriesNameFormat: Watch Streams
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: sum(grpc_server_started_total{namespace="openshift-etcd",grpc_service="etcdserverpb.Lease",grpc_type="bidi_stream"}) - sum(grpc_server_handled_total{namespace="openshift-etcd",grpc_service="etcdserverpb.Lease",grpc_type="bidi_stream"})
+                  seriesNameFormat: Lease Streams
+      '4_5':
+        kind: Panel
+        spec:
+          display:
+            name: Snapshot duration
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: table
+                position: bottom
+              visual:
+                areaOpacity: 0.1
+                connectNulls: false
+                display: line
+                lineWidth: 1
+              yAxis:
+                format:
+                  unit: seconds
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: sum(rate(etcd_debugging_snap_save_total_duration_seconds_sum{namespace="openshift-etcd"}[2m]))
+                  seriesNameFormat: the total latency distributions of save called by snapshot
+      '5_0':
+        kind: Panel
+        spec:
+          display:
+            name: '% DB Space Used'
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: table
+                position: bottom
+              visual:
+                areaOpacity: 0.1
+                connectNulls: false
+                display: line
+                lineWidth: 1
+              yAxis:
+                format:
+                  unit: percent
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: (etcd_mvcc_db_total_size_in_bytes{namespace="openshift-etcd",pod=~"$etcd_pod"} / etcd_server_quota_backend_bytes{namespace="openshift-etcd",pod=~"$etcd_pod"})*100
+                  seriesNameFormat: '{{pod}}'
+      '5_1':
+        kind: Panel
+        spec:
+          display:
+            name: DB Left capacity (with fragmented space)
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: table
+                position: bottom
+              visual:
+                areaOpacity: 0.1
+                connectNulls: false
+                display: line
+                lineWidth: 1
+              yAxis:
+                format:
+                  unit: bytes
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: etcd_server_quota_backend_bytes{namespace="openshift-etcd",pod=~"$etcd_pod"} - etcd_mvcc_db_total_size_in_bytes{namespace="openshift-etcd",pod=~"$etcd_pod"}
+                  seriesNameFormat: '{{pod}}'
+      '5_2':
+        kind: Panel
+        spec:
+          display:
+            name: DB Size Limit (Backend-bytes)
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: table
+                position: bottom
+              visual:
+                areaOpacity: 0.1
+                connectNulls: false
+                display: line
+                lineWidth: 1
+              yAxis:
+                format:
+                  unit: bytes
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: etcd_server_quota_backend_bytes{namespace="openshift-etcd",pod=~"$etcd_pod"}
+                  seriesNameFormat: '{{ pod }} Quota Bytes'
+      '6_0':
+        kind: Panel
+        spec:
+          display:
+            name: Raft Proposals
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: list
+                position: bottom
+              visual:
+                areaOpacity: 0.1
+                connectNulls: false
+                display: line
+                lineWidth: 1
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: sum(rate(etcd_server_proposals_failed_total{namespace="openshift-etcd"}[2m]))
+                  seriesNameFormat: Proposal Failure Rate
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: sum(etcd_server_proposals_pending{namespace="openshift-etcd"})
+                  seriesNameFormat: Proposal Pending Total
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: sum(rate(etcd_server_proposals_committed_total{namespace="openshift-etcd"}[2m]))
+                  seriesNameFormat: Proposal Commit Rate
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: sum(rate(etcd_server_proposals_applied_total{namespace="openshift-etcd"}[2m]))
+                  seriesNameFormat: Proposal Apply Rate
+      '6_1':
+        kind: Panel
+        spec:
+          display:
+            name: Number of leader changes seen
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: list
+                position: bottom
+              visual:
+                areaOpacity: 0.1
+                connectNulls: false
+                display: line
+                lineWidth: 1
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: sum(rate(etcd_server_leader_changes_seen_total{namespace="openshift-etcd"}[2m]))
+                  seriesNameFormat: ''
+      '6_2':
+        kind: Panel
+        spec:
+          display:
+            name: Etcd has a leader?
+          plugin:
+            kind: StatChart
+            spec:
+              calculation: mean
+              colorMode: none
+              format:
+                unit: decimal
+              mappings:
+              - kind: Value
+                spec:
+                  result:
+                    value: 'NO'
+                  value: '0'
+              - kind: Value
+                spec:
+                  result:
+                    value: 'YES'
+                  value: '1'
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: max(etcd_server_has_leader{namespace="openshift-etcd"})
+                  seriesNameFormat: ''
+      '6_3':
+        kind: Panel
+        spec:
+          display:
+            name: Total number of failed proposals seen
+          plugin:
+            kind: StatChart
+            spec:
+              calculation: mean
+              colorMode: none
+              format:
+                unit: decimal
+              mappings:
+              - kind: Misc
+                spec:
+                  result:
+                    value: N/A
+                  value: 'null'
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: max(etcd_server_proposals_committed_total{namespace="openshift-etcd"})
+                  seriesNameFormat: ''
+      '6_4':
+        kind: Panel
+        spec:
+          display:
+            name: Keys
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: list
+                position: bottom
+              visual:
+                areaOpacity: 0.1
+                connectNulls: false
+                display: line
+                lineWidth: 1
+              yAxis:
+                format:
+                  unit: decimal
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: etcd_debugging_mvcc_keys_total{namespace="openshift-etcd",pod=~"$etcd_pod"}
+                  seriesNameFormat: '{{ pod }} Num keys'
+      '6_5':
+        kind: Panel
+        spec:
+          display:
+            name: Leader Elections Per Day
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: list
+                position: bottom
+              visual:
+                areaOpacity: 0.1
+                connectNulls: false
+                display: line
+                lineWidth: 1
+              yAxis:
+                format:
+                  unit: decimal
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: changes(etcd_server_leader_changes_seen_total{namespace="openshift-etcd",pod=~"$etcd_pod"}[1d])
+                  seriesNameFormat: '{{instance}} Total Leader Elections Per Day'
+      '6_6':
+        kind: Panel
+        spec:
+          display:
+            name: Slow Operations
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: list
+                position: bottom
+              visual:
+                areaOpacity: 0.1
+                connectNulls: false
+                display: line
+                lineWidth: 1
+              yAxis:
+                format:
+                  unit: ops/sec
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: delta(etcd_server_slow_apply_total{namespace="openshift-etcd",pod=~"$etcd_pod"}[2m])
+                  seriesNameFormat: '{{ pod }} slow applies'
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: delta(etcd_server_slow_read_indexes_total{namespace="openshift-etcd",pod=~"$etcd_pod"}[2m])
+                  seriesNameFormat: '{{ pod }} slow read indexes'
+      '6_7':
+        kind: Panel
+        spec:
+          display:
+            name: Key Operations
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: list
+                position: bottom
+              visual:
+                areaOpacity: 0.1
+                connectNulls: false
+                display: line
+                lineWidth: 1
+              yAxis:
+                format:
+                  unit: ops/sec
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: rate(etcd_mvcc_put_total{namespace="openshift-etcd",pod=~"$etcd_pod"}[2m])
+                  seriesNameFormat: '{{ pod }} puts/s'
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: rate(etcd_mvcc_delete_total{namespace="openshift-etcd",pod=~"$etcd_pod"}[2m])
+                  seriesNameFormat: '{{ pod }} deletes/s'
+      '6_8':
+        kind: Panel
+        spec:
+          display:
+            name: Heartbeat Failures
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: list
+                position: bottom
+                values:
+                - first
+                - min
+                - max
+                - last
+              visual:
+                areaOpacity: 0.1
+                connectNulls: false
+                display: line
+                lineWidth: 1
+              yAxis:
+                format:
+                  unit: decimal
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: etcd_server_heartbeat_send_failures_total{namespace="openshift-etcd",pod=~"$etcd_pod"}
+                  seriesNameFormat: '{{ pod }} heartbeat failures'
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: etcd_server_health_failures{namespace="openshift-etcd",pod=~"$etcd_pod"}
+                  seriesNameFormat: '{{ pod }} health failures'
+      '6_9':
+        kind: Panel
+        spec:
+          display:
+            name: Compacted Keys
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: list
+                position: bottom
+              visual:
+                areaOpacity: 0.1
+                connectNulls: false
+                display: line
+                lineWidth: 1
+              yAxis:
+                format:
+                  unit: decimal
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: etcd_debugging_mvcc_db_compaction_keys_total{namespace="openshift-etcd",pod=~"$etcd_pod"}
+                  seriesNameFormat: '{{ pod  }} keys compacted'
+    layouts:
+    - kind: Grid
+      spec:
+        display:
+          title: General Resource Usage
+          collapse:
+            open: false
+        items:
+        - x: 0
+          y: 1
+          width: 12
+          height: 8
+          content:
+            $ref: '#/spec/panels/0_0'
+        - x: 12
+          y: 1
+          width: 12
+          height: 8
+          content:
+            $ref: '#/spec/panels/0_1'
+        - x: 0
+          y: 8
+          width: 12
+          height: 8
+          content:
+            $ref: '#/spec/panels/0_2'
+        - x: 12
+          y: 8
+          width: 12
+          height: 8
+          content:
+            $ref: '#/spec/panels/0_3'
+        - x: 0
+          y: 16
+          width: 12
+          height: 8
+          content:
+            $ref: '#/spec/panels/0_4'
+        - x: 12
+          y: 16
+          width: 12
+          height: 8
+          content:
+            $ref: '#/spec/panels/0_5'
+    - kind: Grid
+      spec:
+        display:
+          title: Compact/Defrag Detailed
+          collapse:
+            open: false
+        items:
+        - x: 0
+          y: 0
+          width: 8
+          height: 8
+          content:
+            $ref: '#/spec/panels/1_0'
+        - x: 8
+          y: 0
+          width: 8
+          height: 8
+          content:
+            $ref: '#/spec/panels/1_1'
+        - x: 16
+          y: 0
+          width: 8
+          height: 8
+          content:
+            $ref: '#/spec/panels/1_2'
+    - kind: Grid
+      spec:
+        display:
+          title: WAL fsync Duration Detailed
+          collapse:
+            open: false
+        items:
+        - x: 0
+          y: 0
+          width: 8
+          height: 8
+          content:
+            $ref: '#/spec/panels/2_0'
+        - x: 8
+          y: 0
+          width: 8
+          height: 8
+          content:
+            $ref: '#/spec/panels/2_1'
+        - x: 16
+          y: 0
+          width: 8
+          height: 8
+          content:
+            $ref: '#/spec/panels/2_2'
+    - kind: Grid
+      spec:
+        display:
+          title: Backend Commit Duration Detailed
+          collapse:
+            open: false
+        items:
+        - x: 0
+          y: 0
+          width: 8
+          height: 8
+          content:
+            $ref: '#/spec/panels/3_0'
+        - x: 8
+          y: 0
+          width: 8
+          height: 8
+          content:
+            $ref: '#/spec/panels/3_1'
+        - x: 16
+          y: 0
+          width: 8
+          height: 8
+          content:
+            $ref: '#/spec/panels/3_2'
+    - kind: Grid
+      spec:
+        display:
+          title: Network Usage
+          collapse:
+            open: false
+        items:
+        - x: 0
+          y: 1
+          width: 12
+          height: 8
+          content:
+            $ref: '#/spec/panels/4_0'
+        - x: 12
+          y: 1
+          width: 12
+          height: 8
+          content:
+            $ref: '#/spec/panels/4_1'
+        - x: 0
+          y: 8
+          width: 12
+          height: 8
+          content:
+            $ref: '#/spec/panels/4_2'
+        - x: 12
+          y: 8
+          width: 12
+          height: 8
+          content:
+            $ref: '#/spec/panels/4_3'
+        - x: 0
+          y: 16
+          width: 12
+          height: 8
+          content:
+            $ref: '#/spec/panels/4_4'
+        - x: 12
+          y: 16
+          width: 12
+          height: 8
+          content:
+            $ref: '#/spec/panels/4_5'
+    - kind: Grid
+      spec:
+        display:
+          title: DB Info per Member
+          collapse:
+            open: false
+        items:
+        - x: 0
+          y: 8
+          width: 8
+          height: 8
+          content:
+            $ref: '#/spec/panels/5_0'
+        - x: 8
+          y: 8
+          width: 8
+          height: 8
+          content:
+            $ref: '#/spec/panels/5_1'
+        - x: 16
+          y: 8
+          width: 8
+          height: 8
+          content:
+            $ref: '#/spec/panels/5_2'
+    - kind: Grid
+      spec:
+        display:
+          title: General Info
+          collapse:
+            open: false
+        items:
+        - x: 0
+          y: 1
+          width: 12
+          height: 8
+          content:
+            $ref: '#/spec/panels/6_0'
+        - x: 12
+          y: 1
+          width: 12
+          height: 8
+          content:
+            $ref: '#/spec/panels/6_1'
+        - x: 0
+          y: 8
+          width: 6
+          height: 2
+          content:
+            $ref: '#/spec/panels/6_2'
+        - x: 6
+          y: 8
+          width: 6
+          height: 2
+          content:
+            $ref: '#/spec/panels/6_3'
+        - x: 12
+          y: 12
+          width: 12
+          height: 8
+          content:
+            $ref: '#/spec/panels/6_4'
+        - x: 0
+          y: 12
+          width: 12
+          height: 6
+          content:
+            $ref: '#/spec/panels/6_5'
+        - x: 0
+          y: 20
+          width: 12
+          height: 8
+          content:
+            $ref: '#/spec/panels/6_6'
+        - x: 12
+          y: 20
+          width: 12
+          height: 8
+          content:
+            $ref: '#/spec/panels/6_7'
+        - x: 0
+          y: 28
+          width: 12
+          height: 8
+          content:
+            $ref: '#/spec/panels/6_8'
+        - x: 12
+          y: 28
+          width: 12
+          height: 8
+          content:
+            $ref: '#/spec/panels/6_9'
+    duration: 1h

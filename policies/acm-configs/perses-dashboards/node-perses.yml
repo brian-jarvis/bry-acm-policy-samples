@@ -1,0 +1,2346 @@
+---
+apiVersion: perses.dev/v1alpha2
+kind: PersesDashboard
+metadata:
+  namespace: open-cluster-management-observability
+  name: node-performance
+  labels:
+    managed-by: bry-tam-policies
+spec:
+  config:
+    display:
+      name: Node Performance
+    variables:
+    - kind: ListVariable
+      spec:
+        display:
+          name: Namespace
+          hidden: false
+        allowAllValue: true
+        allowMultiple: false
+        plugin:
+          kind: PrometheusLabelValuesVariable
+          spec:
+            labelName: namespace
+            matchers:
+            - kube_pod_info{namespace!="(cluster-density.*|node-density-.*)"}
+            datasource:
+              kind: PrometheusDatasource
+              name: rbac-query-proxy-datasource
+        name: namespace
+    - kind: ListVariable
+      spec:
+        display:
+          name: interval
+          hidden: false
+        defaultValue: 5m
+        allowAllValue: false
+        allowMultiple: false
+        plugin:
+          kind: StaticListVariable
+          spec:
+            values:
+            - 5m
+            - 2m
+            - 1m
+        name: interval
+    panels:
+      '0_0':
+        kind: Panel
+        spec:
+          display:
+            name: Workers CPU Usage
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: table
+                position: bottom
+                values:
+                - mean
+                - min
+                - max
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  unit: percent
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: sum( rate( (node_cpu_seconds_total{ mode != "idle" } * on (instance) group_left label_replace( kube_node_role{ role = "worker"} , "instance" , "$1" , "node" ,"(.*)") )[$interval:] ) ) by (instance) * 100
+                  seriesNameFormat: '{{instance}}'
+      '0_1':
+        kind: Panel
+        spec:
+          display:
+            name: Control Plane CPU Usage
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: table
+                position: bottom
+                values:
+                - mean
+                - min
+                - max
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  unit: percent
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: sum( rate( (node_cpu_seconds_total{ mode != "idle" } * on (instance) group_left label_replace( kube_node_role{ role = "control-plane"} , "instance" , "$1" , "node" ,"(.*)") )[$interval:] ) ) by (instance) * 100
+                  seriesNameFormat: '{{instance}}'
+      '0_2':
+        kind: Panel
+        spec:
+          display:
+            name: Workers Load1
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: table
+                position: bottom
+                values:
+                - mean
+                - min
+                - max
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  unit: decimal
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: 'node_load1 * on (instance) group_left label_replace( kube_node_role{ role = "worker"} , "instance" , "$1" , "node" ,"(.*)") '
+                  seriesNameFormat: '{{instance}}'
+      '0_3':
+        kind: Panel
+        spec:
+          display:
+            name: Control Plane Load1
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: table
+                position: bottom
+                values:
+                - mean
+                - min
+                - max
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  unit: decimal
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: 'node_load1 * on (instance) group_left label_replace( kube_node_role{ role = "control-plane"} , "instance" , "$1" , "node" ,"(.*)") '
+                  seriesNameFormat: '{{instance}}'
+      '0_4':
+        kind: Panel
+        spec:
+          display:
+            name: Workers Memory Available
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: table
+                position: bottom
+                values:
+                - mean
+                - min
+                - max
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  unit: bytes
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: node_memory_MemAvailable_bytes * on (instance) group_left label_replace( kube_node_role{ role = "worker"} , "instance" , "$1" , "node" ,"(.*)")
+                  seriesNameFormat: '{{instance}}'
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: sum( node_memory_MemAvailable_bytes * on (instance) group_left label_replace( kube_node_role{ role = "worker"} , "instance" , "$1" , "node" ,"(.*)") )
+                  seriesNameFormat: sum
+      '0_5':
+        kind: Panel
+        spec:
+          display:
+            name: Control Plane Memory Available
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: table
+                position: bottom
+                values:
+                - mean
+                - min
+                - max
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  unit: bytes
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: node_memory_MemAvailable_bytes * on (instance) group_left label_replace( kube_node_role{ role = "control-plane"} , "instance" , "$1" , "node" ,"(.*)")
+                  seriesNameFormat: '{{instance}}'
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: sum( node_memory_MemAvailable_bytes * on (instance) group_left label_replace( kube_node_role{ role = "control-plane"} , "instance" , "$1" , "node" ,"(.*)") )
+                  seriesNameFormat: sum
+      '0_6':
+        kind: Panel
+        spec:
+          display:
+            name: Workers Disk IOPS
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: table
+                position: bottom
+                values:
+                - mean
+                - min
+                - max
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  unit: decimal
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: rate( (  node_disk_reads_completed_total *  on (instance) group_left label_replace( kube_node_role{ role = "worker" } , "instance" , "$1" , "node" ,"(.*)") )[$interval:])
+                  seriesNameFormat: '{{instance}} - {{ device }} - read'
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: rate( (  node_disk_writes_completed_total *  on (instance) group_left label_replace( kube_node_role{ role = "worker" } , "instance" , "$1" , "node" ,"(.*)") )[$interval:])
+                  seriesNameFormat: '{{instance}} - {{ device }} - write'
+      '0_7':
+        kind: Panel
+        spec:
+          display:
+            name: Control Plane Disk IOPS
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: table
+                position: bottom
+                values:
+                - mean
+                - min
+                - max
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  unit: decimal
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: rate( (  node_disk_reads_completed_total *  on (instance) group_left label_replace( kube_node_role{ role = "control-plane" } , "instance" , "$1" , "node" ,"(.*)") )[$interval:])
+                  seriesNameFormat: '{{instance}} - {{ device }} - read'
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: rate( (  node_disk_writes_completed_total *  on (instance) group_left label_replace( kube_node_role{ role = "control-plane" } , "instance" , "$1" , "node" ,"(.*)") )[$interval:])
+                  seriesNameFormat: '{{instance}} - {{ device }} - write'
+      0_8:
+        kind: Panel
+        spec:
+          display:
+            name: Workers Container Threads
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: table
+                position: bottom
+                values:
+                - first
+                - min
+                - max
+                - last
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  unit: decimal
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: sum by (node) (container_threads{ container!=""})  * on (node) group_left kube_node_role{ role = "worker" }
+                  seriesNameFormat: '{{instance}}'
+      0_9:
+        kind: Panel
+        spec:
+          display:
+            name: Control Plane Container Threads
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: table
+                position: bottom
+                values:
+                - first
+                - min
+                - max
+                - last
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  unit: decimal
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: sum by (node) (container_threads{ container!=""})  * on (node) group_left kube_node_role{ role = "control-plane" }
+                  seriesNameFormat: '{{instance}}'
+      '1_0':
+        kind: Panel
+        spec:
+          display:
+            name: Workers CGroup CPU(% of 1 core)
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: table
+                position: bottom
+                values:
+                - mean
+                - min
+                - max
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  unit: decimal
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: sum by (id) (( rate(container_cpu_usage_seconds_total{ job=~".*", id =~"/system.slice|/system.slice/kubelet.service|/system.slice/ovs-vswitchd.service|/system.slice/crio.service|/system.slice/systemd-journald.service|/system.slice/ovsdb-server.service|/system.slice/systemd-udevd.service|/kubepods.slice"}[$interval])) * 100 * on (node) group_left kube_node_role{ role = "worker" } )
+                  seriesNameFormat: '{{instance}}'
+      '1_1':
+        kind: Panel
+        spec:
+          display:
+            name: Control Plane CGroup CPU(% of 1 core)
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: table
+                position: bottom
+                values:
+                - mean
+                - min
+                - max
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  unit: decimal
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: sum by (id) (( rate(container_cpu_usage_seconds_total{ job=~".*", id =~"/system.slice|/system.slice/kubelet.service|/system.slice/ovs-vswitchd.service|/system.slice/crio.service|/system.slice/systemd-journald.service|/system.slice/ovsdb-server.service|/system.slice/systemd-udevd.service|/kubepods.slice"}[$interval])) * 100 * on (node) group_left kube_node_role{ role = "control-plane" } )
+                  seriesNameFormat: '{{instance}}'
+      '1_2':
+        kind: Panel
+        spec:
+          display:
+            name: Workers CGroup Memory Working Set
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: table
+                position: bottom
+                values:
+                - first
+                - min
+                - max
+                - last
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  unit: bytes
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: sum by (id) (container_memory_working_set_bytes{ job=~".*", id =~"/system.slice|/system.slice/kubelet.service|/system.slice/ovs-vswitchd.service|/system.slice/crio.service|/system.slice/systemd-journald.service|/system.slice/ovsdb-server.service|/system.slice/systemd-udevd.service|/kubepods.slice"} * on (node) group_left kube_node_role{ role = "worker" } )
+                  seriesNameFormat: '{{instance}}'
+      '1_3':
+        kind: Panel
+        spec:
+          display:
+            name: Control Plane CGroup Memory Working Set
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: table
+                position: bottom
+                values:
+                - first
+                - min
+                - max
+                - last
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  unit: bytes
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: sum by (id) (container_memory_working_set_bytes{ job=~".*", id =~"/system.slice|/system.slice/kubelet.service|/system.slice/ovs-vswitchd.service|/system.slice/crio.service|/system.slice/systemd-journald.service|/system.slice/ovsdb-server.service|/system.slice/systemd-udevd.service|/kubepods.slice"} * on (node) group_left kube_node_role{ role = "control-plane" } )
+                  seriesNameFormat: '{{instance}}'
+      '1_4':
+        kind: Panel
+        spec:
+          display:
+            name: system.slice Working Set by node
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: table
+                position: bottom
+                values:
+                - mean
+                - min
+                - max
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  unit: bytes
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: sum by (node)(container_memory_working_set_bytes{id="/system.slice"})
+                  seriesNameFormat: system.slice - {{ node }}
+      '1_5':
+        kind: Panel
+        spec:
+          display:
+            name: system.slice CPU by node
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: table
+                position: bottom
+                values:
+                - mean
+                - min
+                - max
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  unit: bytes
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: sum by (node) (( rate(container_cpu_usage_seconds_total{id="/system.slice"}[$interval])) * 100)
+                  seriesNameFormat: system.slice - {{ node }}
+      '2_0':
+        kind: Panel
+        spec:
+          display:
+            name: Pod count
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: table
+                position: bottom
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  unit: decimal
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: sum(kube_pod_status_phase{}) by (phase)
+                  seriesNameFormat: '{{phase}} pods'
+      '2_1':
+        kind: Panel
+        spec:
+          display:
+            name: Pod Distribution
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: table
+                position: bottom
+                values:
+                - mean
+                - min
+                - max
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  unit: decimal
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: count(kube_pod_info{}) by (node)
+                  seriesNameFormat: '{{ node }}'
+      '2_2':
+        kind: Panel
+        spec:
+          display:
+            name: Container count
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: table
+                position: bottom
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  unit: decimal
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: count(kube_pod_container_info)
+                  seriesNameFormat: Containers
+      '2_3':
+        kind: Panel
+        spec:
+          display:
+            name: Container Distribution
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: table
+                position: bottom
+                values:
+                - mean
+                - min
+                - max
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  unit: decimal
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: count(container_last_seen{}) by (node)
+                  seriesNameFormat: Containers on {{node}}
+      '3_0':
+        kind: Panel
+        spec:
+          display:
+            name: Top 10 Container Memory Working Set
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: table
+                position: bottom
+                values:
+                - mean
+                - min
+                - max
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  unit: bytes
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: topk(10, container_memory_working_set_bytes{namespace!="",container!="POD",name!=""})
+                  seriesNameFormat: '{{ namespace }} - {{ name }}'
+      '3_1':
+        kind: Panel
+        spec:
+          display:
+            name: Top 10 Container CPU(% of 1 core)
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: table
+                position: bottom
+                values:
+                - mean
+                - min
+                - max
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  unit: percent
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: topk(10,irate(container_cpu_usage_seconds_total{namespace!="",container!="POD",name!=""}[$interval])*100)
+                  seriesNameFormat: '{{ namespace }} - {{ name }}'
+      '3_2':
+        kind: Panel
+        spec:
+          display:
+            name: Top 10 Goroutines count
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: table
+                position: bottom
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  unit: decimal
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: topk(10, sum(go_goroutines{}) by (job,instance))
+                  seriesNameFormat: '{{ job }} - {{ instance }}'
+      '4_0':
+        kind: Panel
+        spec:
+          display:
+            name: Workers Kubelet Runtime Operations Errors/second, >0.001 Waning, >0.01 Critical, >0.1 Severe
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: table
+                position: bottom
+                values:
+                - first
+                - min
+                - max
+                - last
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  unit: decimal
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: sum by (node, operation_type) (rate(kubelet_runtime_operations_errors_total [$interval])  *  on (node) group_left kube_node_role{ role = "worker" })
+                  seriesNameFormat: '{{node}}: {{operation_type}}'
+      '4_1':
+        kind: Panel
+        spec:
+          display:
+            name: Control Plane Kubelet Runtime Operations Errors/second, >0.001 Waning, >0.01 Critical, >0.1 Severe
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: table
+                position: bottom
+                values:
+                - first
+                - min
+                - max
+                - last
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  unit: decimal
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: sum by (node, operation_type) (rate(kubelet_runtime_operations_errors_total [$interval]) *  on (node) group_left kube_node_role{ role = "control-plane" })
+                  seriesNameFormat: '{{node}}: {{operation_type}}'
+      '5_0':
+        kind: Panel
+        spec:
+          display:
+            name: P99 Kubelet Croup Manager Duration - Create
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: table
+                position: bottom
+                values:
+                - first
+                - min
+                - max
+                - last
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  unit: decimal
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: sum(rate(kubelet_cgroup_manager_duration_seconds_bucket{node=~".*",operation_type="create"}[5m])) by (node, operation_type, le)
+                  seriesNameFormat: '{{node}}: {{operation_type}}'
+      '5_1':
+        kind: Panel
+        spec:
+          display:
+            name: p99KubeletCroupManagerDuration - Update
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: table
+                position: bottom
+                values:
+                - first
+                - min
+                - max
+                - last
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  unit: decimal
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: sum(rate(kubelet_cgroup_manager_duration_seconds_bucket{node=~".*",operation_type="update"}[5m])) by (node, operation_type, le)
+                  seriesNameFormat: '{{node}}: {{operation_type}}'
+      '5_2':
+        kind: Panel
+        spec:
+          display:
+            name: p99KubeletCroupManagerDuration - Destroy
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: table
+                position: bottom
+                values:
+                - first
+                - min
+                - max
+                - last
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  unit: decimal
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: sum(rate(kubelet_cgroup_manager_duration_seconds_bucket{node=~".*",operation_type="destroy"}[5m])) by (node, operation_type, le)
+                  seriesNameFormat: '{{node}}: {{operation_type}}'
+      '6_0':
+        kind: Panel
+        spec:
+          display:
+            name: Top 10 Kubelet Process CPU Usage(% of 1 core)
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: table
+                position: bottom
+                values:
+                - mean
+                - min
+                - max
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  unit: percent
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: topk(10,irate(process_cpu_seconds_total{service="kubelet",job="kubelet"}[$interval])*100 *  on (node) group_left kube_node_role{ role = "worker" })
+                  seriesNameFormat: kubelet - {{node}}
+      '6_1':
+        kind: Panel
+        spec:
+          display:
+            name: Top 10 Kubelet Process Resident Memory
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: table
+                position: bottom
+                values:
+                - first
+                - min
+                - max
+                - last
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  unit: bytes
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: topk(10,process_resident_memory_bytes{service="kubelet",job="kubelet"} *  on (node) group_left kube_node_role{ role = "worker" })
+                  seriesNameFormat: kubelet - {{node}}
+      '7_0':
+        kind: Panel
+        spec:
+          display:
+            name: Kubelet HTTP requests count by path
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: table
+                position: bottom
+                values:
+                - mean
+                - min
+                - max
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  unit: decimal
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: sum(rate(kubelet_http_requests_duration_seconds_count[$interval])) by (path)
+                  seriesNameFormat: '{{ path }}'
+      '7_1':
+        kind: Panel
+        spec:
+          display:
+            name: Kubelet HTTP requests count by node
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: table
+                position: bottom
+                values:
+                - mean
+                - min
+                - max
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  unit: decimal
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: sum(rate(kubelet_http_requests_duration_seconds_count[$interval])) by (node)
+                  seriesNameFormat: '{{ node }}'
+      '7_2':
+        kind: Panel
+        spec:
+          display:
+            name: Kubelet HTTP requests latency per request by path (ms)
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: table
+                position: bottom
+                values:
+                - mean
+                - min
+                - max
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  unit: decimal
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: sum(rate(kubelet_http_requests_duration_seconds_sum[$interval])) by (path) * 1000/sum(rate(kubelet_http_requests_duration_seconds_count[$interval])) by (path)
+                  seriesNameFormat: '{{ path }}'
+      '7_3':
+        kind: Panel
+        spec:
+          display:
+            name: Kubelet HTTP requests latency per request by node (ms)> 200ms Warning, > 500ms Critical
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: table
+                position: bottom
+                values:
+                - mean
+                - min
+                - max
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  unit: decimal
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: sum(rate(kubelet_http_requests_duration_seconds_sum[$interval])) by (node) * 1000/sum(rate(kubelet_http_requests_duration_seconds_count[$interval])) by (node)
+                  seriesNameFormat: '{{ node }}'
+      '8_0':
+        kind: Panel
+        spec:
+          display:
+            name: Workers Runtime Crio Operations Errors/second, > 0.001 Warning, >0.01 Critical
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: table
+                position: bottom
+                values:
+                - first
+                - min
+                - max
+                - last
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  unit: decimal
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: sum by (node, operation) (rate(container_runtime_crio_operations_errors_total [$interval])  *  on (node) group_left kube_node_role{ role = "worker" })
+                  seriesNameFormat: '{{node}}: {{ operation }}'
+      '8_1':
+        kind: Panel
+        spec:
+          display:
+            name: Control Plane Runtime Crio Operations Errors/second, > 0.001 Warning, >0.01 Critical
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: table
+                position: bottom
+                values:
+                - first
+                - min
+                - max
+                - last
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  unit: decimal
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: sum by (node, operation) (rate(container_runtime_crio_operations_errors_total [$interval]) *  on (node) group_left kube_node_role{ role = "control-plane" })
+                  seriesNameFormat: '{{node}}: {{ operation }}'
+      '8_2':
+        kind: Panel
+        spec:
+          display:
+            name: Workers Runtime Crio Operations Latency Avg(second), > 1s Warning, >5s Critical
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: table
+                position: bottom
+                values:
+                - first
+                - min
+                - max
+                - last
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  unit: decimal
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: topk(10, sum by (operation, node) (rate(container_runtime_crio_operations_latency_seconds_total[$interval]))/sum by (operation, node) (rate(container_runtime_crio_operations_total[$interval])) * on (node) group_left kube_node_role{ role = "worker" } * 100)
+                  seriesNameFormat: '{{node}}: {{ operation }}'
+      '8_3':
+        kind: Panel
+        spec:
+          display:
+            name: Control Plane Runtime Crio Operations Latency Avg(second), > 1s Warning, >5s Critical
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: table
+                position: bottom
+                values:
+                - first
+                - min
+                - max
+                - last
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  unit: decimal
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: topk(10, sum by (operation, node) (rate(container_runtime_crio_operations_latency_seconds_total[$interval]))/sum by (operation, node) (rate(container_runtime_crio_operations_total[$interval])) * on (node) group_left kube_node_role{ role = "control-plane" } * 100)
+                  seriesNameFormat: '{{node}}: {{ operation }}'
+      '9_0':
+        kind: Panel
+        spec:
+          display:
+            name: Top 10 crio Process CPU Usage(% of 1 core)
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: table
+                position: bottom
+                values:
+                - mean
+                - min
+                - max
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  unit: percent
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: topk(10,irate(process_cpu_seconds_total{service="kubelet",job="crio"}[$interval])*100 *  on (node) group_left kube_node_role{ role = "worker" })
+                  seriesNameFormat: crio - {{node}}
+      '9_1':
+        kind: Panel
+        spec:
+          display:
+            name: Top 10 crio Process Resident Memory
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: table
+                position: bottom
+                values:
+                - first
+                - min
+                - max
+                - last
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  unit: bytes
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: topk(10,process_resident_memory_bytes{service="kubelet",job="crio"} *  on (node) group_left kube_node_role{ role = "worker" })
+                  seriesNameFormat: crio - {{node}}
+      '10_0':
+        kind: Panel
+        spec:
+          display:
+            name: inodes usage in /run
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: table
+                position: bottom
+                values:
+                - mean
+                - min
+                - max
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  unit: percent
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: (1 - node_filesystem_files_free{fstype!="",mountpoint="/run"} / node_filesystem_files{fstype!="",mountpoint="/run"}) * 100
+                  seriesNameFormat: '{{instance}}'
+      '10_1':
+        kind: Panel
+        spec:
+          display:
+            name: inodes count in /run
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: table
+                position: bottom
+                values:
+                - mean
+                - min
+                - max
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  unit: decimal
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: node_filesystem_files{fstype!="",mountpoint="/run"} - node_filesystem_files_free{fstype!="",mountpoint="/run"}
+                  seriesNameFormat: '{{instance}}'
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: sum(node_filesystem_files{fstype!="",mountpoint="/run"} - node_filesystem_files_free{fstype!="",mountpoint="/run"})
+                  seriesNameFormat: sum
+      '11_0':
+        kind: Panel
+        spec:
+          display:
+            name: P95 PLEG Latency (s), >1s Waning, >3s Critical
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: table
+                position: bottom
+                values:
+                - mean
+                - min
+                - max
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  unit: decimal
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: histogram_quantile(0.95, sum(rate(kubelet_pleg_relist_duration_seconds_bucket [$interval])) by (node, le))
+                  seriesNameFormat: '{{node}}'
+      '11_1':
+        kind: Panel
+        spec:
+          display:
+            name: P95 PLEG Latency (s), >3s Waning, >5s Critical
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: table
+                position: bottom
+                values:
+                - mean
+                - min
+                - max
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  unit: decimal
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: histogram_quantile(0.99, sum(rate(kubelet_pleg_relist_duration_seconds_bucket [$interval])) by (node, le))
+                  seriesNameFormat: '{{node}}'
+      '11_2':
+        kind: Panel
+        spec:
+          display:
+            name: Average Latency  (s), >0.5s Waning, >1s Critical
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: table
+                position: bottom
+                values:
+                - mean
+                - min
+                - max
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  unit: decimal
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: rate(kubelet_pleg_relist_duration_seconds_sum [$interval])/rate(kubelet_pleg_relist_duration_seconds_count[$interval])
+                  seriesNameFormat: '{{node}}'
+      '11_3':
+        kind: Panel
+        spec:
+          display:
+            name: PLEG Relist Count in 5 mins, <150 Waning, <50 Critical
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: table
+                position: bottom
+                values:
+                - mean
+                - min
+                - max
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  unit: decimal
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: sum(increase(kubelet_pleg_relist_duration_seconds_count[5m])) by (node)
+                  seriesNameFormat: '{{node}}'
+      '12_0':
+        kind: Panel
+        spec:
+          display:
+            name: Top 10 Container Pressure Memory Stalled, >1% Waning, >5% Critical
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: table
+                position: bottom
+                values:
+                - mean
+                - min
+                - max
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  unit: percent
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: topk(10, sum(rate(container_pressure_memory_stalled_seconds_total{container!="POD",name!="",namespace!="",namespace=~"$namespace"}[$interval])) by (node,pod,container,namespace,name,service) * 100)
+                  seriesNameFormat: '{{node}}: {{ pod }}: {{ container }}'
+      '12_1':
+        kind: Panel
+        spec:
+          display:
+            name: Top 10 Container Pressure Memory Waiting, >5% Waning, >10% Critical
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: table
+                position: bottom
+                values:
+                - mean
+                - min
+                - max
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  unit: percent
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: topk(10, sum(rate(container_pressure_memory_waiting_seconds_total{container!="POD",name!="",namespace!="",namespace=~"$namespace"}[$interval])) by (node,pod,container,namespace,name,service) * 100)
+                  seriesNameFormat: '{{node}}: {{ pod }}: {{ container }}'
+      '12_2':
+        kind: Panel
+        spec:
+          display:
+            name: Top 10 Container Pressure CPU Stalled, >1% Waning, >5% Critical
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: table
+                position: bottom
+                values:
+                - mean
+                - min
+                - max
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  unit: percent
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: topk(10, sum(irate(container_pressure_cpu_stalled_seconds_total{container!="POD",name!="",namespace!="",namespace=~"$namespace"}[$interval])) by (node,pod,container,namespace,name,service) * 100)
+                  seriesNameFormat: '{{node}}: {{ pod }}: {{ container }}'
+      '12_3':
+        kind: Panel
+        spec:
+          display:
+            name: Top 10 Container Pressure CPU Waiting, >20% Waning, >50% Critical
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: table
+                position: bottom
+                values:
+                - mean
+                - min
+                - max
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  unit: percent
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: topk(10, sum(rate(container_pressure_cpu_waiting_seconds_total{container!="POD",name!="",namespace!="",namespace=~"$namespace"}[$interval])) by (node,pod,container,namespace,name,service) * 100)
+                  seriesNameFormat: '{{node}}: {{ pod }}: {{ container }}'
+      '12_4':
+        kind: Panel
+        spec:
+          display:
+            name: Top 10 Container Pressure IO Stalled, >5% Waning, >10% Critical
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: table
+                position: bottom
+                values:
+                - mean
+                - min
+                - max
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  unit: percent
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: topk(10, sum(rate(container_pressure_io_stalled_seconds_total{container!="POD",name!="",namespace!="",namespace=~"$namespace"}[$interval])) by (node,pod,container,namespace,name,service) * 100)
+                  seriesNameFormat: '{{node}}: {{ pod }}: {{ container }}'
+      '12_5':
+        kind: Panel
+        spec:
+          display:
+            name: Top 10 Container Pressure IO Waiting, >10% Waning, >30% Critical
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: table
+                position: bottom
+                values:
+                - mean
+                - min
+                - max
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  unit: percent
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: topk(10, sum(rate(container_pressure_io_waiting_seconds_total{container!="POD",name!="",namespace!="",namespace=~"$namespace"}[$interval])) by (node,pod,container,namespace,name,service) * 100)
+                  seriesNameFormat: '{{node}}: {{ pod }}: {{ container }}'
+      '13_0':
+        kind: Panel
+        spec:
+          display:
+            name: Top 10 Node Pressure Memory Stalled, >1% Waning, >5% Critical
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: table
+                position: bottom
+                values:
+                - mean
+                - min
+                - max
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  unit: percent
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: topk(10, rate(node_pressure_memory_stalled_seconds_total [$interval]) * 100)
+                  seriesNameFormat: '{{instance}}'
+      '13_1':
+        kind: Panel
+        spec:
+          display:
+            name: Top 10 Node Pressure Memory Waiting, >10% Waning, >30% Critical
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: table
+                position: bottom
+                values:
+                - mean
+                - min
+                - max
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  unit: percent
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: topk(10, rate(node_pressure_memory_waiting_seconds_total [$interval]) * 100)
+                  seriesNameFormat: '{{instance}}'
+      '13_2':
+        kind: Panel
+        spec:
+          display:
+            name: Top 10 Node Pressure IO Stalled, >10% Waning, >30% Critical
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: table
+                position: bottom
+                values:
+                - mean
+                - min
+                - max
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  unit: percent
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: topk(10, rate(node_pressure_io_stalled_seconds_total [$interval]) * 100)
+                  seriesNameFormat: '{{instance}}'
+      '13_3':
+        kind: Panel
+        spec:
+          display:
+            name: Top 10 Node Pressure IO Waiting, >30% Waning, >60% Critical
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: table
+                position: bottom
+                values:
+                - mean
+                - min
+                - max
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  unit: percent
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: topk(10, rate(node_pressure_io_waiting_seconds_total[$interval]) * 100)
+                  seriesNameFormat: '{{instance}}'
+      '13_4':
+        kind: Panel
+        spec:
+          display:
+            name: Top 10 Node Pressure CPU Waiting, >5% Waning, >20% Critical
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: table
+                position: bottom
+                values:
+                - mean
+                - min
+                - max
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  unit: percent
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: topk(10, rate(node_pressure_cpu_waiting_seconds_total [$interval]) * 100)
+                  seriesNameFormat: '{{instance}}'
+      '13_5':
+        kind: Panel
+        spec:
+          display:
+            name: Top 10 Node Pressure IRQ Stalled, >5% Waning, >10% Critical
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: table
+                position: bottom
+                values:
+                - mean
+                - min
+                - max
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  unit: percent
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: topk(10, rate(node_pressure_irq_stalled_seconds_total [$interval]) * 100)
+                  seriesNameFormat: '{{instance}}'
+    layouts:
+    - kind: Grid
+      spec:
+        display:
+          title: Node Resource
+          collapse:
+            open: false
+        items:
+        - x: 0
+          y: 2
+          width: 12
+          height: 8
+          content:
+            $ref: '#/spec/panels/0_0'
+        - x: 12
+          y: 2
+          width: 12
+          height: 8
+          content:
+            $ref: '#/spec/panels/0_1'
+        - x: 0
+          y: 9
+          width: 12
+          height: 8
+          content:
+            $ref: '#/spec/panels/0_2'
+        - x: 12
+          y: 9
+          width: 12
+          height: 8
+          content:
+            $ref: '#/spec/panels/0_3'
+        - x: 0
+          y: 17
+          width: 12
+          height: 8
+          content:
+            $ref: '#/spec/panels/0_4'
+        - x: 12
+          y: 17
+          width: 12
+          height: 8
+          content:
+            $ref: '#/spec/panels/0_5'
+        - x: 0
+          y: 49
+          width: 12
+          height: 8
+          content:
+            $ref: '#/spec/panels/0_6'
+        - x: 12
+          y: 49
+          width: 12
+          height: 8
+          content:
+            $ref: '#/spec/panels/0_7'
+        - x: 0
+          y: 41
+          width: 12
+          height: 8
+          content:
+            $ref: '#/spec/panels/0_8'
+        - x: 12
+          y: 41
+          width: 12
+          height: 8
+          content:
+            $ref: '#/spec/panels/0_9'
+    - kind: Grid
+      spec:
+        display:
+          title: Cgroup Resource
+          collapse:
+            open: false
+        items:
+        - x: 0
+          y: 2
+          width: 12
+          height: 8
+          content:
+            $ref: '#/spec/panels/1_0'
+        - x: 12
+          y: 2
+          width: 12
+          height: 8
+          content:
+            $ref: '#/spec/panels/1_1'
+        - x: 0
+          y: 2
+          width: 12
+          height: 8
+          content:
+            $ref: '#/spec/panels/1_2'
+        - x: 12
+          y: 2
+          width: 12
+          height: 8
+          content:
+            $ref: '#/spec/panels/1_3'
+        - x: 0
+          y: 2
+          width: 12
+          height: 8
+          content:
+            $ref: '#/spec/panels/1_4'
+        - x: 12
+          y: 2
+          width: 12
+          height: 8
+          content:
+            $ref: '#/spec/panels/1_5'
+    - kind: Grid
+      spec:
+        display:
+          title: Cluster Workload
+          collapse:
+            open: false
+        items:
+        - x: 0
+          y: 12
+          width: 12
+          height: 8
+          content:
+            $ref: '#/spec/panels/2_0'
+        - x: 12
+          y: 12
+          width: 12
+          height: 8
+          content:
+            $ref: '#/spec/panels/2_1'
+        - x: 0
+          y: 12
+          width: 12
+          height: 8
+          content:
+            $ref: '#/spec/panels/2_2'
+        - x: 12
+          y: 12
+          width: 12
+          height: 8
+          content:
+            $ref: '#/spec/panels/2_3'
+    - kind: Grid
+      spec:
+        display:
+          title: Top Usage
+          collapse:
+            open: false
+        items:
+        - x: 0
+          y: 28
+          width: 12
+          height: 8
+          content:
+            $ref: '#/spec/panels/3_0'
+        - x: 12
+          y: 28
+          width: 12
+          height: 8
+          content:
+            $ref: '#/spec/panels/3_1'
+        - x: 0
+          y: 36
+          width: 12
+          height: 8
+          content:
+            $ref: '#/spec/panels/3_2'
+    - kind: Grid
+      spec:
+        display:
+          title: Kubelet Operation
+          collapse:
+            open: false
+        items:
+        - x: 0
+          y: 19
+          width: 12
+          height: 8
+          content:
+            $ref: '#/spec/panels/4_0'
+        - x: 12
+          y: 19
+          width: 12
+          height: 8
+          content:
+            $ref: '#/spec/panels/4_1'
+    - kind: Grid
+      spec:
+        display:
+          title: P99 Kubelet Croup Manager Duration
+          collapse:
+            open: false
+        items:
+        - x: 0
+          y: 19
+          width: 8
+          height: 8
+          content:
+            $ref: '#/spec/panels/5_0'
+        - x: 8
+          y: 19
+          width: 8
+          height: 8
+          content:
+            $ref: '#/spec/panels/5_1'
+        - x: 16
+          y: 19
+          width: 8
+          height: 8
+          content:
+            $ref: '#/spec/panels/5_2'
+    - kind: Grid
+      spec:
+        display:
+          title: Kubelet Resource Usage
+          collapse:
+            open: false
+        items:
+        - x: 0
+          y: 19
+          width: 12
+          height: 8
+          content:
+            $ref: '#/spec/panels/6_0'
+        - x: 12
+          y: 19
+          width: 12
+          height: 8
+          content:
+            $ref: '#/spec/panels/6_1'
+    - kind: Grid
+      spec:
+        display:
+          title: Kubelet HTTP requests Performance
+          collapse:
+            open: false
+        items:
+        - x: 0
+          y: 19
+          width: 12
+          height: 8
+          content:
+            $ref: '#/spec/panels/7_0'
+        - x: 12
+          y: 19
+          width: 12
+          height: 8
+          content:
+            $ref: '#/spec/panels/7_1'
+        - x: 0
+          y: 19
+          width: 12
+          height: 8
+          content:
+            $ref: '#/spec/panels/7_2'
+        - x: 12
+          y: 19
+          width: 12
+          height: 8
+          content:
+            $ref: '#/spec/panels/7_3'
+    - kind: Grid
+      spec:
+        display:
+          title: CRIO Operation
+          collapse:
+            open: false
+        items:
+        - x: 0
+          y: 19
+          width: 12
+          height: 8
+          content:
+            $ref: '#/spec/panels/8_0'
+        - x: 12
+          y: 19
+          width: 12
+          height: 8
+          content:
+            $ref: '#/spec/panels/8_1'
+        - x: 0
+          y: 19
+          width: 12
+          height: 8
+          content:
+            $ref: '#/spec/panels/8_2'
+        - x: 12
+          y: 19
+          width: 12
+          height: 8
+          content:
+            $ref: '#/spec/panels/8_3'
+    - kind: Grid
+      spec:
+        display:
+          title: CRIO Resource Usage
+          collapse:
+            open: false
+        items:
+        - x: 0
+          y: 19
+          width: 12
+          height: 8
+          content:
+            $ref: '#/spec/panels/9_0'
+        - x: 12
+          y: 19
+          width: 12
+          height: 8
+          content:
+            $ref: '#/spec/panels/9_1'
+    - kind: Grid
+      spec:
+        display:
+          title: iNodes Usage
+          collapse:
+            open: false
+        items:
+        - x: 0
+          y: 19
+          width: 12
+          height: 8
+          content:
+            $ref: '#/spec/panels/10_0'
+        - x: 12
+          y: 19
+          width: 12
+          height: 8
+          content:
+            $ref: '#/spec/panels/10_1'
+    - kind: Grid
+      spec:
+        display:
+          title: Pod Lifecycle Event Generator (PLEG)
+          collapse:
+            open: false
+        items:
+        - x: 0
+          y: 2
+          width: 12
+          height: 8
+          content:
+            $ref: '#/spec/panels/11_0'
+        - x: 12
+          y: 2
+          width: 12
+          height: 8
+          content:
+            $ref: '#/spec/panels/11_1'
+        - x: 0
+          y: 2
+          width: 12
+          height: 8
+          content:
+            $ref: '#/spec/panels/11_2'
+        - x: 12
+          y: 2
+          width: 12
+          height: 8
+          content:
+            $ref: '#/spec/panels/11_3'
+    - kind: Grid
+      spec:
+        display:
+          title: PSI - Containers (need to enable PSI)
+          collapse:
+            open: false
+        items:
+        - x: 0
+          y: 2
+          width: 12
+          height: 8
+          content:
+            $ref: '#/spec/panels/12_0'
+        - x: 12
+          y: 2
+          width: 12
+          height: 8
+          content:
+            $ref: '#/spec/panels/12_1'
+        - x: 0
+          y: 2
+          width: 12
+          height: 8
+          content:
+            $ref: '#/spec/panels/12_2'
+        - x: 12
+          y: 2
+          width: 12
+          height: 8
+          content:
+            $ref: '#/spec/panels/12_3'
+        - x: 0
+          y: 2
+          width: 12
+          height: 8
+          content:
+            $ref: '#/spec/panels/12_4'
+        - x: 12
+          y: 2
+          width: 12
+          height: 8
+          content:
+            $ref: '#/spec/panels/12_5'
+    - kind: Grid
+      spec:
+        display:
+          title: PSI - Nodes (need to enable PSI)
+          collapse:
+            open: false
+        items:
+        - x: 0
+          y: 2
+          width: 12
+          height: 8
+          content:
+            $ref: '#/spec/panels/13_0'
+        - x: 12
+          y: 2
+          width: 12
+          height: 8
+          content:
+            $ref: '#/spec/panels/13_1'
+        - x: 0
+          y: 2
+          width: 12
+          height: 8
+          content:
+            $ref: '#/spec/panels/13_2'
+        - x: 12
+          y: 2
+          width: 12
+          height: 8
+          content:
+            $ref: '#/spec/panels/13_3'
+        - x: 0
+          y: 2
+          width: 12
+          height: 8
+          content:
+            $ref: '#/spec/panels/13_4'
+        - x: 12
+          y: 2
+          width: 12
+          height: 8
+          content:
+            $ref: '#/spec/panels/13_5'
+    duration: 1h
