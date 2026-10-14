@@ -1342,37 +1342,37 @@ spec:
             open: false
         items:
         - x: 0
-          y: 1
+          "y": 1
           width: 12
           height: 8
           content:
             $ref: '#/spec/panels/0_0'
         - x: 12
-          y: 1
+          "y": 1
           width: 12
           height: 8
           content:
             $ref: '#/spec/panels/0_1'
         - x: 0
-          y: 8
+          "y": 8
           width: 12
           height: 8
           content:
             $ref: '#/spec/panels/0_2'
         - x: 12
-          y: 8
+          "y": 8
           width: 12
           height: 8
           content:
             $ref: '#/spec/panels/0_3'
         - x: 0
-          y: 16
+          "y": 16
           width: 12
           height: 8
           content:
             $ref: '#/spec/panels/0_4'
         - x: 12
-          y: 16
+          "y": 16
           width: 12
           height: 8
           content:
@@ -1385,19 +1385,19 @@ spec:
             open: false
         items:
         - x: 0
-          y: 0
+          "y": 0
           width: 8
           height: 8
           content:
             $ref: '#/spec/panels/1_0'
         - x: 8
-          y: 0
+          "y": 0
           width: 8
           height: 8
           content:
             $ref: '#/spec/panels/1_1'
         - x: 16
-          y: 0
+          "y": 0
           width: 8
           height: 8
           content:
@@ -1410,19 +1410,19 @@ spec:
             open: false
         items:
         - x: 0
-          y: 0
+          "y": 0
           width: 8
           height: 8
           content:
             $ref: '#/spec/panels/2_0'
         - x: 8
-          y: 0
+          "y": 0
           width: 8
           height: 8
           content:
             $ref: '#/spec/panels/2_1'
         - x: 16
-          y: 0
+          "y": 0
           width: 8
           height: 8
           content:
@@ -1435,19 +1435,19 @@ spec:
             open: false
         items:
         - x: 0
-          y: 0
+          "y": 0
           width: 8
           height: 8
           content:
             $ref: '#/spec/panels/3_0'
         - x: 8
-          y: 0
+          "y": 0
           width: 8
           height: 8
           content:
             $ref: '#/spec/panels/3_1'
         - x: 16
-          y: 0
+          "y": 0
           width: 8
           height: 8
           content:
@@ -1460,37 +1460,37 @@ spec:
             open: false
         items:
         - x: 0
-          y: 1
+          "y": 1
           width: 12
           height: 8
           content:
             $ref: '#/spec/panels/4_0'
         - x: 12
-          y: 1
+          "y": 1
           width: 12
           height: 8
           content:
             $ref: '#/spec/panels/4_1'
         - x: 0
-          y: 8
+          "y": 8
           width: 12
           height: 8
           content:
             $ref: '#/spec/panels/4_2'
         - x: 12
-          y: 8
+          "y": 8
           width: 12
           height: 8
           content:
             $ref: '#/spec/panels/4_3'
         - x: 0
-          y: 16
+          "y": 16
           width: 12
           height: 8
           content:
             $ref: '#/spec/panels/4_4'
         - x: 12
-          y: 16
+          "y": 16
           width: 12
           height: 8
           content:
@@ -1503,19 +1503,19 @@ spec:
             open: false
         items:
         - x: 0
-          y: 8
+          "y": 8
           width: 8
           height: 8
           content:
             $ref: '#/spec/panels/5_0'
         - x: 8
-          y: 8
+          "y": 8
           width: 8
           height: 8
           content:
             $ref: '#/spec/panels/5_1'
         - x: 16
-          y: 8
+          "y": 8
           width: 8
           height: 8
           content:
@@ -1528,61 +1528,61 @@ spec:
             open: false
         items:
         - x: 0
-          y: 1
+          "y": 1
           width: 12
           height: 8
           content:
             $ref: '#/spec/panels/6_0'
         - x: 12
-          y: 1
+          "y": 1
           width: 12
           height: 8
           content:
             $ref: '#/spec/panels/6_1'
         - x: 0
-          y: 8
+          "y": 8
           width: 6
           height: 2
           content:
             $ref: '#/spec/panels/6_2'
         - x: 6
-          y: 8
+          "y": 8
           width: 6
           height: 2
           content:
             $ref: '#/spec/panels/6_3'
         - x: 12
-          y: 12
+          "y": 12
           width: 12
           height: 8
           content:
             $ref: '#/spec/panels/6_4'
         - x: 0
-          y: 12
+          "y": 12
           width: 12
           height: 6
           content:
             $ref: '#/spec/panels/6_5'
         - x: 0
-          y: 20
+          "y": 20
           width: 12
           height: 8
           content:
             $ref: '#/spec/panels/6_6'
         - x: 12
-          y: 20
+          "y": 20
           width: 12
           height: 8
           content:
             $ref: '#/spec/panels/6_7'
         - x: 0
-          y: 28
+          "y": 28
           width: 12
           height: 8
           content:
             $ref: '#/spec/panels/6_8'
         - x: 12
-          y: 28
+          "y": 28
           width: 12
           height: 8
           content:

@@ -741,109 +741,109 @@ spec:
           title: Panel Group 1
         items:
         - x: 0
-          y: 0
+          "y": 0
           width: 12
           height: 8
           content:
             $ref: '#/spec/panels/0'
         - x: 12
-          y: 0
+          "y": 0
           width: 12
           height: 8
           content:
             $ref: '#/spec/panels/1'
         - x: 0
-          y: 8
+          "y": 8
           width: 12
           height: 8
           content:
             $ref: '#/spec/panels/2'
         - x: 12
-          y: 8
+          "y": 8
           width: 12
           height: 8
           content:
             $ref: '#/spec/panels/3'
         - x: 0
-          y: 16
+          "y": 16
           width: 12
           height: 8
           content:
             $ref: '#/spec/panels/4'
         - x: 12
-          y: 16
+          "y": 16
           width: 12
           height: 8
           content:
             $ref: '#/spec/panels/5'
         - x: 0
-          y: 24
+          "y": 24
           width: 12
           height: 8
           content:
             $ref: '#/spec/panels/6'
         - x: 12
-          y: 24
+          "y": 24
           width: 12
           height: 8
           content:
             $ref: '#/spec/panels/7'
         - x: 0
-          y: 32
+          "y": 32
           width: 12
           height: 8
           content:
             $ref: '#/spec/panels/8'
         - x: 12
-          y: 32
+          "y": 32
           width: 12
           height: 8
           content:
             $ref: '#/spec/panels/9'
         - x: 0
-          y: 40
+          "y": 40
           width: 12
           height: 8
           content:
             $ref: '#/spec/panels/10'
         - x: 12
-          y: 40
+          "y": 40
           width: 12
           height: 8
           content:
             $ref: '#/spec/panels/11'
         - x: 0
-          y: 48
+          "y": 48
           width: 12
           height: 8
           content:
             $ref: '#/spec/panels/12'
         - x: 12
-          y: 48
+          "y": 48
           width: 12
           height: 8
           content:
             $ref: '#/spec/panels/13'
         - x: 0
-          y: 64
+          "y": 64
           width: 12
           height: 8
           content:
             $ref: '#/spec/panels/14'
         - x: 12
-          y: 64
+          "y": 64
           width: 12
           height: 8
           content:
             $ref: '#/spec/panels/15'
         - x: 0
-          y: 72
+          "y": 72
           width: 12
           height: 8
           content:
             $ref: '#/spec/panels/16'
         - x: 12
-          y: 72
+          "y": 72
           width: 12
           height: 8
           content:
