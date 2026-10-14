@@ -401,7 +401,7 @@ spec:
                     name: rbac-query-proxy-datasource
                   query: sum by (id) (( rate(container_cpu_usage_seconds_total{ job=~".*", id =~"/system.slice|/system.slice/kubelet.service|/.*/ovs-vswitchd.service|/system.slice/crio.service|/system.slice/systemd-journald.service|/.*/ovsdb-server.service|/system.slice/systemd-udevd.service|/kubepods.slice"}[$interval])) * 100 * on (node) group_left kube_node_role{ role = "control-plane" } )
                   seriesNameFormat: '{{node}}'
-      0_8:
+      "0_8":
         kind: Panel
         spec:
           display:
@@ -433,7 +433,7 @@ spec:
                     name: rbac-query-proxy-datasource
                   query: sum by (id) ( container_memory_rss{ job=~".*", id =~"/system.slice|/system.slice/kubelet.service|/.*/ovs-vswitchd.service|/system.slice/crio.service|/system.slice/systemd-journald.service|/.*/ovsdb-server.service|/system.slice/systemd-udevd.service|/kubepods.slice"} * on (node) group_left kube_node_role{ role = "worker" } )
                   seriesNameFormat: '{{id}}'
-      0_9:
+      "0_9":
         kind: Panel
         spec:
           display:
@@ -3639,85 +3639,85 @@ spec:
             open: false
         items:
         - x: 0
-          y: 2
+          "y": 2
           width: 12
           height: 8
           content:
             $ref: '#/spec/panels/0_0'
         - x: 12
-          y: 2
+          "y": 2
           width: 12
           height: 8
           content:
             $ref: '#/spec/panels/0_1'
         - x: 0
-          y: 9
+          "y": 9
           width: 12
           height: 8
           content:
             $ref: '#/spec/panels/0_2'
         - x: 12
-          y: 9
+          "y": 9
           width: 12
           height: 8
           content:
             $ref: '#/spec/panels/0_3'
         - x: 0
-          y: 17
+          "y": 17
           width: 12
           height: 8
           content:
             $ref: '#/spec/panels/0_4'
         - x: 12
-          y: 17
+          "y": 17
           width: 12
           height: 8
           content:
             $ref: '#/spec/panels/0_5'
         - x: 0
-          y: 25
+          "y": 25
           width: 12
           height: 8
           content:
             $ref: '#/spec/panels/0_6'
         - x: 12
-          y: 25
+          "y": 25
           width: 12
           height: 8
           content:
             $ref: '#/spec/panels/0_7'
         - x: 0
-          y: 33
+          "y": 33
           width: 12
           height: 8
           content:
             $ref: '#/spec/panels/0_8'
         - x: 12
-          y: 33
+          "y": 33
           width: 12
           height: 8
           content:
             $ref: '#/spec/panels/0_9'
         - x: 0
-          y: 41
+          "y": 41
           width: 12
           height: 8
           content:
             $ref: '#/spec/panels/0_10'
         - x: 12
-          y: 41
+          "y": 41
           width: 12
           height: 8
           content:
             $ref: '#/spec/panels/0_11'
         - x: 0
-          y: 49
+          "y": 49
           width: 12
           height: 8
           content:
             $ref: '#/spec/panels/0_12'
         - x: 12
-          y: 49
+          "y": 49
           width: 12
           height: 8
           content:
@@ -3730,115 +3730,115 @@ spec:
             open: false
         items:
         - x: 0
-          y: 0
+          "y": 0
           width: 12
           height: 8
           content:
             $ref: '#/spec/panels/1_0'
         - x: 12
-          y: 0
+          "y": 0
           width: 12
           height: 8
           content:
             $ref: '#/spec/panels/1_1'
         - x: 0
-          y: 8
+          "y": 8
           width: 12
           height: 8
           content:
             $ref: '#/spec/panels/1_2'
         - x: 12
-          y: 8
+          "y": 8
           width: 12
           height: 8
           content:
             $ref: '#/spec/panels/1_3'
         - x: 0
-          y: 16
+          "y": 16
           width: 12
           height: 8
           content:
             $ref: '#/spec/panels/1_4'
         - x: 12
-          y: 16
+          "y": 16
           width: 12
           height: 8
           content:
             $ref: '#/spec/panels/1_5'
         - x: 0
-          y: 24
+          "y": 24
           width: 12
           height: 8
           content:
             $ref: '#/spec/panels/1_6'
         - x: 12
-          y: 24
+          "y": 24
           width: 12
           height: 8
           content:
             $ref: '#/spec/panels/1_7'
         - x: 0
-          y: 32
+          "y": 32
           width: 12
           height: 8
           content:
             $ref: '#/spec/panels/1_8'
         - x: 12
-          y: 32
+          "y": 32
           width: 12
           height: 8
           content:
             $ref: '#/spec/panels/1_9'
         - x: 0
-          y: 40
+          "y": 40
           width: 12
           height: 8
           content:
             $ref: '#/spec/panels/1_10'
         - x: 12
-          y: 40
+          "y": 40
           width: 12
           height: 8
           content:
             $ref: '#/spec/panels/1_11'
         - x: 0
-          y: 48
+          "y": 48
           width: 12
           height: 8
           content:
             $ref: '#/spec/panels/1_12'
         - x: 12
-          y: 48
+          "y": 48
           width: 12
           height: 8
           content:
             $ref: '#/spec/panels/1_13'
         - x: 0
-          y: 56
+          "y": 56
           width: 8
           height: 8
           content:
             $ref: '#/spec/panels/1_14'
         - x: 8
-          y: 56
+          "y": 56
           width: 8
           height: 8
           content:
             $ref: '#/spec/panels/1_15'
         - x: 16
-          y: 56
+          "y": 56
           width: 8
           height: 8
           content:
             $ref: '#/spec/panels/1_16'
         - x: 0
-          y: 64
+          "y": 64
           width: 12
           height: 8
           content:
             $ref: '#/spec/panels/1_17'
         - x: 12
-          y: 64
+          "y": 64
           width: 12
           height: 8
           content:
@@ -3851,25 +3851,25 @@ spec:
             open: false
         items:
         - x: 0
-          y: 2
+          "y": 2
           width: 12
           height: 8
           content:
             $ref: '#/spec/panels/2_0'
         - x: 12
-          y: 2
+          "y": 2
           width: 12
           height: 8
           content:
             $ref: '#/spec/panels/2_1'
         - x: 0
-          y: 10
+          "y": 10
           width: 12
           height: 8
           content:
             $ref: '#/spec/panels/2_2'
         - x: 12
-          y: 10
+          "y": 10
           width: 12
           height: 8
           content:
@@ -3882,13 +3882,13 @@ spec:
             open: false
         items:
         - x: 0
-          y: 2
+          "y": 2
           width: 12
           height: 8
           content:
             $ref: '#/spec/panels/3_0'
         - x: 12
-          y: 2
+          "y": 2
           width: 12
           height: 8
           content:
@@ -3901,37 +3901,37 @@ spec:
             open: false
         items:
         - x: 0
-          y: 3
+          "y": 3
           width: 12
           height: 8
           content:
             $ref: '#/spec/panels/4_0'
         - x: 12
-          y: 3
+          "y": 3
           width: 12
           height: 8
           content:
             $ref: '#/spec/panels/4_1'
         - x: 0
-          y: 11
+          "y": 11
           width: 12
           height: 8
           content:
             $ref: '#/spec/panels/4_2'
         - x: 12
-          y: 11
+          "y": 11
           width: 12
           height: 8
           content:
             $ref: '#/spec/panels/4_3'
         - x: 0
-          y: 19
+          "y": 19
           width: 12
           height: 8
           content:
             $ref: '#/spec/panels/4_4'
         - x: 12
-          y: 19
+          "y": 19
           width: 12
           height: 8
           content:
@@ -3944,97 +3944,97 @@ spec:
             open: false
         items:
         - x: 0
-          y: 4
+          "y": 4
           width: 8
           height: 3
           content:
             $ref: '#/spec/panels/5_0'
         - x: 8
-          y: 4
+          "y": 4
           width: 8
           height: 3
           content:
             $ref: '#/spec/panels/5_1'
         - x: 16
-          y: 4
+          "y": 4
           width: 8
           height: 3
           content:
             $ref: '#/spec/panels/5_2'
         - x: 0
-          y: 12
+          "y": 12
           width: 8
           height: 8
           content:
             $ref: '#/spec/panels/5_3'
         - x: 8
-          y: 12
+          "y": 12
           width: 8
           height: 8
           content:
             $ref: '#/spec/panels/5_4'
         - x: 16
-          y: 12
+          "y": 12
           width: 8
           height: 8
           content:
             $ref: '#/spec/panels/5_5'
         - x: 0
-          y: 20
+          "y": 20
           width: 8
           height: 8
           content:
             $ref: '#/spec/panels/5_6'
         - x: 8
-          y: 20
+          "y": 20
           width: 8
           height: 8
           content:
             $ref: '#/spec/panels/5_7'
         - x: 16
-          y: 20
+          "y": 20
           width: 8
           height: 8
           content:
             $ref: '#/spec/panels/5_8'
         - x: 0
-          y: 20
+          "y": 20
           width: 8
           height: 8
           content:
             $ref: '#/spec/panels/5_9'
         - x: 8
-          y: 20
+          "y": 20
           width: 8
           height: 8
           content:
             $ref: '#/spec/panels/5_10'
         - x: 16
-          y: 20
+          "y": 20
           width: 8
           height: 8
           content:
             $ref: '#/spec/panels/5_11'
         - x: 0
-          y: 28
+          "y": 28
           width: 12
           height: 8
           content:
             $ref: '#/spec/panels/5_12'
         - x: 12
-          y: 28
+          "y": 28
           width: 12
           height: 8
           content:
             $ref: '#/spec/panels/5_13'
         - x: 12
-          y: 36
+          "y": 36
           width: 12
           height: 8
           content:
             $ref: '#/spec/panels/5_14'
         - x: 0
-          y: 36
+          "y": 36
           width: 12
           height: 8
           content:
@@ -4047,19 +4047,19 @@ spec:
             open: false
         items:
         - x: 0
-          y: 4
+          "y": 4
           width: 24
           height: 3
           content:
             $ref: '#/spec/panels/6_0'
         - x: 0
-          y: 4
+          "y": 4
           width: 8
           height: 8
           content:
             $ref: '#/spec/panels/6_1'
         - x: 8
-          y: 4
+          "y": 4
           width: 8
           height: 8
           content:
@@ -4072,85 +4072,85 @@ spec:
             open: false
         items:
         - x: 0
-          y: 0
+          "y": 0
           width: 12
           height: 8
           content:
             $ref: '#/spec/panels/7_0'
         - x: 12
-          y: 0
+          "y": 0
           width: 12
           height: 8
           content:
             $ref: '#/spec/panels/7_1'
         - x: 0
-          y: 8
+          "y": 8
           width: 12
           height: 8
           content:
             $ref: '#/spec/panels/7_2'
         - x: 12
-          y: 8
+          "y": 8
           width: 12
           height: 8
           content:
             $ref: '#/spec/panels/7_3'
         - x: 0
-          y: 16
+          "y": 16
           width: 12
           height: 8
           content:
             $ref: '#/spec/panels/7_4'
         - x: 12
-          y: 16
+          "y": 16
           width: 12
           height: 8
           content:
             $ref: '#/spec/panels/7_5'
         - x: 0
-          y: 24
+          "y": 24
           width: 12
           height: 8
           content:
             $ref: '#/spec/panels/7_6'
         - x: 12
-          y: 24
+          "y": 24
           width: 12
           height: 8
           content:
             $ref: '#/spec/panels/7_7'
         - x: 0
-          y: 24
+          "y": 24
           width: 12
           height: 8
           content:
             $ref: '#/spec/panels/7_8'
         - x: 12
-          y: 24
+          "y": 24
           width: 12
           height: 8
           content:
             $ref: '#/spec/panels/7_9'
         - x: 0
-          y: 32
+          "y": 32
           width: 12
           height: 8
           content:
             $ref: '#/spec/panels/7_10'
         - x: 12
-          y: 32
+          "y": 32
           width: 12
           height: 8
           content:
             $ref: '#/spec/panels/7_11'
         - x: 0
-          y: 32
+          "y": 32
           width: 12
           height: 8
           content:
             $ref: '#/spec/panels/7_12'
         - x: 12
-          y: 32
+          "y": 32
           width: 12
           height: 8
           content:
@@ -4164,73 +4164,73 @@ spec:
             open: false
         items:
         - x: 0
-          y: 0
+          "y": 0
           width: 12
           height: 8
           content:
             $ref: '#/spec/panels/8_0'
         - x: 12
-          y: 0
+          "y": 0
           width: 12
           height: 8
           content:
             $ref: '#/spec/panels/8_1'
         - x: 0
-          y: 8
+          "y": 8
           width: 12
           height: 8
           content:
             $ref: '#/spec/panels/8_2'
         - x: 12
-          y: 8
+          "y": 8
           width: 12
           height: 8
           content:
             $ref: '#/spec/panels/8_3'
         - x: 0
-          y: 16
+          "y": 16
           width: 12
           height: 8
           content:
             $ref: '#/spec/panels/8_4'
         - x: 12
-          y: 16
+          "y": 16
           width: 12
           height: 8
           content:
             $ref: '#/spec/panels/8_5'
         - x: 0
-          y: 24
+          "y": 24
           width: 12
           height: 8
           content:
             $ref: '#/spec/panels/8_6'
         - x: 12
-          y: 24
+          "y": 24
           width: 12
           height: 8
           content:
             $ref: '#/spec/panels/8_7'
         - x: 0
-          y: 32
+          "y": 32
           width: 12
           height: 8
           content:
             $ref: '#/spec/panels/8_8'
         - x: 12
-          y: 32
+          "y": 32
           width: 12
           height: 8
           content:
             $ref: '#/spec/panels/8_9'
         - x: 0
-          y: 40
+          "y": 40
           width: 12
           height: 8
           content:
             $ref: '#/spec/panels/8_10'
         - x: 12
-          y: 40
+          "y": 40
           width: 12
           height: 8
           content:
@@ -4244,61 +4244,61 @@ spec:
             open: false
         items:
         - x: 0
-          y: 0
+          "y": 0
           width: 12
           height: 8
           content:
             $ref: '#/spec/panels/9_0'
         - x: 12
-          y: 0
+          "y": 0
           width: 12
           height: 8
           content:
             $ref: '#/spec/panels/9_1'
         - x: 0
-          y: 8
+          "y": 8
           width: 12
           height: 8
           content:
             $ref: '#/spec/panels/9_2'
         - x: 12
-          y: 8
+          "y": 8
           width: 12
           height: 8
           content:
             $ref: '#/spec/panels/9_3'
         - x: 0
-          y: 16
+          "y": 16
           width: 12
           height: 8
           content:
             $ref: '#/spec/panels/9_4'
         - x: 12
-          y: 16
+          "y": 16
           width: 12
           height: 8
           content:
             $ref: '#/spec/panels/9_5'
         - x: 0
-          y: 24
+          "y": 24
           width: 12
           height: 8
           content:
             $ref: '#/spec/panels/9_6'
         - x: 12
-          y: 24
+          "y": 24
           width: 12
           height: 8
           content:
             $ref: '#/spec/panels/9_7'
         - x: 0
-          y: 24
+          "y": 24
           width: 12
           height: 8
           content:
             $ref: '#/spec/panels/9_8'
         - x: 12
-          y: 24
+          "y": 24
           width: 12
           height: 8
           content:
