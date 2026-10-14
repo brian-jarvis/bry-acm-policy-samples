@@ -1,0 +1,1396 @@
+{
+   "description": "Dashboard for Api-performance-overview\n",
+   "editable": false,
+   "graphTooltip": 1,
+   "panels": [
+      {
+         "datasource": {
+            "type": "prometheus",
+            "uid": "$Datasource"
+         },
+         "fieldConfig": {
+            "defaults": {
+               "custom": {
+                  "barAlignment": 0,
+                  "drawStyle": "line",
+                  "fillOpacity": 10,
+                  "gradientMode": "none",
+                  "lineInterpolation": "linear",
+                  "lineWidth": 1,
+                  "pointSize": 5,
+                  "showPoints": "never",
+                  "spanNulls": false,
+                  "stacking": {
+                     "group": "A",
+                     "mode": "none"
+                  }
+               },
+               "unit": "s"
+            }
+         },
+         "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 0
+         },
+         "id": 1,
+         "options": {
+            "legend": {
+               "asTable": true,
+               "calcs": [
+                  "max"
+               ],
+               "displayMode": "table",
+               "placement": "right",
+               "showLegend": true,
+               "sortBy": "Max",
+               "sortDesc": true
+            },
+            "tooltip": {
+               "mode": "multi",
+               "sort": "desc"
+            }
+         },
+         "pluginVersion": "v10.4.0",
+         "targets": [
+            {
+               "datasource": {
+                  "type": "prometheus",
+                  "uid": "$Datasource"
+               },
+               "expr": "histogram_quantile(0.99, sum(rate(apiserver_request_duration_seconds_bucket{apiserver=~\"$apiserver\",instance=~\"$instance\",resource=~\"$resource\",subresource!=\"log\",verb=~\"$verb\",verb!~\"WATCH|WATCHLIST|PROXY\"}[$interval])) by(verb,le))",
+               "format": "time_series",
+               "intervalFactor": 2,
+               "legendFormat": "{{verb}}"
+            }
+         ],
+         "timeFrom": null,
+         "timeShift": null,
+         "title": "request duration - 99th quantile",
+         "type": "timeseries"
+      },
+      {
+         "datasource": {
+            "type": "prometheus",
+            "uid": "$Datasource"
+         },
+         "fieldConfig": {
+            "defaults": {
+               "custom": {
+                  "barAlignment": 0,
+                  "drawStyle": "line",
+                  "fillOpacity": 10,
+                  "gradientMode": "none",
+                  "lineInterpolation": "linear",
+                  "lineWidth": 1,
+                  "pointSize": 5,
+                  "showPoints": "never",
+                  "spanNulls": false,
+                  "stacking": {
+                     "group": "A",
+                     "mode": "none"
+                  }
+               },
+               "unit": "short"
+            }
+         },
+         "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 0
+         },
+         "id": 2,
+         "options": {
+            "legend": {
+               "asTable": true,
+               "calcs": [
+                  "max"
+               ],
+               "displayMode": "table",
+               "placement": "right",
+               "showLegend": true,
+               "sortBy": "Max",
+               "sortDesc": true
+            },
+            "tooltip": {
+               "mode": "multi",
+               "sort": "desc"
+            }
+         },
+         "pluginVersion": "v10.4.0",
+         "targets": [
+            {
+               "datasource": {
+                  "type": "prometheus",
+                  "uid": "$Datasource"
+               },
+               "expr": "sum(rate(apiserver_request_total{apiserver=~\"$apiserver\",instance=~\"$instance\",resource=~\"$resource\",code=~\"$code\",verb=~\"$verb\"}[$interval])) by(instance)",
+               "format": "time_series",
+               "intervalFactor": 2,
+               "legendFormat": "{{instance}}"
+            }
+         ],
+         "timeFrom": null,
+         "timeShift": null,
+         "title": "request rate - by instance",
+         "type": "timeseries"
+      },
+      {
+         "datasource": {
+            "type": "prometheus",
+            "uid": "$Datasource"
+         },
+         "fieldConfig": {
+            "defaults": {
+               "custom": {
+                  "barAlignment": 0,
+                  "drawStyle": "line",
+                  "fillOpacity": 10,
+                  "gradientMode": "none",
+                  "lineInterpolation": "linear",
+                  "lineWidth": 1,
+                  "pointSize": 5,
+                  "showPoints": "never",
+                  "spanNulls": false,
+                  "stacking": {
+                     "group": "A",
+                     "mode": "none"
+                  }
+               },
+               "unit": "s"
+            }
+         },
+         "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 8
+         },
+         "id": 3,
+         "options": {
+            "legend": {
+               "asTable": true,
+               "calcs": [
+                  "max"
+               ],
+               "displayMode": "table",
+               "placement": "right",
+               "showLegend": true,
+               "sortBy": "Max",
+               "sortDesc": true
+            },
+            "tooltip": {
+               "mode": "multi",
+               "sort": "desc"
+            }
+         },
+         "pluginVersion": "v10.4.0",
+         "targets": [
+            {
+               "datasource": {
+                  "type": "prometheus",
+                  "uid": "$Datasource"
+               },
+               "expr": "histogram_quantile(0.99, sum(rate(apiserver_request_duration_seconds_bucket{apiserver=~\"$apiserver\",instance=~\"$instance\",resource=~\"$resource\",subresource!=\"log\",verb=~\"$verb\",verb!~\"WATCH|WATCHLIST|PROXY\"}[$interval])) by(resource,le))",
+               "format": "time_series",
+               "intervalFactor": 2,
+               "legendFormat": "{{resource}}"
+            }
+         ],
+         "timeFrom": null,
+         "timeShift": null,
+         "title": "request duration - 99th quantile - by resource",
+         "type": "timeseries"
+      },
+      {
+         "datasource": {
+            "type": "prometheus",
+            "uid": "$Datasource"
+         },
+         "fieldConfig": {
+            "defaults": {
+               "custom": {
+                  "barAlignment": 0,
+                  "drawStyle": "line",
+                  "fillOpacity": 10,
+                  "gradientMode": "none",
+                  "lineInterpolation": "linear",
+                  "lineWidth": 1,
+                  "pointSize": 5,
+                  "showPoints": "never",
+                  "spanNulls": false,
+                  "stacking": {
+                     "group": "A",
+                     "mode": "none"
+                  }
+               },
+               "unit": "short"
+            }
+         },
+         "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 8
+         },
+         "id": 4,
+         "options": {
+            "legend": {
+               "asTable": true,
+               "calcs": [
+                  "max"
+               ],
+               "displayMode": "table",
+               "placement": "right",
+               "showLegend": true,
+               "sortBy": "Max",
+               "sortDesc": true
+            },
+            "tooltip": {
+               "mode": "multi",
+               "sort": "desc"
+            }
+         },
+         "pluginVersion": "v10.4.0",
+         "targets": [
+            {
+               "datasource": {
+                  "type": "prometheus",
+                  "uid": "$Datasource"
+               },
+               "expr": "sum(rate(apiserver_request_total{apiserver=~\"$apiserver\",instance=~\"$instance\",resource=~\"$resource\",code=~\"$code\",verb=~\"$verb\"}[$interval])) by(resource)",
+               "format": "time_series",
+               "intervalFactor": 2,
+               "legendFormat": "{{resource}}"
+            }
+         ],
+         "timeFrom": null,
+         "timeShift": null,
+         "title": "request rate - by resource",
+         "type": "timeseries"
+      },
+      {
+         "datasource": {
+            "type": "prometheus",
+            "uid": "$Datasource"
+         },
+         "fieldConfig": {
+            "defaults": {
+               "custom": {
+                  "barAlignment": 0,
+                  "drawStyle": "line",
+                  "fillOpacity": 10,
+                  "gradientMode": "none",
+                  "lineInterpolation": "linear",
+                  "lineWidth": 1,
+                  "pointSize": 5,
+                  "showPoints": "never",
+                  "spanNulls": false,
+                  "stacking": {
+                     "group": "A",
+                     "mode": "none"
+                  }
+               },
+               "unit": "s"
+            }
+         },
+         "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 16
+         },
+         "id": 5,
+         "options": {
+            "legend": {
+               "displayMode": "list",
+               "placement": "bottom",
+               "showLegend": true,
+               "sortBy": "Max",
+               "sortDesc": true
+            },
+            "tooltip": {
+               "mode": "multi",
+               "sort": "desc"
+            }
+         },
+         "pluginVersion": "v10.4.0",
+         "targets": [
+            {
+               "datasource": {
+                  "type": "prometheus",
+                  "uid": "$Datasource"
+               },
+               "expr": "histogram_quantile(0.99, sum(rate(apiserver_request_duration_seconds_bucket{apiserver=~\"$apiserver\",instance=~\"$instance\",resource=~\"$resource\",verb=~\"LIST|GET\"}[$interval])) by(le))",
+               "format": "time_series",
+               "intervalFactor": 2,
+               "legendFormat": "read"
+            },
+            {
+               "datasource": {
+                  "type": "prometheus",
+                  "uid": "$Datasource"
+               },
+               "expr": "histogram_quantile(0.99, sum(rate(apiserver_request_duration_seconds_bucket{apiserver=~\"$apiserver\",instance=~\"$instance\",resource=~\"$resource\",verb=~\"POST|PUT|PATCH|UPDATE|DELETE\"}[$interval])) by(le))",
+               "format": "time_series",
+               "intervalFactor": 2,
+               "legendFormat": "write"
+            }
+         ],
+         "timeFrom": null,
+         "timeShift": null,
+         "title": "request duration - read vs write",
+         "type": "timeseries"
+      },
+      {
+         "datasource": {
+            "type": "prometheus",
+            "uid": "$Datasource"
+         },
+         "fieldConfig": {
+            "defaults": {
+               "custom": {
+                  "barAlignment": 0,
+                  "drawStyle": "line",
+                  "fillOpacity": 10,
+                  "gradientMode": "none",
+                  "lineInterpolation": "linear",
+                  "lineWidth": 1,
+                  "pointSize": 5,
+                  "showPoints": "never",
+                  "spanNulls": false,
+                  "stacking": {
+                     "group": "A",
+                     "mode": "none"
+                  }
+               },
+               "unit": "short"
+            }
+         },
+         "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 16
+         },
+         "id": 6,
+         "options": {
+            "legend": {
+               "displayMode": "list",
+               "placement": "bottom",
+               "showLegend": true,
+               "sortBy": "Max",
+               "sortDesc": true
+            },
+            "tooltip": {
+               "mode": "multi",
+               "sort": "desc"
+            }
+         },
+         "pluginVersion": "v10.4.0",
+         "targets": [
+            {
+               "datasource": {
+                  "type": "prometheus",
+                  "uid": "$Datasource"
+               },
+               "expr": "sum(rate(apiserver_request_total{apiserver=~\"$apiserver\",instance=~\"$instance\",resource=~\"$resource\",verb=~\"LIST|GET\"}[$interval]))",
+               "format": "time_series",
+               "intervalFactor": 2,
+               "legendFormat": "read"
+            },
+            {
+               "datasource": {
+                  "type": "prometheus",
+                  "uid": "$Datasource"
+               },
+               "expr": "sum(rate(apiserver_request_total{apiserver=~\"$apiserver\",instance=~\"$instance\",resource=~\"$resource\",verb=~\"POST|PUT|PATCH|UPDATE|DELETE\"}[$interval]))",
+               "format": "time_series",
+               "intervalFactor": 2,
+               "legendFormat": "write"
+            }
+         ],
+         "timeFrom": null,
+         "timeShift": null,
+         "title": "request rate - read vs write",
+         "type": "timeseries"
+      },
+      {
+         "datasource": {
+            "type": "prometheus",
+            "uid": "$Datasource"
+         },
+         "fieldConfig": {
+            "defaults": {
+               "custom": {
+                  "barAlignment": 0,
+                  "drawStyle": "line",
+                  "fillOpacity": 10,
+                  "gradientMode": "none",
+                  "lineInterpolation": "linear",
+                  "lineWidth": 1,
+                  "pointSize": 5,
+                  "showPoints": "never",
+                  "spanNulls": false,
+                  "stacking": {
+                     "group": "A",
+                     "mode": "none"
+                  }
+               },
+               "unit": "short"
+            }
+         },
+         "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 24
+         },
+         "id": 7,
+         "options": {
+            "legend": {
+               "displayMode": "list",
+               "placement": "bottom",
+               "showLegend": true,
+               "sortBy": "Max",
+               "sortDesc": true
+            },
+            "tooltip": {
+               "mode": "multi",
+               "sort": "desc"
+            }
+         },
+         "pluginVersion": "v10.4.0",
+         "targets": [
+            {
+               "datasource": {
+                  "type": "prometheus",
+                  "uid": "$Datasource"
+               },
+               "expr": "sum(rate(apiserver_request_terminations_total{instance=~\"$instance\"}[$interval])) by (verb)",
+               "format": "time_series",
+               "intervalFactor": 2,
+               "legendFormat": ""
+            }
+         ],
+         "timeFrom": null,
+         "timeShift": null,
+         "title": "requests dropped rate",
+         "type": "timeseries"
+      },
+      {
+         "datasource": {
+            "type": "prometheus",
+            "uid": "$Datasource"
+         },
+         "fieldConfig": {
+            "defaults": {
+               "custom": {
+                  "barAlignment": 0,
+                  "drawStyle": "line",
+                  "fillOpacity": 10,
+                  "gradientMode": "none",
+                  "lineInterpolation": "linear",
+                  "lineWidth": 1,
+                  "pointSize": 5,
+                  "showPoints": "never",
+                  "spanNulls": false,
+                  "stacking": {
+                     "group": "A",
+                     "mode": "none"
+                  }
+               },
+               "unit": "short"
+            }
+         },
+         "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 24
+         },
+         "id": 8,
+         "options": {
+            "legend": {
+               "displayMode": "list",
+               "placement": "bottom",
+               "showLegend": true,
+               "sortBy": "Max",
+               "sortDesc": true
+            },
+            "tooltip": {
+               "mode": "multi",
+               "sort": "desc"
+            }
+         },
+         "pluginVersion": "v10.4.0",
+         "targets": [
+            {
+               "datasource": {
+                  "type": "prometheus",
+                  "uid": "$Datasource"
+               },
+               "expr": "sum(rate(apiserver_request_terminations_total{instance=~\"$instance\",resource=~\"$resource\",code=~\"$code\"}[$interval])) by(component)",
+               "format": "time_series",
+               "intervalFactor": 2,
+               "legendFormat": ""
+            }
+         ],
+         "timeFrom": null,
+         "timeShift": null,
+         "title": "requests terminated rate",
+         "type": "timeseries"
+      },
+      {
+         "datasource": {
+            "type": "prometheus",
+            "uid": "$Datasource"
+         },
+         "fieldConfig": {
+            "defaults": {
+               "custom": {
+                  "barAlignment": 0,
+                  "drawStyle": "line",
+                  "fillOpacity": 10,
+                  "gradientMode": "none",
+                  "lineInterpolation": "linear",
+                  "lineWidth": 1,
+                  "pointSize": 5,
+                  "showPoints": "never",
+                  "spanNulls": false,
+                  "stacking": {
+                     "group": "A",
+                     "mode": "none"
+                  }
+               },
+               "unit": "short"
+            }
+         },
+         "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 32
+         },
+         "id": 9,
+         "options": {
+            "legend": {
+               "asTable": true,
+               "calcs": [
+                  "max"
+               ],
+               "displayMode": "table",
+               "placement": "right",
+               "showLegend": true,
+               "sortBy": "Max",
+               "sortDesc": true
+            },
+            "tooltip": {
+               "mode": "multi",
+               "sort": "desc"
+            }
+         },
+         "pluginVersion": "v10.4.0",
+         "targets": [
+            {
+               "datasource": {
+                  "type": "prometheus",
+                  "uid": "$Datasource"
+               },
+               "expr": "sum(rate(apiserver_request_total{apiserver=~\"$apiserver\",instance=~\"$instance\",resource=~\"$resource\",verb=~\"$verb\",code=~\"$code\"}[$interval])) by(code)",
+               "format": "time_series",
+               "intervalFactor": 2,
+               "legendFormat": "{{code}}"
+            }
+         ],
+         "timeFrom": null,
+         "timeShift": null,
+         "title": "requests status rate",
+         "type": "timeseries"
+      },
+      {
+         "datasource": {
+            "type": "prometheus",
+            "uid": "$Datasource"
+         },
+         "fieldConfig": {
+            "defaults": {
+               "custom": {
+                  "barAlignment": 0,
+                  "drawStyle": "line",
+                  "fillOpacity": 10,
+                  "gradientMode": "none",
+                  "lineInterpolation": "linear",
+                  "lineWidth": 1,
+                  "pointSize": 5,
+                  "showPoints": "never",
+                  "spanNulls": false,
+                  "stacking": {
+                     "group": "A",
+                     "mode": "none"
+                  }
+               },
+               "unit": "short"
+            }
+         },
+         "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 32
+         },
+         "id": 10,
+         "options": {
+            "legend": {
+               "asTable": true,
+               "calcs": [
+                  "max"
+               ],
+               "displayMode": "table",
+               "placement": "right",
+               "showLegend": true,
+               "sortBy": "Max",
+               "sortDesc": true
+            },
+            "tooltip": {
+               "mode": "multi",
+               "sort": "desc"
+            }
+         },
+         "pluginVersion": "v10.4.0",
+         "targets": [
+            {
+               "datasource": {
+                  "type": "prometheus",
+                  "uid": "$Datasource"
+               },
+               "expr": "sum(apiserver_longrunning_requests{instance=~\"$instance\",resource=~\"$resource\",verb=~\"$verb\"}) by(instance)",
+               "format": "time_series",
+               "intervalFactor": 2,
+               "legendFormat": "{{instance}}"
+            }
+         ],
+         "timeFrom": null,
+         "timeShift": null,
+         "title": "long running requests",
+         "type": "timeseries"
+      },
+      {
+         "datasource": {
+            "type": "prometheus",
+            "uid": "$Datasource"
+         },
+         "fieldConfig": {
+            "defaults": {
+               "custom": {
+                  "barAlignment": 0,
+                  "drawStyle": "line",
+                  "fillOpacity": 10,
+                  "gradientMode": "none",
+                  "lineInterpolation": "linear",
+                  "lineWidth": 1,
+                  "pointSize": 5,
+                  "showPoints": "never",
+                  "spanNulls": false,
+                  "stacking": {
+                     "group": "A",
+                     "mode": "none"
+                  }
+               },
+               "unit": "short"
+            }
+         },
+         "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 40
+         },
+         "id": 11,
+         "options": {
+            "legend": {
+               "asTable": true,
+               "calcs": [
+                  "max"
+               ],
+               "displayMode": "table",
+               "placement": "right",
+               "showLegend": true,
+               "sortBy": "Max",
+               "sortDesc": true
+            },
+            "tooltip": {
+               "mode": "multi",
+               "sort": "desc"
+            }
+         },
+         "pluginVersion": "v10.4.0",
+         "targets": [
+            {
+               "datasource": {
+                  "type": "prometheus",
+                  "uid": "$Datasource"
+               },
+               "expr": "sum(apiserver_current_inflight_requests{instance=~\"$instance\"}) by (instance,request_kind)",
+               "format": "time_series",
+               "intervalFactor": 2,
+               "legendFormat": "{{request_kind}}-{{instance}}"
+            }
+         ],
+         "timeFrom": null,
+         "timeShift": null,
+         "title": "request in flight",
+         "type": "timeseries"
+      },
+      {
+         "datasource": {
+            "type": "prometheus",
+            "uid": "$Datasource"
+         },
+         "fieldConfig": {
+            "defaults": {
+               "custom": {
+                  "barAlignment": 0,
+                  "drawStyle": "line",
+                  "fillOpacity": 10,
+                  "gradientMode": "none",
+                  "lineInterpolation": "linear",
+                  "lineWidth": 1,
+                  "pointSize": 5,
+                  "showPoints": "never",
+                  "spanNulls": false,
+                  "stacking": {
+                     "group": "A",
+                     "mode": "none"
+                  }
+               },
+               "unit": "bytes"
+            }
+         },
+         "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 40
+         },
+         "id": 12,
+         "options": {
+            "legend": {
+               "asTable": true,
+               "calcs": [
+                  "max"
+               ],
+               "displayMode": "table",
+               "placement": "right",
+               "showLegend": true,
+               "sortBy": "Max",
+               "sortDesc": true
+            },
+            "tooltip": {
+               "mode": "multi",
+               "sort": "desc"
+            }
+         },
+         "pluginVersion": "v10.4.0",
+         "targets": [
+            {
+               "datasource": {
+                  "type": "prometheus",
+                  "uid": "$Datasource"
+               },
+               "expr": "histogram_quantile(0.99, sum(rate(apiserver_response_sizes_bucket{instance=~\"$instance\",resource=~\"$resource\",verb=~\"$verb\"}[$interval])) by(instance,le))",
+               "format": "time_series",
+               "intervalFactor": 2,
+               "legendFormat": "{{instance}}"
+            }
+         ],
+         "timeFrom": null,
+         "timeShift": null,
+         "title": "response size - 99th quantile",
+         "type": "timeseries"
+      },
+      {
+         "datasource": {
+            "type": "prometheus",
+            "uid": "$Datasource"
+         },
+         "fieldConfig": {
+            "defaults": {
+               "custom": {
+                  "barAlignment": 0,
+                  "drawStyle": "line",
+                  "fillOpacity": 10,
+                  "gradientMode": "none",
+                  "lineInterpolation": "linear",
+                  "lineWidth": 1,
+                  "pointSize": 5,
+                  "showPoints": "never",
+                  "spanNulls": false,
+                  "stacking": {
+                     "group": "A",
+                     "mode": "none"
+                  }
+               },
+               "unit": "short"
+            }
+         },
+         "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 48
+         },
+         "id": 13,
+         "options": {
+            "legend": {
+               "asTable": true,
+               "calcs": [
+                  "max"
+               ],
+               "displayMode": "table",
+               "placement": "right",
+               "showLegend": true,
+               "sortBy": "Max",
+               "sortDesc": true
+            },
+            "tooltip": {
+               "mode": "multi",
+               "sort": "desc"
+            }
+         },
+         "pluginVersion": "v10.4.0",
+         "targets": [
+            {
+               "datasource": {
+                  "type": "prometheus",
+                  "uid": "$Datasource"
+               },
+               "expr": "histogram_quantile(0.99, sum(rate(apiserver_flowcontrol_request_queue_length_after_enqueue_bucket{instance=~\"$instance\",flow_schema=~\"$flow_schema\",priority_level=~\"$priority_level\"}[$interval])) by(flow_schema, priority_level, le))",
+               "format": "time_series",
+               "intervalFactor": 2,
+               "legendFormat": "{{flow_schema}}:{{priority_level}}"
+            }
+         ],
+         "timeFrom": null,
+         "timeShift": null,
+         "title": "p&f - request queue length",
+         "type": "timeseries"
+      },
+      {
+         "datasource": {
+            "type": "prometheus",
+            "uid": "$Datasource"
+         },
+         "fieldConfig": {
+            "defaults": {
+               "custom": {
+                  "barAlignment": 0,
+                  "drawStyle": "line",
+                  "fillOpacity": 10,
+                  "gradientMode": "none",
+                  "lineInterpolation": "linear",
+                  "lineWidth": 1,
+                  "pointSize": 5,
+                  "showPoints": "never",
+                  "spanNulls": false,
+                  "stacking": {
+                     "group": "A",
+                     "mode": "none"
+                  }
+               },
+               "unit": "s"
+            }
+         },
+         "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 48
+         },
+         "id": 14,
+         "options": {
+            "legend": {
+               "asTable": true,
+               "calcs": [
+                  "mean",
+                  "max",
+                  "lastNotNull"
+               ],
+               "displayMode": "table",
+               "placement": "right",
+               "showLegend": true,
+               "sortBy": "Max",
+               "sortDesc": true
+            },
+            "tooltip": {
+               "mode": "multi",
+               "sort": "desc"
+            }
+         },
+         "pluginVersion": "v10.4.0",
+         "targets": [
+            {
+               "datasource": {
+                  "type": "prometheus",
+                  "uid": "$Datasource"
+               },
+               "expr": "histogram_quantile(0.99, sum(rate(apiserver_flowcontrol_request_wait_duration_seconds_bucket{instance=~\"$instance\",flow_schema=~\"$flow_schema\",priority_level=~\"$priority_level\"}[5m])) by(flow_schema, priority_level, le))",
+               "format": "time_series",
+               "intervalFactor": 2,
+               "legendFormat": "{{flow_schema}}:{{priority_level}}"
+            }
+         ],
+         "timeFrom": null,
+         "timeShift": null,
+         "title": "p&f - request wait duration - 99th quantile",
+         "type": "timeseries"
+      },
+      {
+         "datasource": {
+            "type": "prometheus",
+            "uid": "$Datasource"
+         },
+         "fieldConfig": {
+            "defaults": {
+               "custom": {
+                  "barAlignment": 0,
+                  "drawStyle": "line",
+                  "fillOpacity": 10,
+                  "gradientMode": "none",
+                  "lineInterpolation": "linear",
+                  "lineWidth": 1,
+                  "pointSize": 5,
+                  "showPoints": "never",
+                  "spanNulls": false,
+                  "stacking": {
+                     "group": "A",
+                     "mode": "none"
+                  }
+               },
+               "unit": "short"
+            }
+         },
+         "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 64
+         },
+         "id": 15,
+         "options": {
+            "legend": {
+               "asTable": true,
+               "calcs": [
+                  "max"
+               ],
+               "displayMode": "table",
+               "placement": "right",
+               "showLegend": true,
+               "sortBy": "Max",
+               "sortDesc": true
+            },
+            "tooltip": {
+               "mode": "multi",
+               "sort": "desc"
+            }
+         },
+         "pluginVersion": "v10.4.0",
+         "targets": [
+            {
+               "datasource": {
+                  "type": "prometheus",
+                  "uid": "$Datasource"
+               },
+               "expr": "sum(rate(apiserver_flowcontrol_dispatched_requests_total{instance=~\"$instance\",flow_schema=~\"$flow_schema\",priority_level=~\"$priority_level\"}[$interval])) by(flow_schema,priority_level)",
+               "format": "time_series",
+               "intervalFactor": 2,
+               "legendFormat": "{{flow_schema}}:{{priority_level}}"
+            }
+         ],
+         "timeFrom": null,
+         "timeShift": null,
+         "title": "p&f - request dispatch rate",
+         "type": "timeseries"
+      },
+      {
+         "datasource": {
+            "type": "prometheus",
+            "uid": "$Datasource"
+         },
+         "fieldConfig": {
+            "defaults": {
+               "custom": {
+                  "barAlignment": 0,
+                  "drawStyle": "line",
+                  "fillOpacity": 10,
+                  "gradientMode": "none",
+                  "lineInterpolation": "linear",
+                  "lineWidth": 1,
+                  "pointSize": 5,
+                  "showPoints": "never",
+                  "spanNulls": false,
+                  "stacking": {
+                     "group": "A",
+                     "mode": "none"
+                  }
+               },
+               "unit": "s"
+            }
+         },
+         "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 64
+         },
+         "id": 16,
+         "options": {
+            "legend": {
+               "asTable": true,
+               "calcs": [
+                  "max"
+               ],
+               "displayMode": "table",
+               "placement": "right",
+               "showLegend": true,
+               "sortBy": "Max",
+               "sortDesc": true
+            },
+            "tooltip": {
+               "mode": "multi",
+               "sort": "desc"
+            }
+         },
+         "pluginVersion": "v10.4.0",
+         "targets": [
+            {
+               "datasource": {
+                  "type": "prometheus",
+                  "uid": "$Datasource"
+               },
+               "expr": "histogram_quantile(0.99, sum(rate(apiserver_flowcontrol_request_execution_seconds_bucket{instance=~\"$instance\",flow_schema=~\"$flow_schema\",priority_level=~\"$priority_level\"}[$interval])) by(flow_schema, priority_level, le))",
+               "format": "time_series",
+               "intervalFactor": 2,
+               "legendFormat": "{{flow_schema}}:{{priority_level}}"
+            }
+         ],
+         "timeFrom": null,
+         "timeShift": null,
+         "title": "p&f - request execution duration",
+         "type": "timeseries"
+      },
+      {
+         "datasource": {
+            "type": "prometheus",
+            "uid": "$Datasource"
+         },
+         "fieldConfig": {
+            "defaults": {
+               "custom": {
+                  "barAlignment": 0,
+                  "drawStyle": "line",
+                  "fillOpacity": 10,
+                  "gradientMode": "none",
+                  "lineInterpolation": "linear",
+                  "lineWidth": 1,
+                  "pointSize": 5,
+                  "showPoints": "never",
+                  "spanNulls": false,
+                  "stacking": {
+                     "group": "A",
+                     "mode": "none"
+                  }
+               },
+               "unit": "short"
+            }
+         },
+         "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 72
+         },
+         "id": 17,
+         "options": {
+            "legend": {
+               "asTable": true,
+               "calcs": [
+                  "max"
+               ],
+               "displayMode": "table",
+               "placement": "right",
+               "showLegend": true,
+               "sortBy": "Max",
+               "sortDesc": true
+            },
+            "tooltip": {
+               "mode": "multi",
+               "sort": "desc"
+            }
+         },
+         "pluginVersion": "v10.4.0",
+         "targets": [
+            {
+               "datasource": {
+                  "type": "prometheus",
+                  "uid": "$Datasource"
+               },
+               "expr": "sum(apiserver_flowcontrol_current_inqueue_requests{instance=~\"$instance\",flow_schema=~\"$flow_schema\",priority_level=~\"$priority_level\"}) by (flow_schema,priority_level)",
+               "format": "time_series",
+               "intervalFactor": 2,
+               "legendFormat": "{{flow_schema}}:{{priority_level}}"
+            }
+         ],
+         "timeFrom": null,
+         "timeShift": null,
+         "title": "p&f - pending in queue",
+         "type": "timeseries"
+      },
+      {
+         "datasource": {
+            "type": "prometheus",
+            "uid": "$Datasource"
+         },
+         "fieldConfig": {
+            "defaults": {
+               "custom": {
+                  "barAlignment": 0,
+                  "drawStyle": "line",
+                  "fillOpacity": 10,
+                  "gradientMode": "none",
+                  "lineInterpolation": "linear",
+                  "lineWidth": 1,
+                  "pointSize": 5,
+                  "showPoints": "never",
+                  "spanNulls": false,
+                  "stacking": {
+                     "group": "A",
+                     "mode": "none"
+                  }
+               },
+               "unit": "short"
+            }
+         },
+         "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 72
+         },
+         "id": 18,
+         "options": {
+            "legend": {
+               "asTable": true,
+               "calcs": [
+                  "max"
+               ],
+               "displayMode": "table",
+               "placement": "right",
+               "showLegend": true,
+               "sortBy": "Max",
+               "sortDesc": true
+            },
+            "tooltip": {
+               "mode": "multi",
+               "sort": "desc"
+            }
+         },
+         "pluginVersion": "v10.4.0",
+         "targets": [
+            {
+               "datasource": {
+                  "type": "prometheus",
+                  "uid": "$Datasource"
+               },
+               "expr": "sum(apiserver_flowcontrol_request_concurrency_in_use{instance=~\".*:6443\",priority_level=~\"$priority_level\"}) by (instance,flow_schema)",
+               "format": "time_series",
+               "intervalFactor": 2,
+               "legendFormat": "{{instance}}:{{flow_schema}}"
+            }
+         ],
+         "timeFrom": null,
+         "timeShift": null,
+         "title": "p&f - concurrency limit by kube-apiserver",
+         "type": "timeseries"
+      }
+   ],
+   "refresh": "30s",
+   "schemaVersion": 36,
+   "tags": [
+      "Api-performance"
+   ],
+   "templating": {
+      "list": [
+         {
+            "label": "Datasource",
+            "name": "Datasource",
+            "query": "prometheus",
+            "refresh": 1,
+            "regex": "",
+            "type": "datasource"
+         },
+         {
+            "datasource": {
+               "type": "prometheus",
+               "uid": "${Datasource}"
+            },
+            "includeAll": true,
+            "label": "apiserver",
+            "multi": false,
+            "name": "apiserver",
+            "query": "label_values(apiserver_request_duration_seconds_bucket, apiserver)",
+            "refresh": 2,
+            "type": "query"
+         },
+         {
+            "datasource": {
+               "type": "prometheus",
+               "uid": "${Datasource}"
+            },
+            "includeAll": true,
+            "label": "instance",
+            "multi": false,
+            "name": "instance",
+            "query": "label_values(apiserver_request_total, instance)",
+            "refresh": 2,
+            "type": "query"
+         },
+         {
+            "datasource": {
+               "type": "prometheus",
+               "uid": "${Datasource}"
+            },
+            "includeAll": true,
+            "label": "resource",
+            "multi": false,
+            "name": "resource",
+            "query": "label_values(apiserver_request_duration_seconds_bucket, resource)",
+            "refresh": 2,
+            "type": "query"
+         },
+         {
+            "datasource": {
+               "type": "prometheus",
+               "uid": "${Datasource}"
+            },
+            "includeAll": true,
+            "label": "code",
+            "multi": false,
+            "name": "code",
+            "query": "label_values(code)",
+            "refresh": 2,
+            "type": "query"
+         },
+         {
+            "datasource": {
+               "type": "prometheus",
+               "uid": "${Datasource}"
+            },
+            "includeAll": true,
+            "label": "verb",
+            "multi": false,
+            "name": "verb",
+            "query": "label_values(verb)",
+            "refresh": 2,
+            "type": "query"
+         },
+         {
+            "datasource": {
+               "type": "prometheus",
+               "uid": "${Datasource}"
+            },
+            "includeAll": true,
+            "label": "flow-schema",
+            "multi": false,
+            "name": "flow_schema",
+            "query": "label_values(flow_schema)",
+            "refresh": 2,
+            "type": "query"
+         },
+         {
+            "datasource": {
+               "type": "prometheus",
+               "uid": "${Datasource}"
+            },
+            "includeAll": true,
+            "label": "priority-level",
+            "multi": false,
+            "name": "priority_level",
+            "query": "label_values(priority_level)",
+            "refresh": 2,
+            "type": "query"
+         },
+         {
+            "auto": true,
+            "auto_count": 30,
+            "auto_min": "10s",
+            "current": {
+               "selected": false,
+               "text": "auto",
+               "value": "$__auto_interval_interval"
+            },
+            "datasource": {
+               "type": "prometheus",
+               "uid": "${Datasource}"
+            },
+            "includeAll": true,
+            "label": "interval",
+            "multi": false,
+            "name": "interval",
+            "options": [
+               {
+                  "selected": true,
+                  "text": "auto",
+                  "value": "$__auto_interval_interval"
+               },
+               {
+                  "selected": false,
+                  "text": "1m",
+                  "value": "1m"
+               },
+               {
+                  "selected": false,
+                  "text": "5m",
+                  "value": "5m"
+               }
+            ],
+            "query": "1m,5m",
+            "refresh": 2,
+            "type": "interval"
+         }
+      ]
+   },
+   "time": {
+      "from": "now-1h",
+      "to": "now"
+   },
+   "timepicker": {
+      "refresh_intervals": [
+         "5s",
+         "10s",
+         "30s",
+         "1m",
+         "5m",
+         "15m",
+         "30m",
+         "1h",
+         "2h",
+         "1d"
+      ],
+      "time_options": [
+         "5m",
+         "15m",
+         "1h",
+         "6h",
+         "12h",
+         "24h",
+         "2d",
+         "7d",
+         "30d"
+      ]
+   },
+   "timezone": "utc",
+   "title": "API Performance Dashboard"
+}

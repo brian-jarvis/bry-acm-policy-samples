@@ -8,6 +8,7 @@ resources:
   - ./policy-alerts/
   - ./observability/
   - ./observability-addon-config/
+  - ./perses-dashboards/
   - ./managedserviceaccount/
   - ./klusterlet-infra/
   - ./kubeadmin-config-trustca/
