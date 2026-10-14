@@ -13,6 +13,23 @@ spec:
     variables:
     - kind: ListVariable
       spec:
+        allowAllValue: false
+        allowMultiple: false
+        display:
+          hidden: false
+          name: cluster
+        name: cluster
+        plugin:
+          kind: PrometheusLabelValuesVariable
+          spec:
+            datasource:
+              kind: PrometheusDatasource
+              name: rbac-query-proxy-datasource
+            labelName: name
+            matchers:
+            - acm_managed_cluster_labels{openshiftVersion_major!="3"}
+    - kind: ListVariable
+      spec:
         display:
           name: Master
           hidden: false
@@ -23,7 +40,7 @@ spec:
           spec:
             labelName: node
             matchers:
-            - kube_node_role{role="master"}
+            - kube_node_role{cluster="$cluster",role="master"}
             datasource:
               kind: PrometheusDatasource
               name: rbac-query-proxy-datasource
@@ -40,7 +57,7 @@ spec:
           spec:
             labelName: node
             matchers:
-            - kube_node_role{role=~"work.*"}
+            - kube_node_role{cluster="$cluster",role=~"work.*"}
             datasource:
               kind: PrometheusDatasource
               name: rbac-query-proxy-datasource
@@ -57,7 +74,7 @@ spec:
           spec:
             labelName: pod
             matchers:
-            - '{pod=~"ovnkube-control-plane.*", namespace=~"openshift-ovn-kubernetes"}'
+            - '{cluster="$cluster",pod=~"ovnkube-control-plane.*", namespace=~"openshift-ovn-kubernetes"}'
             datasource:
               kind: PrometheusDatasource
               name: rbac-query-proxy-datasource
@@ -74,7 +91,7 @@ spec:
           spec:
             labelName: pod
             matchers:
-            - '{pod=~"ovnkube-node.*", namespace=~"openshift-ovn-kubernetes"}'
+            - '{cluster="$cluster",pod=~"ovnkube-node.*", namespace=~"openshift-ovn-kubernetes"}'
             datasource:
               kind: PrometheusDatasource
               name: rbac-query-proxy-datasource
@@ -111,7 +128,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: ovnkube_clustermanager_leader > 0
+                  query: ovnkube_clustermanager_leader{cluster="$cluster"} > 0
                   seriesNameFormat: '{{pod}}'
       '0_1':
         kind: Panel
@@ -144,7 +161,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: ovn_northd_status
+                  query: ovn_northd_status{cluster="$cluster"}
                   seriesNameFormat: '{{pod}}'
       '0_2':
         kind: Panel
@@ -172,7 +189,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: count(ovn_controller_monitor_all) by (namespace)
+                  query: count(ovn_controller_monitor_all{cluster="$cluster"}) by (namespace)
                   seriesNameFormat: ''
       '0_3':
         kind: Panel
@@ -205,7 +222,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: sum( irate(container_cpu_usage_seconds_total{pod=~"(ovnkube-master|ovnkube-control-plane).+",namespace="openshift-ovn-kubernetes",container!~"POD|"}[2m])*100 ) by (pod, node)
+                  query: sum( irate(container_cpu_usage_seconds_total{cluster="$cluster",pod=~"(ovnkube-master|ovnkube-control-plane).+",namespace="openshift-ovn-kubernetes",container!~"POD|"}[2m])*100 ) by (pod, node)
                   seriesNameFormat: '{{pod}} - {{node}}'
       '0_4':
         kind: Panel
@@ -238,7 +255,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: container_memory_rss{pod=~"(ovnkube-master|ovnkube-control-plane).+",namespace="openshift-ovn-kubernetes",container!~"POD|"}
+                  query: container_memory_rss{cluster="$cluster",pod=~"(ovnkube-master|ovnkube-control-plane).+",namespace="openshift-ovn-kubernetes",container!~"POD|"}
                   seriesNameFormat: '{{pod}} - {{node}}'
       '1_0':
         kind: Panel
@@ -271,7 +288,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: histogram_quantile(0.99, rate(scheduler_pod_scheduling_sli_duration_seconds_bucket[5m])) > 0
+                  query: histogram_quantile(0.99, rate(scheduler_pod_scheduling_sli_duration_seconds_bucket{cluster="$cluster"}[5m])) > 0
                   seriesNameFormat: '{{pod}}'
       '1_1':
         kind: Panel
@@ -304,7 +321,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: histogram_quantile(0.99, sum(rate(ovnkube_controller_pod_first_seen_lsp_created_duration_seconds_bucket[2m])) by (pod, le)) > 0
+                  query: histogram_quantile(0.99, sum(rate(ovnkube_controller_pod_first_seen_lsp_created_duration_seconds_bucket{cluster="$cluster"}[2m])) by (pod, le)) > 0
                   seriesNameFormat: '{{pod}}'
       '1_2':
         kind: Panel
@@ -337,7 +354,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: histogram_quantile(0.99, sum by (pod, le) (rate(ovnkube_controller_pod_creation_latency_seconds_bucket[2m]))) > 0
+                  query: histogram_quantile(0.99, sum by (pod, le) (rate(ovnkube_controller_pod_creation_latency_seconds_bucket{cluster="$cluster"}[2m]))) > 0
                   seriesNameFormat: '{{pod}}'
       '1_3':
         kind: Panel
@@ -370,7 +387,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: histogram_quantile(0.99, sum(rate(ovnkube_controller_pod_lsp_created_port_binding_duration_seconds_bucket[2m])) by (pod,le)) > 0
+                  query: histogram_quantile(0.99, sum(rate(ovnkube_controller_pod_lsp_created_port_binding_duration_seconds_bucket{cluster="$cluster"}[2m])) by (pod,le)) > 0
                   seriesNameFormat: '{{pod}}'
       '1_4':
         kind: Panel
@@ -403,7 +420,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: histogram_quantile(0.99, sum(rate(ovnkube_controller_port_binding_chassis_assignment_latency_seconds_bucket[2m])) by (pod,le)) > 0
+                  query: histogram_quantile(0.99, sum(rate(ovnkube_controller_port_binding_chassis_assignment_latency_seconds_bucket{cluster="$cluster"}[2m])) by (pod,le)) > 0
                   seriesNameFormat: '{{pod}}'
       '1_5':
         kind: Panel
@@ -436,7 +453,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: histogram_quantile(0.99, sum(rate(ovnkube_controller_port_binding_port_up_duration_seconds_bucket[2m])) by (pod,le)) > 0
+                  query: histogram_quantile(0.99, sum(rate(ovnkube_controller_port_binding_port_up_duration_seconds_bucket{cluster="$cluster"}[2m])) by (pod,le)) > 0
                   seriesNameFormat: '{{pod}}'
       '1_6':
         kind: Panel
@@ -469,7 +486,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: histogram_quantile(0.99, sum(rate(ovnkube_node_cni_request_duration_seconds_bucket{command="ADD"}[2m])) by (pod,le)) > 0
+                  query: histogram_quantile(0.99, sum(rate(ovnkube_node_cni_request_duration_seconds_bucket{cluster="$cluster",command="ADD"}[2m])) by (pod,le)) > 0
                   seriesNameFormat: '{{pod}}'
       '1_7':
         kind: Panel
@@ -502,7 +519,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: histogram_quantile(0.99, sum(rate(ovnkube_controller_network_programming_duration_seconds_bucket[2m])) by (pod,le)) > 0
+                  query: histogram_quantile(0.99, sum(rate(ovnkube_controller_network_programming_duration_seconds_bucket{cluster="$cluster"}[2m])) by (pod,le)) > 0
                   seriesNameFormat: '{{pod}}'
       '1_8':
         kind: Panel
@@ -535,7 +552,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: histogram_quantile(0.99, sum(rate(ovnkube_controller_sync_service_latency_seconds_bucket[2m])) by (pod,le)) > 0
+                  query: histogram_quantile(0.99, sum(rate(ovnkube_controller_sync_service_latency_seconds_bucket{cluster="$cluster"}[2m])) by (pod,le)) > 0
                   seriesNameFormat: '{{pod}}'
       '1_9':
         kind: Panel
@@ -568,7 +585,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: histogram_quantile(0.99, sum(rate(ovnkube_node_ready_duration_seconds_bucket[2m])) by (pod,le)) > 0
+                  query: histogram_quantile(0.99, sum(rate(ovnkube_node_ready_duration_seconds_bucket{cluster="$cluster"}[2m])) by (pod,le)) > 0
                   seriesNameFormat: '{{pod}}'
       '2_0':
         kind: Panel
@@ -601,7 +618,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: topk(10, sum(irate(container_cpu_usage_seconds_total{pod=~"ovnkube-node.+",namespace="openshift-ovn-kubernetes",container!~"POD|"}[2m])*100) by (pod, node))
+                  query: topk(10, sum(irate(container_cpu_usage_seconds_total{cluster="$cluster",pod=~"ovnkube-node.+",namespace="openshift-ovn-kubernetes",container!~"POD|"}[2m])*100) by (pod, node))
                   seriesNameFormat: '{{pod}} - {{node}}'
       '2_1':
         kind: Panel
@@ -634,7 +651,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: topk(10, sum(container_memory_rss{pod=~"ovnkube-node.+",namespace="openshift-ovn-kubernetes",container!~"POD|"}) by (pod, node))
+                  query: topk(10, sum(container_memory_rss{cluster="$cluster",pod=~"ovnkube-node.+",namespace="openshift-ovn-kubernetes",container!~"POD|"}) by (pod, node))
                   seriesNameFormat: '{{pod}} - {{node}}'
       '2_2':
         kind: Panel
@@ -667,7 +684,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: topk(10, sum(irate(container_cpu_usage_seconds_total{container="northd",namespace="openshift-ovn-kubernetes"}[2m])*100) by (pod, node))
+                  query: topk(10, sum(irate(container_cpu_usage_seconds_total{cluster="$cluster",container="northd",namespace="openshift-ovn-kubernetes"}[2m])*100) by (pod, node))
                   seriesNameFormat: '{{pod}} - {{node}}'
       '2_3':
         kind: Panel
@@ -700,7 +717,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: topk(10, sum(container_memory_rss{container="northd",namespace="openshift-ovn-kubernetes"}) by (pod, node))
+                  query: topk(10, sum(container_memory_rss{cluster="$cluster",container="northd",namespace="openshift-ovn-kubernetes"}) by (pod, node))
                   seriesNameFormat: '{{pod}} - {{node}}'
       '2_4':
         kind: Panel
@@ -733,7 +750,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: topk(10, sum(irate(container_cpu_usage_seconds_total{container="sbdb",namespace="openshift-ovn-kubernetes"}[2m])*100) by (pod, node))
+                  query: topk(10, sum(irate(container_cpu_usage_seconds_total{cluster="$cluster",container="sbdb",namespace="openshift-ovn-kubernetes"}[2m])*100) by (pod, node))
                   seriesNameFormat: '{{pod}} - {{node}}'
       '2_5':
         kind: Panel
@@ -766,7 +783,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: topk(10, sum(container_memory_rss{container="sbdb",namespace="openshift-ovn-kubernetes"}) by (pod, node))
+                  query: topk(10, sum(container_memory_rss{cluster="$cluster",container="sbdb",namespace="openshift-ovn-kubernetes"}) by (pod, node))
                   seriesNameFormat: '{{pod}} - {{node}}'
       '2_6':
         kind: Panel
@@ -799,7 +816,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: topk(10, sum(irate(container_cpu_usage_seconds_total{container="nbdb",namespace="openshift-ovn-kubernetes"}[2m])*100) by (pod, node))
+                  query: topk(10, sum(irate(container_cpu_usage_seconds_total{cluster="$cluster",container="nbdb",namespace="openshift-ovn-kubernetes"}[2m])*100) by (pod, node))
                   seriesNameFormat: '{{pod}} - {{node}}'
       '2_7':
         kind: Panel
@@ -832,7 +849,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: topk(10, sum(container_memory_rss{container="nbdb",namespace="openshift-ovn-kubernetes"}) by (pod, node))
+                  query: topk(10, sum(container_memory_rss{cluster="$cluster",container="nbdb",namespace="openshift-ovn-kubernetes"}) by (pod, node))
                   seriesNameFormat: '{{pod}} - {{node}}'
       '2_8':
         kind: Panel
@@ -865,7 +882,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: topk(10, sum(irate(container_cpu_usage_seconds_total{container="ovnkube-controller",namespace="openshift-ovn-kubernetes"}[2m])*100) by (pod, node))
+                  query: topk(10, sum(irate(container_cpu_usage_seconds_total{cluster="$cluster",container="ovnkube-controller",namespace="openshift-ovn-kubernetes"}[2m])*100) by (pod, node))
                   seriesNameFormat: '{{pod}} - {{node}}'
       '2_9':
         kind: Panel
@@ -898,7 +915,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: topk(10, sum(container_memory_rss{container="ovnkube-controller",namespace="openshift-ovn-kubernetes"}) by (pod, node))
+                  query: topk(10, sum(container_memory_rss{cluster="$cluster",container="ovnkube-controller",namespace="openshift-ovn-kubernetes"}) by (pod, node))
                   seriesNameFormat: '{{pod}} - {{node}}'
       '2_10':
         kind: Panel
@@ -931,7 +948,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: topk(10, sum(irate(container_cpu_usage_seconds_total{container="ovn-controller",namespace="openshift-ovn-kubernetes"}[2m])*100) by (pod, node))
+                  query: topk(10, sum(irate(container_cpu_usage_seconds_total{cluster="$cluster",container="ovn-controller",namespace="openshift-ovn-kubernetes"}[2m])*100) by (pod, node))
                   seriesNameFormat: '{{pod}} - {{node}}'
       '2_11':
         kind: Panel
@@ -964,7 +981,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: topk(10, sum(container_memory_rss{container="ovn-controller",namespace="openshift-ovn-kubernetes"}) by (pod, node))
+                  query: topk(10, sum(container_memory_rss{cluster="$cluster",container="ovn-controller",namespace="openshift-ovn-kubernetes"}) by (pod, node))
                   seriesNameFormat: '{{pod}} - {{node}}'
       '3_0':
         kind: Panel
@@ -997,7 +1014,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: sum(rate(workqueue_adds_total{job=~"ovnkube-controller.*"}[2m])) by (pod, name)
+                  query: sum(rate(workqueue_adds_total{cluster="$cluster",job=~"ovnkube-controller.*"}[2m])) by (pod, name)
                   seriesNameFormat: '{{pod}} - {{name}}'
       '3_1':
         kind: Panel
@@ -1030,7 +1047,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: sum(workqueue_depth{job=~"ovnkube-controller.*"}) by (pod, name)
+                  query: sum(workqueue_depth{cluster="$cluster",job=~"ovnkube-controller.*"}) by (pod, name)
                   seriesNameFormat: '{{pod}} - {{name}}'
       '3_2':
         kind: Panel
@@ -1063,7 +1080,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: histogram_quantile(0.99, sum(rate(workqueue_queue_duration_seconds_bucket{job=~"ovnkube-controller.*"}[2m])) by (pod, name, le))
+                  query: histogram_quantile(0.99, sum(rate(workqueue_queue_duration_seconds_bucket{cluster="$cluster",job=~"ovnkube-controller.*"}[2m])) by (pod, name, le))
                   seriesNameFormat: '{{pod}} - {{name}}'
       '3_3':
         kind: Panel
@@ -1096,7 +1113,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: sum(workqueue_unfinished_work_seconds{job=~"ovnkube-controller.*"}) by (pod, name)
+                  query: sum(workqueue_unfinished_work_seconds{cluster="$cluster",job=~"ovnkube-controller.*"}) by (pod, name)
                   seriesNameFormat: '{{pod}} - {{name}}'
     layouts:
     - kind: Grid

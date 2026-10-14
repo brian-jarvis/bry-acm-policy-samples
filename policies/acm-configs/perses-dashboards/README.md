@@ -21,6 +21,12 @@ dashboard's metrics to the set MCOA federates from managed clusters up to the hu
 these, most panels render empty because the metrics are never forwarded past the managed cluster. See
 [Implementation Details](#implementation-details) for how the metric lists were derived.
 
+Every dashboard requires selecting a managed cluster, matching the convention used by ACM's own
+built-in dashboards: a `cluster` variable (backed by `acm_managed_cluster_labels`) is the first
+variable on every dashboard, every other variable's label-value query is scoped to the selected
+cluster, and every panel's PromQL query is scoped to it as well. See
+[Implementation Details](#implementation-details) for how this was applied.
+
 | Dashboard | Source JSON | Resource name | ScrapeConfig |
 | --- | --- | --- | --- |
 | OpenShift Networking (OVN) | `ovn-dashboard.json` | `ovn-dashboard` | `ovn-metrics` |
@@ -90,3 +96,28 @@ names (e.g. `container_cpu_usage_seconds_total`) are repeated across more than o
 ScrapeConfig — that overlap is expected and harmless (duplicate `match[]` entries across separate
 ScrapeConfigs don't double-scrape). When converting another dashboard in the future, repeat this
 diffing process against the then-current set of forwarded metrics before writing its ScrapeConfig.
+
+### Multicluster compatibility
+
+The converted dashboards originally had no managed-cluster selector, unlike ACM's own built-in
+dashboards. To match that convention, each dashboard gained the same `cluster` `ListVariable` ACM's
+dashboards use (a `PrometheusLabelValuesVariable` against `acm_managed_cluster_labels`, via
+`rbac-query-proxy-datasource`), and every other variable and panel query was scoped to it:
+
+  - Variables whose label-value matcher already had `{...}` (e.g. `kube_node_role{role="master"}`) got
+    `cluster="$cluster",` prepended inside the existing braces
+  - Variables with a bare metric name and no braces (e.g. `apiserver_request_total`) got
+    `{cluster="$cluster"}` appended
+  - Variables with no matcher at all (e.g. api-performance-overview's `code`/`verb`/`flow_schema`/
+    `priority_level`) got a matcher of `{cluster="$cluster"}`
+  - `StaticListVariable`-kind variables (the `interval` variables) were left untouched — they aren't
+    Prometheus-backed
+  - Every PromQL panel query had `cluster="$cluster"` injected into every metric selector it
+    references, including inside aggregations, vector-matching expressions, and range-vector/subquery
+    syntax, while leaving function names, `by (...)`/`on (...)`-style label lists, and duration
+    literals (e.g. `[5m]`, `[$interval:]`) untouched
+
+This was done with a scripted regex-based PromQL transform (not a full parser, since PromQL tooling
+isn't available in this environment) with a stoplist of aggregation operators, functions, and keywords
+to avoid misidentifying them as metric names. When converting another dashboard in the future, apply
+the same cluster-scoping to its variables and panel queries before committing it.
