@@ -43,6 +43,21 @@ policies:
       - path: api-performance-overview-perses.yml
         name: perses-dashboard-api-performance-overview
 
+      - path: ovn-metrics-scrapeconfig.yml
+        name: perses-dashboard-ovn-metrics-scrapeconfig
+
+      - path: ocp-performance-metrics-scrapeconfig.yml
+        name: perses-dashboard-ocp-performance-metrics-scrapeconfig
+
+      - path: node-metrics-scrapeconfig.yml
+        name: perses-dashboard-node-metrics-scrapeconfig
+
+      - path: etcd-metrics-scrapeconfig.yml
+        name: perses-dashboard-etcd-metrics-scrapeconfig
+
+      - path: api-performance-metrics-scrapeconfig.yml
+        name: perses-dashboard-api-performance-metrics-scrapeconfig
+
 policySets:
   - name: perses-dashboards
     placement:

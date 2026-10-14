@@ -16,13 +16,18 @@ match this cluster's conventions:
   `PersesDatasource` by name (the same datasource ACM's own dashboards use), instead of a
   dashboard-local `Datasource` template variable
 
-| Dashboard | Source JSON | Resource name |
-| --- | --- | --- |
-| OpenShift Networking (OVN) | `ovn-dashboard.json` | `ovn-dashboard` |
-| OpenShift Performance | `ocp-performance.json` | `ocp-performance` |
-| Node Performance | `node.json` | `node-performance` |
-| etcd Cluster Info | `etcd-on-cluster-dashboard.json` | `etcd-on-cluster-dashboard` |
-| API Performance | `api-performance-overview.json` | `api-performance-overview` |
+Each dashboard also has a matching `ScrapeConfig` manifest (`*-metrics-scrapeconfig.yml`) that adds the
+dashboard's metrics to the set MCOA federates from managed clusters up to the hub's Thanos — without
+these, most panels render empty because the metrics are never forwarded past the managed cluster. See
+[Implementation Details](#implementation-details) for how the metric lists were derived.
+
+| Dashboard | Source JSON | Resource name | ScrapeConfig |
+| --- | --- | --- | --- |
+| OpenShift Networking (OVN) | `ovn-dashboard.json` | `ovn-dashboard` | `ovn-metrics` |
+| OpenShift Performance | `ocp-performance.json` | `ocp-performance` | `ocp-performance-metrics` |
+| Node Performance | `node.json` | `node-performance` | `node-metrics` |
+| etcd Cluster Info | `etcd-on-cluster-dashboard.json` | `etcd-on-cluster-dashboard` | `etcd-metrics` |
+| API Performance | `api-performance-overview.json` | `api-performance-overview` | `api-performance-metrics` |
 
 ## Dependencies
   - [ACM Observability](../observability/) — requires the `MultiClusterObservability` stack and the
@@ -32,6 +37,11 @@ match this cluster's conventions:
   - Requires the `rbac-query-proxy-datasource` `PersesDatasource`, which is created automatically in
     the `open-cluster-management-observability` namespace once the multicluster-observability-addon
     (MCOA) is enabled on the hub
+  - [Observability Addon Config](../observability-addon-config/) — this policy watches every
+    `ScrapeConfig` in `open-cluster-management-observability` and keeps the
+    `multicluster-observability-addon` ClusterManagementAddOn's global metrics config in sync with
+    them. The `ScrapeConfig` manifests here are picked up automatically; no changes to that policy are
+    needed.
 
 ## Details
 ACM Minimal Version: 2.17
@@ -61,3 +71,22 @@ After migration, `percli`'s `--format cr` output needed further adjustment to ma
 API version (`v1alpha1` → `v1alpha2`), the missing `spec.config` wrapper, the target namespace and
 label, and swapping every `$Datasource` reference (and the `Datasource` template variable itself) for
 a direct reference to the `rbac-query-proxy-datasource` `PersesDatasource`.
+
+### ScrapeConfigs
+
+MCOA does not use the `observability-metrics-(custom-)allowlist` ConfigMap mechanism from classic ACM
+observability — it federates metrics from each managed cluster based on the `ScrapeConfig` objects
+referenced by the `multicluster-observability-addon` ClusterManagementAddOn (see
+[Observability Addon Config](../observability-addon-config/)). Each `*-metrics-scrapeconfig.yml` here
+follows the same shape as ACM's own built-in ScrapeConfigs (`platform-metrics`,
+`apiserver-hcp-uwl-metrics`, etc.) in that namespace: `metricsPath: /federate`, `scheme: HTTPS`,
+`scrapeClass: not-configurable`, a placeholder `staticConfigs` target, and an exact-match `params.match[]`
+list (`{__name__="..."}` per metric, no regex) to minimize the extra Thanos cardinality/storage cost.
+
+The metric lists were derived by: parsing every PromQL query in the converted dashboards to extract
+candidate metric names, then diffing against the full set of metric names already forwarded by ACM's 7
+built-in ScrapeConfigs (165 distinct names). Only metrics not already forwarded were added. A few metric
+names (e.g. `container_cpu_usage_seconds_total`) are repeated across more than one dashboard's
+ScrapeConfig — that overlap is expected and harmless (duplicate `match[]` entries across separate
+ScrapeConfigs don't double-scrape). When converting another dashboard in the future, repeat this
+diffing process against the then-current set of forwarded metrics before writing its ScrapeConfig.
