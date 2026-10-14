@@ -13,6 +13,23 @@ spec:
     variables:
     - kind: ListVariable
       spec:
+        allowAllValue: false
+        allowMultiple: false
+        display:
+          hidden: false
+          name: cluster
+        name: cluster
+        plugin:
+          kind: PrometheusLabelValuesVariable
+          spec:
+            datasource:
+              kind: PrometheusDatasource
+              name: rbac-query-proxy-datasource
+            labelName: name
+            matchers:
+            - acm_managed_cluster_labels{openshiftVersion_major!="3"}
+    - kind: ListVariable
+      spec:
         display:
           name: apiserver
           hidden: false
@@ -23,7 +40,7 @@ spec:
           spec:
             labelName: apiserver
             matchers:
-            - apiserver_request_duration_seconds_bucket
+            - apiserver_request_duration_seconds_bucket{cluster="$cluster"}
             datasource:
               kind: PrometheusDatasource
               name: rbac-query-proxy-datasource
@@ -40,7 +57,7 @@ spec:
           spec:
             labelName: instance
             matchers:
-            - apiserver_request_total
+            - apiserver_request_total{cluster="$cluster"}
             datasource:
               kind: PrometheusDatasource
               name: rbac-query-proxy-datasource
@@ -57,7 +74,7 @@ spec:
           spec:
             labelName: resource
             matchers:
-            - apiserver_request_duration_seconds_bucket
+            - apiserver_request_duration_seconds_bucket{cluster="$cluster"}
             datasource:
               kind: PrometheusDatasource
               name: rbac-query-proxy-datasource
@@ -73,7 +90,8 @@ spec:
           kind: PrometheusLabelValuesVariable
           spec:
             labelName: code
-            matchers: []
+            matchers:
+            - '{cluster="$cluster"}'
             datasource:
               kind: PrometheusDatasource
               name: rbac-query-proxy-datasource
@@ -89,7 +107,8 @@ spec:
           kind: PrometheusLabelValuesVariable
           spec:
             labelName: verb
-            matchers: []
+            matchers:
+            - '{cluster="$cluster"}'
             datasource:
               kind: PrometheusDatasource
               name: rbac-query-proxy-datasource
@@ -105,7 +124,8 @@ spec:
           kind: PrometheusLabelValuesVariable
           spec:
             labelName: flow_schema
-            matchers: []
+            matchers:
+            - '{cluster="$cluster"}'
             datasource:
               kind: PrometheusDatasource
               name: rbac-query-proxy-datasource
@@ -121,7 +141,8 @@ spec:
           kind: PrometheusLabelValuesVariable
           spec:
             labelName: priority_level
-            matchers: []
+            matchers:
+            - '{cluster="$cluster"}'
             datasource:
               kind: PrometheusDatasource
               name: rbac-query-proxy-datasource
@@ -174,7 +195,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: histogram_quantile(0.99, sum(rate(apiserver_request_duration_seconds_bucket{apiserver=~"$apiserver",instance=~"$instance",resource=~"$resource",subresource!="log",verb=~"$verb",verb!~"WATCH|WATCHLIST|PROXY"}[$interval])) by(verb,le))
+                  query: histogram_quantile(0.99, sum(rate(apiserver_request_duration_seconds_bucket{cluster="$cluster",apiserver=~"$apiserver",instance=~"$instance",resource=~"$resource",subresource!="log",verb=~"$verb",verb!~"WATCH|WATCHLIST|PROXY"}[$interval])) by(verb,le))
                   seriesNameFormat: '{{verb}}'
       '1':
         kind: Panel
@@ -206,7 +227,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: sum(rate(apiserver_request_total{apiserver=~"$apiserver",instance=~"$instance",resource=~"$resource",code=~"$code",verb=~"$verb"}[$interval])) by(instance)
+                  query: sum(rate(apiserver_request_total{cluster="$cluster",apiserver=~"$apiserver",instance=~"$instance",resource=~"$resource",code=~"$code",verb=~"$verb"}[$interval])) by(instance)
                   seriesNameFormat: '{{instance}}'
       '2':
         kind: Panel
@@ -238,7 +259,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: histogram_quantile(0.99, sum(rate(apiserver_request_duration_seconds_bucket{apiserver=~"$apiserver",instance=~"$instance",resource=~"$resource",subresource!="log",verb=~"$verb",verb!~"WATCH|WATCHLIST|PROXY"}[$interval])) by(resource,le))
+                  query: histogram_quantile(0.99, sum(rate(apiserver_request_duration_seconds_bucket{cluster="$cluster",apiserver=~"$apiserver",instance=~"$instance",resource=~"$resource",subresource!="log",verb=~"$verb",verb!~"WATCH|WATCHLIST|PROXY"}[$interval])) by(resource,le))
                   seriesNameFormat: '{{resource}}'
       '3':
         kind: Panel
@@ -270,7 +291,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: sum(rate(apiserver_request_total{apiserver=~"$apiserver",instance=~"$instance",resource=~"$resource",code=~"$code",verb=~"$verb"}[$interval])) by(resource)
+                  query: sum(rate(apiserver_request_total{cluster="$cluster",apiserver=~"$apiserver",instance=~"$instance",resource=~"$resource",code=~"$code",verb=~"$verb"}[$interval])) by(resource)
                   seriesNameFormat: '{{resource}}'
       '4':
         kind: Panel
@@ -300,7 +321,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: histogram_quantile(0.99, sum(rate(apiserver_request_duration_seconds_bucket{apiserver=~"$apiserver",instance=~"$instance",resource=~"$resource",verb=~"LIST|GET"}[$interval])) by(le))
+                  query: histogram_quantile(0.99, sum(rate(apiserver_request_duration_seconds_bucket{cluster="$cluster",apiserver=~"$apiserver",instance=~"$instance",resource=~"$resource",verb=~"LIST|GET"}[$interval])) by(le))
                   seriesNameFormat: read
           - kind: TimeSeriesQuery
             spec:
@@ -310,7 +331,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: histogram_quantile(0.99, sum(rate(apiserver_request_duration_seconds_bucket{apiserver=~"$apiserver",instance=~"$instance",resource=~"$resource",verb=~"POST|PUT|PATCH|UPDATE|DELETE"}[$interval])) by(le))
+                  query: histogram_quantile(0.99, sum(rate(apiserver_request_duration_seconds_bucket{cluster="$cluster",apiserver=~"$apiserver",instance=~"$instance",resource=~"$resource",verb=~"POST|PUT|PATCH|UPDATE|DELETE"}[$interval])) by(le))
                   seriesNameFormat: write
       '5':
         kind: Panel
@@ -340,7 +361,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: sum(rate(apiserver_request_total{apiserver=~"$apiserver",instance=~"$instance",resource=~"$resource",verb=~"LIST|GET"}[$interval]))
+                  query: sum(rate(apiserver_request_total{cluster="$cluster",apiserver=~"$apiserver",instance=~"$instance",resource=~"$resource",verb=~"LIST|GET"}[$interval]))
                   seriesNameFormat: read
           - kind: TimeSeriesQuery
             spec:
@@ -350,7 +371,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: sum(rate(apiserver_request_total{apiserver=~"$apiserver",instance=~"$instance",resource=~"$resource",verb=~"POST|PUT|PATCH|UPDATE|DELETE"}[$interval]))
+                  query: sum(rate(apiserver_request_total{cluster="$cluster",apiserver=~"$apiserver",instance=~"$instance",resource=~"$resource",verb=~"POST|PUT|PATCH|UPDATE|DELETE"}[$interval]))
                   seriesNameFormat: write
       '6':
         kind: Panel
@@ -380,7 +401,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: sum(rate(apiserver_request_terminations_total{instance=~"$instance"}[$interval])) by (verb)
+                  query: sum(rate(apiserver_request_terminations_total{cluster="$cluster",instance=~"$instance"}[$interval])) by (verb)
                   seriesNameFormat: ''
       '7':
         kind: Panel
@@ -410,7 +431,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: sum(rate(apiserver_request_terminations_total{instance=~"$instance",resource=~"$resource",code=~"$code"}[$interval])) by(component)
+                  query: sum(rate(apiserver_request_terminations_total{cluster="$cluster",instance=~"$instance",resource=~"$resource",code=~"$code"}[$interval])) by(component)
                   seriesNameFormat: ''
       '8':
         kind: Panel
@@ -442,7 +463,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: sum(rate(apiserver_request_total{apiserver=~"$apiserver",instance=~"$instance",resource=~"$resource",verb=~"$verb",code=~"$code"}[$interval])) by(code)
+                  query: sum(rate(apiserver_request_total{cluster="$cluster",apiserver=~"$apiserver",instance=~"$instance",resource=~"$resource",verb=~"$verb",code=~"$code"}[$interval])) by(code)
                   seriesNameFormat: '{{code}}'
       '9':
         kind: Panel
@@ -474,7 +495,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: sum(apiserver_longrunning_requests{instance=~"$instance",resource=~"$resource",verb=~"$verb"}) by(instance)
+                  query: sum(apiserver_longrunning_requests{cluster="$cluster",instance=~"$instance",resource=~"$resource",verb=~"$verb"}) by(instance)
                   seriesNameFormat: '{{instance}}'
       '10':
         kind: Panel
@@ -506,7 +527,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: sum(apiserver_current_inflight_requests{instance=~"$instance"}) by (instance,request_kind)
+                  query: sum(apiserver_current_inflight_requests{cluster="$cluster",instance=~"$instance"}) by (instance,request_kind)
                   seriesNameFormat: '{{request_kind}}-{{instance}}'
       '11':
         kind: Panel
@@ -538,7 +559,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: histogram_quantile(0.99, sum(rate(apiserver_response_sizes_bucket{instance=~"$instance",resource=~"$resource",verb=~"$verb"}[$interval])) by(instance,le))
+                  query: histogram_quantile(0.99, sum(rate(apiserver_response_sizes_bucket{cluster="$cluster",instance=~"$instance",resource=~"$resource",verb=~"$verb"}[$interval])) by(instance,le))
                   seriesNameFormat: '{{instance}}'
       '12':
         kind: Panel
@@ -570,7 +591,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: histogram_quantile(0.99, sum(rate(apiserver_flowcontrol_request_queue_length_after_enqueue_bucket{instance=~"$instance",flow_schema=~"$flow_schema",priority_level=~"$priority_level"}[$interval])) by(flow_schema, priority_level, le))
+                  query: histogram_quantile(0.99, sum(rate(apiserver_flowcontrol_request_queue_length_after_enqueue_bucket{cluster="$cluster",instance=~"$instance",flow_schema=~"$flow_schema",priority_level=~"$priority_level"}[$interval])) by(flow_schema, priority_level, le))
                   seriesNameFormat: '{{flow_schema}}:{{priority_level}}'
       '13':
         kind: Panel
@@ -604,7 +625,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: histogram_quantile(0.99, sum(rate(apiserver_flowcontrol_request_wait_duration_seconds_bucket{instance=~"$instance",flow_schema=~"$flow_schema",priority_level=~"$priority_level"}[5m])) by(flow_schema, priority_level, le))
+                  query: histogram_quantile(0.99, sum(rate(apiserver_flowcontrol_request_wait_duration_seconds_bucket{cluster="$cluster",instance=~"$instance",flow_schema=~"$flow_schema",priority_level=~"$priority_level"}[5m])) by(flow_schema, priority_level, le))
                   seriesNameFormat: '{{flow_schema}}:{{priority_level}}'
       '14':
         kind: Panel
@@ -636,7 +657,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: sum(rate(apiserver_flowcontrol_dispatched_requests_total{instance=~"$instance",flow_schema=~"$flow_schema",priority_level=~"$priority_level"}[$interval])) by(flow_schema,priority_level)
+                  query: sum(rate(apiserver_flowcontrol_dispatched_requests_total{cluster="$cluster",instance=~"$instance",flow_schema=~"$flow_schema",priority_level=~"$priority_level"}[$interval])) by(flow_schema,priority_level)
                   seriesNameFormat: '{{flow_schema}}:{{priority_level}}'
       '15':
         kind: Panel
@@ -668,7 +689,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: histogram_quantile(0.99, sum(rate(apiserver_flowcontrol_request_execution_seconds_bucket{instance=~"$instance",flow_schema=~"$flow_schema",priority_level=~"$priority_level"}[$interval])) by(flow_schema, priority_level, le))
+                  query: histogram_quantile(0.99, sum(rate(apiserver_flowcontrol_request_execution_seconds_bucket{cluster="$cluster",instance=~"$instance",flow_schema=~"$flow_schema",priority_level=~"$priority_level"}[$interval])) by(flow_schema, priority_level, le))
                   seriesNameFormat: '{{flow_schema}}:{{priority_level}}'
       '16':
         kind: Panel
@@ -700,7 +721,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: sum(apiserver_flowcontrol_current_inqueue_requests{instance=~"$instance",flow_schema=~"$flow_schema",priority_level=~"$priority_level"}) by (flow_schema,priority_level)
+                  query: sum(apiserver_flowcontrol_current_inqueue_requests{cluster="$cluster",instance=~"$instance",flow_schema=~"$flow_schema",priority_level=~"$priority_level"}) by (flow_schema,priority_level)
                   seriesNameFormat: '{{flow_schema}}:{{priority_level}}'
       '17':
         kind: Panel
@@ -732,7 +753,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: sum(apiserver_flowcontrol_request_concurrency_in_use{instance=~".*:6443",priority_level=~"$priority_level"}) by (instance,flow_schema)
+                  query: sum(apiserver_flowcontrol_request_concurrency_in_use{cluster="$cluster",instance=~".*:6443",priority_level=~"$priority_level"}) by (instance,flow_schema)
                   seriesNameFormat: '{{instance}}:{{flow_schema}}'
     layouts:
     - kind: Grid

@@ -13,6 +13,23 @@ spec:
     variables:
     - kind: ListVariable
       spec:
+        allowAllValue: false
+        allowMultiple: false
+        display:
+          hidden: false
+          name: cluster
+        name: cluster
+        plugin:
+          kind: PrometheusLabelValuesVariable
+          spec:
+            datasource:
+              kind: PrometheusDatasource
+              name: rbac-query-proxy-datasource
+            labelName: name
+            matchers:
+            - acm_managed_cluster_labels{openshiftVersion_major!="3"}
+    - kind: ListVariable
+      spec:
         display:
           name: Master
           hidden: false
@@ -23,7 +40,7 @@ spec:
           spec:
             labelName: node
             matchers:
-            - kube_node_role{role="master"}
+            - kube_node_role{cluster="$cluster",role="master"}
             datasource:
               kind: PrometheusDatasource
               name: rbac-query-proxy-datasource
@@ -40,7 +57,7 @@ spec:
           spec:
             labelName: node
             matchers:
-            - kube_node_role{role=~"worker"}
+            - kube_node_role{cluster="$cluster",role=~"worker"}
             datasource:
               kind: PrometheusDatasource
               name: rbac-query-proxy-datasource
@@ -57,7 +74,7 @@ spec:
           spec:
             labelName: node
             matchers:
-            - kube_node_role{role="infra"}
+            - kube_node_role{cluster="$cluster",role="infra"}
             datasource:
               kind: PrometheusDatasource
               name: rbac-query-proxy-datasource
@@ -74,7 +91,7 @@ spec:
           spec:
             labelName: namespace
             matchers:
-            - kube_pod_info{namespace!~"(cluster-density.*|node-density-.*)"}
+            - kube_pod_info{cluster="$cluster",namespace!~"(cluster-density.*|node-density-.*)"}
             datasource:
               kind: PrometheusDatasource
               name: rbac-query-proxy-datasource
@@ -91,7 +108,7 @@ spec:
           spec:
             labelName: device
             matchers:
-            - node_disk_written_bytes_total
+            - node_disk_written_bytes_total{cluster="$cluster"}
             datasource:
               kind: PrometheusDatasource
               name: rbac-query-proxy-datasource
@@ -108,7 +125,7 @@ spec:
           spec:
             labelName: device
             matchers:
-            - node_network_receive_bytes_total
+            - node_network_receive_bytes_total{cluster="$cluster"}
             datasource:
               kind: PrometheusDatasource
               name: rbac-query-proxy-datasource
@@ -160,7 +177,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: sum( rate( (node_cpu_seconds_total{ mode != "idle" } * on (instance) group_left label_replace( kube_node_role{ role = "worker"} , "instance" , "$1" , "node" ,"(.*)") )[$interval:] ) ) by (instance) * 100
+                  query: sum( rate( (node_cpu_seconds_total{cluster="$cluster", mode != "idle" } * on (instance) group_left label_replace( kube_node_role{cluster="$cluster", role = "worker"} , "instance" , "$1" , "node" ,"(.*)") )[$interval:] ) ) by (instance) * 100
                   seriesNameFormat: '{{instance}}'
       '0_1':
         kind: Panel
@@ -191,7 +208,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: sum( rate( (node_cpu_seconds_total{ mode != "idle" } * on (instance) group_left label_replace( kube_node_role{ role = "control-plane"} , "instance" , "$1" , "node" ,"(.*)") )[$interval:] ) ) by (instance) * 100
+                  query: sum( rate( (node_cpu_seconds_total{cluster="$cluster", mode != "idle" } * on (instance) group_left label_replace( kube_node_role{cluster="$cluster", role = "control-plane"} , "instance" , "$1" , "node" ,"(.*)") )[$interval:] ) ) by (instance) * 100
                   seriesNameFormat: '{{instance}}'
       '0_2':
         kind: Panel
@@ -222,7 +239,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: 'node_load1 * on (instance) group_left label_replace( kube_node_role{ role = "worker"} , "instance" , "$1" , "node" ,"(.*)") '
+                  query: 'node_load1{cluster="$cluster"} * on (instance) group_left label_replace( kube_node_role{cluster="$cluster", role = "worker"} , "instance" , "$1" , "node" ,"(.*)") '
                   seriesNameFormat: '{{instance}}'
       '0_3':
         kind: Panel
@@ -253,7 +270,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: 'node_load1 * on (instance) group_left label_replace( kube_node_role{ role = "control-plane"} , "instance" , "$1" , "node" ,"(.*)") '
+                  query: 'node_load1{cluster="$cluster"} * on (instance) group_left label_replace( kube_node_role{cluster="$cluster", role = "control-plane"} , "instance" , "$1" , "node" ,"(.*)") '
                   seriesNameFormat: '{{instance}}'
       '0_4':
         kind: Panel
@@ -285,7 +302,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: node_memory_MemAvailable_bytes * on (instance) group_left label_replace( kube_node_role{ role = "worker"} , "instance" , "$1" , "node" ,"(.*)")
+                  query: node_memory_MemAvailable_bytes{cluster="$cluster"} * on (instance) group_left label_replace( kube_node_role{cluster="$cluster", role = "worker"} , "instance" , "$1" , "node" ,"(.*)")
                   seriesNameFormat: '{{instance}}'
           - kind: TimeSeriesQuery
             spec:
@@ -295,7 +312,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: sum( node_memory_MemAvailable_bytes * on (instance) group_left label_replace( kube_node_role{ role = "worker"} , "instance" , "$1" , "node" ,"(.*)") )
+                  query: sum( node_memory_MemAvailable_bytes{cluster="$cluster"} * on (instance) group_left label_replace( kube_node_role{cluster="$cluster", role = "worker"} , "instance" , "$1" , "node" ,"(.*)") )
                   seriesNameFormat: sum
       '0_5':
         kind: Panel
@@ -327,7 +344,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: node_memory_MemAvailable_bytes * on (instance) group_left label_replace( kube_node_role{ role = "control-plane"} , "instance" , "$1" , "node" ,"(.*)")
+                  query: node_memory_MemAvailable_bytes{cluster="$cluster"} * on (instance) group_left label_replace( kube_node_role{cluster="$cluster", role = "control-plane"} , "instance" , "$1" , "node" ,"(.*)")
                   seriesNameFormat: '{{instance}}'
           - kind: TimeSeriesQuery
             spec:
@@ -337,7 +354,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: sum( node_memory_MemAvailable_bytes * on (instance) group_left label_replace( kube_node_role{ role = "control-plane"} , "instance" , "$1" , "node" ,"(.*)") )
+                  query: sum( node_memory_MemAvailable_bytes{cluster="$cluster"} * on (instance) group_left label_replace( kube_node_role{cluster="$cluster", role = "control-plane"} , "instance" , "$1" , "node" ,"(.*)") )
                   seriesNameFormat: sum
       '0_6':
         kind: Panel
@@ -368,7 +385,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: sum by (id) (( rate(container_cpu_usage_seconds_total{ job=~".*", id =~"/system.slice|/system.slice/kubelet.service|/.*/ovs-vswitchd.service|/system.slice/crio.service|/system.slice/systemd-journald.service|/.*/ovsdb-server.service|/system.slice/systemd-udevd.service|/kubepods.slice"}[$interval])) * 100 * on (node) group_left kube_node_role{ role = "worker" } )
+                  query: sum by (id) (( rate(container_cpu_usage_seconds_total{cluster="$cluster", job=~".*", id =~"/system.slice|/system.slice/kubelet.service|/.*/ovs-vswitchd.service|/system.slice/crio.service|/system.slice/systemd-journald.service|/.*/ovsdb-server.service|/system.slice/systemd-udevd.service|/kubepods.slice"}[$interval])) * 100 * on (node) group_left kube_node_role{cluster="$cluster", role = "worker" } )
                   seriesNameFormat: '{{node}}'
       '0_7':
         kind: Panel
@@ -399,7 +416,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: sum by (id) (( rate(container_cpu_usage_seconds_total{ job=~".*", id =~"/system.slice|/system.slice/kubelet.service|/.*/ovs-vswitchd.service|/system.slice/crio.service|/system.slice/systemd-journald.service|/.*/ovsdb-server.service|/system.slice/systemd-udevd.service|/kubepods.slice"}[$interval])) * 100 * on (node) group_left kube_node_role{ role = "control-plane" } )
+                  query: sum by (id) (( rate(container_cpu_usage_seconds_total{cluster="$cluster", job=~".*", id =~"/system.slice|/system.slice/kubelet.service|/.*/ovs-vswitchd.service|/system.slice/crio.service|/system.slice/systemd-journald.service|/.*/ovsdb-server.service|/system.slice/systemd-udevd.service|/kubepods.slice"}[$interval])) * 100 * on (node) group_left kube_node_role{cluster="$cluster", role = "control-plane" } )
                   seriesNameFormat: '{{node}}'
       "0_8":
         kind: Panel
@@ -431,7 +448,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: sum by (id) ( container_memory_rss{ job=~".*", id =~"/system.slice|/system.slice/kubelet.service|/.*/ovs-vswitchd.service|/system.slice/crio.service|/system.slice/systemd-journald.service|/.*/ovsdb-server.service|/system.slice/systemd-udevd.service|/kubepods.slice"} * on (node) group_left kube_node_role{ role = "worker" } )
+                  query: sum by (id) ( container_memory_rss{cluster="$cluster", job=~".*", id =~"/system.slice|/system.slice/kubelet.service|/.*/ovs-vswitchd.service|/system.slice/crio.service|/system.slice/systemd-journald.service|/.*/ovsdb-server.service|/system.slice/systemd-udevd.service|/kubepods.slice"} * on (node) group_left kube_node_role{cluster="$cluster", role = "worker" } )
                   seriesNameFormat: '{{id}}'
       "0_9":
         kind: Panel
@@ -463,7 +480,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: sum by (id) ( container_memory_rss{ job=~".*", id =~"/system.slice|/system.slice/kubelet.service|/.*/ovs-vswitchd.service|/system.slice/crio.service|/system.slice/systemd-journald.service|/.*/ovsdb-server.service|/system.slice/systemd-udevd.service|/kubepods.slice"} * on (node) group_left kube_node_role{ role = "control-plane" } )
+                  query: sum by (id) ( container_memory_rss{cluster="$cluster", job=~".*", id =~"/system.slice|/system.slice/kubelet.service|/.*/ovs-vswitchd.service|/system.slice/crio.service|/system.slice/systemd-journald.service|/.*/ovsdb-server.service|/system.slice/systemd-udevd.service|/kubepods.slice"} * on (node) group_left kube_node_role{cluster="$cluster", role = "control-plane" } )
                   seriesNameFormat: '{{id}}'
       '0_10':
         kind: Panel
@@ -495,7 +512,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: sum by (node) (container_threads{ container!=""})  * on (node) group_left kube_node_role{ role = "worker" }
+                  query: sum by (node) (container_threads{cluster="$cluster", container!=""})  * on (node) group_left kube_node_role{cluster="$cluster", role = "worker" }
                   seriesNameFormat: '{{node}}'
       '0_11':
         kind: Panel
@@ -527,7 +544,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: sum by (node) (container_threads{ container!=""})  * on (node) group_left kube_node_role{ role = "control-plane" }
+                  query: sum by (node) (container_threads{cluster="$cluster", container!=""})  * on (node) group_left kube_node_role{cluster="$cluster", role = "control-plane" }
                   seriesNameFormat: '{{node}}'
       '0_12':
         kind: Panel
@@ -558,7 +575,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: rate( (  node_disk_reads_completed_total *  on (instance) group_left label_replace( kube_node_role{ role = "worker" } , "instance" , "$1" , "node" ,"(.*)") )[$interval:])
+                  query: rate( (  node_disk_reads_completed_total{cluster="$cluster"} *  on (instance) group_left label_replace( kube_node_role{cluster="$cluster", role = "worker" } , "instance" , "$1" , "node" ,"(.*)") )[$interval:])
                   seriesNameFormat: '{{instance}} - {{ device }} - read'
           - kind: TimeSeriesQuery
             spec:
@@ -568,7 +585,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: rate( (  node_disk_writes_completed_total *  on (instance) group_left label_replace( kube_node_role{ role = "worker" } , "instance" , "$1" , "node" ,"(.*)") )[$interval:])
+                  query: rate( (  node_disk_writes_completed_total{cluster="$cluster"} *  on (instance) group_left label_replace( kube_node_role{cluster="$cluster", role = "worker" } , "instance" , "$1" , "node" ,"(.*)") )[$interval:])
                   seriesNameFormat: '{{instance}} - {{ device }} - write'
       '0_13':
         kind: Panel
@@ -599,7 +616,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: rate( (  node_disk_reads_completed_total *  on (instance) group_left label_replace( kube_node_role{ role = "control-plane" } , "instance" , "$1" , "node" ,"(.*)") )[$interval:])
+                  query: rate( (  node_disk_reads_completed_total{cluster="$cluster"} *  on (instance) group_left label_replace( kube_node_role{cluster="$cluster", role = "control-plane" } , "instance" , "$1" , "node" ,"(.*)") )[$interval:])
                   seriesNameFormat: '{{instance}} - {{ device }} - read'
           - kind: TimeSeriesQuery
             spec:
@@ -609,7 +626,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: rate( (  node_disk_writes_completed_total *  on (instance) group_left label_replace( kube_node_role{ role = "control-plane" } , "instance" , "$1" , "node" ,"(.*)") )[$interval:])
+                  query: rate( (  node_disk_writes_completed_total{cluster="$cluster"} *  on (instance) group_left label_replace( kube_node_role{cluster="$cluster", role = "control-plane" } , "instance" , "$1" , "node" ,"(.*)") )[$interval:])
                   seriesNameFormat: '{{instance}} - {{ device }} - write'
       '1_0':
         kind: Panel
@@ -640,7 +657,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: topk(10, sum( irate(container_cpu_usage_seconds_total{pod=~"ovnkube-.*",namespace="openshift-ovn-kubernetes",container="ovnkube-controller"}[$interval])*100)  by (pod,node) )
+                  query: topk(10, sum( irate(container_cpu_usage_seconds_total{cluster="$cluster",pod=~"ovnkube-.*",namespace="openshift-ovn-kubernetes",container="ovnkube-controller"}[$interval])*100)  by (pod,node) )
                   seriesNameFormat: '{{pod}} - {{node}}'
       '1_1':
         kind: Panel
@@ -671,7 +688,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: topk(10, sum(container_memory_rss{pod=~"ovnkube-node-.*",namespace="openshift-ovn-kubernetes",container="ovnkube-controller"}) by (pod,node))
+                  query: topk(10, sum(container_memory_rss{cluster="$cluster",pod=~"ovnkube-node-.*",namespace="openshift-ovn-kubernetes",container="ovnkube-controller"}) by (pod,node))
                   seriesNameFormat: '{{pod}} - {{node}}'
       '1_2':
         kind: Panel
@@ -702,7 +719,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: topk(10, sum( irate(container_cpu_usage_seconds_total{pod=~"ovnkube-.*",namespace="openshift-ovn-kubernetes",container="ovn-controller"}[$interval])*100)  by (pod,node) )
+                  query: topk(10, sum( irate(container_cpu_usage_seconds_total{cluster="$cluster",pod=~"ovnkube-.*",namespace="openshift-ovn-kubernetes",container="ovn-controller"}[$interval])*100)  by (pod,node) )
                   seriesNameFormat: '{{pod}} - {{node}}'
       '1_3':
         kind: Panel
@@ -733,7 +750,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: topk(10, sum(container_memory_rss{pod=~"ovnkube-node-.*",namespace="openshift-ovn-kubernetes",container="ovn-controller"}) by (pod,node))
+                  query: topk(10, sum(container_memory_rss{cluster="$cluster",pod=~"ovnkube-node-.*",namespace="openshift-ovn-kubernetes",container="ovn-controller"}) by (pod,node))
                   seriesNameFormat: '{{pod}} - {{node}}'
       '1_4':
         kind: Panel
@@ -764,7 +781,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: topk(10, sum( irate(container_cpu_usage_seconds_total{pod=~"ovnkube-.*",namespace="openshift-ovn-kubernetes",container="nbdb"}[$interval])*100)  by (pod,node) )
+                  query: topk(10, sum( irate(container_cpu_usage_seconds_total{cluster="$cluster",pod=~"ovnkube-.*",namespace="openshift-ovn-kubernetes",container="nbdb"}[$interval])*100)  by (pod,node) )
                   seriesNameFormat: '{{pod}} - {{node}}'
       '1_5':
         kind: Panel
@@ -795,7 +812,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: topk(10, sum(container_memory_rss{pod=~"ovnkube-node-.*",namespace="openshift-ovn-kubernetes",container="nbdb"}) by (pod,node))
+                  query: topk(10, sum(container_memory_rss{cluster="$cluster",pod=~"ovnkube-node-.*",namespace="openshift-ovn-kubernetes",container="nbdb"}) by (pod,node))
                   seriesNameFormat: '{{pod}} - {{node}}'
       '1_6':
         kind: Panel
@@ -826,7 +843,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: topk(10, sum( irate(container_cpu_usage_seconds_total{pod=~"ovnkube-.*",namespace="openshift-ovn-kubernetes",container="northd"}[$interval])*100)  by (pod,node) )
+                  query: topk(10, sum( irate(container_cpu_usage_seconds_total{cluster="$cluster",pod=~"ovnkube-.*",namespace="openshift-ovn-kubernetes",container="northd"}[$interval])*100)  by (pod,node) )
                   seriesNameFormat: '{{pod}} - {{node}}'
       '1_7':
         kind: Panel
@@ -857,7 +874,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: topk(10, sum(container_memory_rss{pod=~"ovnkube-node-.*",namespace="openshift-ovn-kubernetes",container="northd"}) by (pod,node))
+                  query: topk(10, sum(container_memory_rss{cluster="$cluster",pod=~"ovnkube-node-.*",namespace="openshift-ovn-kubernetes",container="northd"}) by (pod,node))
                   seriesNameFormat: '{{pod}} - {{node}}'
       '1_8':
         kind: Panel
@@ -888,7 +905,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: topk(10, sum( irate(container_cpu_usage_seconds_total{pod=~"ovnkube-.*",namespace="openshift-ovn-kubernetes",container="sbdb"}[$interval])*100)  by (pod,node) )
+                  query: topk(10, sum( irate(container_cpu_usage_seconds_total{cluster="$cluster",pod=~"ovnkube-.*",namespace="openshift-ovn-kubernetes",container="sbdb"}[$interval])*100)  by (pod,node) )
                   seriesNameFormat: '{{pod}} - {{node}}'
       '1_9':
         kind: Panel
@@ -919,7 +936,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: topk(10, sum(container_memory_rss{pod=~"ovnkube-node-.*",namespace="openshift-ovn-kubernetes",container="sbdb"}) by (pod,node))
+                  query: topk(10, sum(container_memory_rss{cluster="$cluster",pod=~"ovnkube-node-.*",namespace="openshift-ovn-kubernetes",container="sbdb"}) by (pod,node))
                   seriesNameFormat: '{{pod}} - {{node}}'
       '1_10':
         kind: Panel
@@ -950,7 +967,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: irate(container_cpu_usage_seconds_total{id=~"/.*/ovs-vswitchd.service", node=~"$_master_node"}[$interval])*100
+                  query: irate(container_cpu_usage_seconds_total{cluster="$cluster",id=~"/.*/ovs-vswitchd.service", node=~"$_master_node"}[$interval])*100
                   seriesNameFormat: OVS CPU - {{ node }}
           - kind: TimeSeriesQuery
             spec:
@@ -960,7 +977,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: irate(container_cpu_usage_seconds_total{id=~"/.*/ovsdb-server.service", node=~"$_master_node"}[$interval])*100
+                  query: irate(container_cpu_usage_seconds_total{cluster="$cluster",id=~"/.*/ovsdb-server.service", node=~"$_master_node"}[$interval])*100
                   seriesNameFormat: OVS DB CPU - {{ node }}
       '1_11':
         kind: Panel
@@ -991,7 +1008,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: container_memory_rss{id=~"/.*/ovs-vswitchd.service", node=~"$_master_node"}
+                  query: container_memory_rss{cluster="$cluster",id=~"/.*/ovs-vswitchd.service", node=~"$_master_node"}
                   seriesNameFormat: OVS Memory - {{ node }}
           - kind: TimeSeriesQuery
             spec:
@@ -1001,7 +1018,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: container_memory_rss{id=~"/.*/ovsdb-server.service", node=~"$_master_node"}
+                  query: container_memory_rss{cluster="$cluster",id=~"/.*/ovsdb-server.service", node=~"$_master_node"}
                   seriesNameFormat: OVS DB Memory - {{ node }}
       '1_12':
         kind: Panel
@@ -1032,7 +1049,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: irate(container_cpu_usage_seconds_total{id=~"/.*/ovs-vswitchd.service", node=~"$_worker_node"}[$interval])*100
+                  query: irate(container_cpu_usage_seconds_total{cluster="$cluster",id=~"/.*/ovs-vswitchd.service", node=~"$_worker_node"}[$interval])*100
                   seriesNameFormat: OVS CPU - {{ node }}
           - kind: TimeSeriesQuery
             spec:
@@ -1042,7 +1059,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: irate(container_cpu_usage_seconds_total{id=~"/.*/ovsdb-server.service", node=~"$_worker_node"}[$interval])*100
+                  query: irate(container_cpu_usage_seconds_total{cluster="$cluster",id=~"/.*/ovsdb-server.service", node=~"$_worker_node"}[$interval])*100
                   seriesNameFormat: OVS DB CPU - {{ node }}
       '1_13':
         kind: Panel
@@ -1073,7 +1090,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: container_memory_rss{id=~"/.*/ovs-vswitchd.service", node=~"$_worker_node"}
+                  query: container_memory_rss{cluster="$cluster",id=~"/.*/ovs-vswitchd.service", node=~"$_worker_node"}
                   seriesNameFormat: OVS Memory - {{ node }}
           - kind: TimeSeriesQuery
             spec:
@@ -1083,7 +1100,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: container_memory_rss{id=~"/.*/ovsdb-server.service", node=~"$_worker_node"}
+                  query: container_memory_rss{cluster="$cluster",id=~"/.*/ovsdb-server.service", node=~"$_worker_node"}
                   seriesNameFormat: OVS DB Memory - {{ node }}
       '1_14':
         kind: Panel
@@ -1114,7 +1131,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: histogram_quantile(0.99, sum by (instance, pod, le) (rate(ovnkube_controller_pod_creation_latency_seconds_bucket[$interval]))) > 0
+                  query: histogram_quantile(0.99, sum by (instance, pod, le) (rate(ovnkube_controller_pod_creation_latency_seconds_bucket{cluster="$cluster"}[$interval]))) > 0
                   seriesNameFormat: '{{ pod }} - {{ instance }}'
       '1_15':
         kind: Panel
@@ -1145,7 +1162,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: histogram_quantile(0.99, sum(rate(ovnkube_node_cni_request_duration_seconds_bucket{command="ADD"}[$interval])) by (instance,pod,le)) > 0
+                  query: histogram_quantile(0.99, sum(rate(ovnkube_node_cni_request_duration_seconds_bucket{cluster="$cluster",command="ADD"}[$interval])) by (instance,pod,le)) > 0
                   seriesNameFormat: '{{ pod }} - {{ instance }}'
       '1_16':
         kind: Panel
@@ -1176,7 +1193,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: histogram_quantile(0.99, sum(rate(ovnkube_node_cni_request_duration_seconds_bucket{command="DEL"}[$interval])) by (instance,pod,le)) > 0
+                  query: histogram_quantile(0.99, sum(rate(ovnkube_node_cni_request_duration_seconds_bucket{cluster="$cluster",command="DEL"}[$interval])) by (instance,pod,le)) > 0
                   seriesNameFormat: '{{ pod }} - {{ instance }}'
       '1_17':
         kind: Panel
@@ -1207,7 +1224,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: sum( irate(container_cpu_usage_seconds_total{pod=~"(ovnkube-master|ovnkube-control-plane).+",namespace="openshift-ovn-kubernetes",container!~"POD|"}[$interval])*100 ) by (pod, node)
+                  query: sum( irate(container_cpu_usage_seconds_total{cluster="$cluster",pod=~"(ovnkube-master|ovnkube-control-plane).+",namespace="openshift-ovn-kubernetes",container!~"POD|"}[$interval])*100 ) by (pod, node)
                   seriesNameFormat: '{{pod}} - {{node}}'
       '1_18':
         kind: Panel
@@ -1238,7 +1255,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: container_memory_rss{pod=~"(ovnkube-master|ovnkube-control-plane).+",namespace="openshift-ovn-kubernetes",container!~"POD|"}
+                  query: container_memory_rss{cluster="$cluster",pod=~"(ovnkube-master|ovnkube-control-plane).+",namespace="openshift-ovn-kubernetes",container!~"POD|"}
                   seriesNameFormat: '{{pod}} - {{node}}'
       '2_0':
         kind: Panel
@@ -1269,7 +1286,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: sum(irate(container_cpu_usage_seconds_total{pod=~"prometheus-k8s-0",namespace!="",name!="",container="prometheus"}[$interval])) by (pod,container,node) * 100
+                  query: sum(irate(container_cpu_usage_seconds_total{cluster="$cluster",pod=~"prometheus-k8s-0",namespace!="",name!="",container="prometheus"}[$interval])) by (pod,container,node) * 100
                   seriesNameFormat: '{{pod}} - {{node}}'
           - kind: TimeSeriesQuery
             spec:
@@ -1279,7 +1296,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: sum(irate(container_cpu_usage_seconds_total{pod=~"prometheus-k8s-1",namespace!="",name!="",container="prometheus"}[$interval])) by (pod,container,node) * 100
+                  query: sum(irate(container_cpu_usage_seconds_total{cluster="$cluster",pod=~"prometheus-k8s-1",namespace!="",name!="",container="prometheus"}[$interval])) by (pod,container,node) * 100
                   seriesNameFormat: '{{pod}} - {{node}}'
       '2_1':
         kind: Panel
@@ -1310,7 +1327,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: sum(container_memory_rss{pod="prometheus-k8s-1",namespace!="",name!="",container="prometheus"}) by (pod)
+                  query: sum(container_memory_rss{cluster="$cluster",pod="prometheus-k8s-1",namespace!="",name!="",container="prometheus"}) by (pod)
                   seriesNameFormat: '{{pod}}'
           - kind: TimeSeriesQuery
             spec:
@@ -1320,7 +1337,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: sum(container_memory_rss{pod="prometheus-k8s-0",namespace!="",name!="",container="prometheus"}) by (pod)
+                  query: sum(container_memory_rss{cluster="$cluster",pod="prometheus-k8s-0",namespace!="",name!="",container="prometheus"}) by (pod)
                   seriesNameFormat: '{{pod}}'
       '2_2':
         kind: Panel
@@ -1351,7 +1368,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: sum(irate(container_cpu_usage_seconds_total{pod=~"metrics-server-.*",namespace!="",name!=""}[$interval])) by (pod,container) * 100
+                  query: sum(irate(container_cpu_usage_seconds_total{cluster="$cluster",pod=~"metrics-server-.*",namespace!="",name!=""}[$interval])) by (pod,container) * 100
                   seriesNameFormat: '{{pod}}'
           - kind: TimeSeriesQuery
             spec:
@@ -1361,7 +1378,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: sum(irate(container_cpu_usage_seconds_total{pod=~"prometheus-adapter-.*",namespace="openshift-monitoring",name!=""}[$interval])) by (pod,container) * 100
+                  query: sum(irate(container_cpu_usage_seconds_total{cluster="$cluster",pod=~"prometheus-adapter-.*",namespace="openshift-monitoring",name!=""}[$interval])) by (pod,container) * 100
                   seriesNameFormat: '{{pod}}'
       '2_3':
         kind: Panel
@@ -1392,7 +1409,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: sum(container_memory_rss{pod=~"metrics-server-.*",namespace!="",name!=""}) by (pod)
+                  query: sum(container_memory_rss{cluster="$cluster",pod=~"metrics-server-.*",namespace!="",name!=""}) by (pod)
                   seriesNameFormat: '{{pod}}'
           - kind: TimeSeriesQuery
             spec:
@@ -1402,7 +1419,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: sum(container_memory_rss{pod=~"prometheus-adapter-.*",namespace="openshift-monitoring",name!=""}) by (pod)
+                  query: sum(container_memory_rss{cluster="$cluster",pod=~"prometheus-adapter-.*",namespace="openshift-monitoring",name!=""}) by (pod)
                   seriesNameFormat: '{{pod}}'
       '3_0':
         kind: Panel
@@ -1433,7 +1450,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: topk(25, container_memory_rss{container!="POD",name!="",namespace!="",namespace=~"stackrox"})
+                  query: topk(25, container_memory_rss{cluster="$cluster",container!="POD",name!="",namespace!="",namespace=~"stackrox"})
                   seriesNameFormat: '{{ pod }}: {{ container }}'
       '3_1':
         kind: Panel
@@ -1464,7 +1481,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: topk(25, sum(irate(container_cpu_usage_seconds_total{container!="POD",name!="",namespace!="",namespace=~"stackrox"}[$interval])) by (pod,container,namespace,name,service) * 100)
+                  query: topk(25, sum(irate(container_cpu_usage_seconds_total{cluster="$cluster",container!="POD",name!="",namespace!="",namespace=~"stackrox"}[$interval])) by (pod,container,namespace,name,service) * 100)
                   seriesNameFormat: '{{ pod }}: {{ container }}'
       '4_0':
         kind: Panel
@@ -1495,7 +1512,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: topk(10,irate(process_cpu_seconds_total{service="kubelet",job="kubelet"}[$interval])*100 *  on (node) group_left kube_node_role{ role = "worker" })
+                  query: topk(10,irate(process_cpu_seconds_total{cluster="$cluster",service="kubelet",job="kubelet"}[$interval])*100 *  on (node) group_left kube_node_role{cluster="$cluster", role = "worker" })
                   seriesNameFormat: kubelet - {{node}}
       '4_1':
         kind: Panel
@@ -1526,7 +1543,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: topk(10,irate(process_cpu_seconds_total{service="kubelet",job="crio"}[$interval])*100 *  on (node) group_left kube_node_role{ role = "worker" })
+                  query: topk(10,irate(process_cpu_seconds_total{cluster="$cluster",service="kubelet",job="crio"}[$interval])*100 *  on (node) group_left kube_node_role{cluster="$cluster", role = "worker" })
                   seriesNameFormat: crio - {{node}}
       '4_2':
         kind: Panel
@@ -1558,7 +1575,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: topk(10,process_resident_memory_bytes{service="kubelet",job="kubelet"} *  on (node) group_left kube_node_role{ role = "worker" })
+                  query: topk(10,process_resident_memory_bytes{cluster="$cluster",service="kubelet",job="kubelet"} *  on (node) group_left kube_node_role{cluster="$cluster", role = "worker" })
                   seriesNameFormat: kubelet - {{node}}
       '4_3':
         kind: Panel
@@ -1590,7 +1607,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: topk(10,process_resident_memory_bytes{service="kubelet",job="crio"} *  on (node) group_left kube_node_role{ role = "worker" })
+                  query: topk(10,process_resident_memory_bytes{cluster="$cluster",service="kubelet",job="crio"} *  on (node) group_left kube_node_role{cluster="$cluster", role = "worker" })
                   seriesNameFormat: crio - {{node}}
       '4_4':
         kind: Panel
@@ -1621,7 +1638,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: (1 - node_filesystem_files_free{fstype!="",mountpoint="/run"} / node_filesystem_files{fstype!="",mountpoint="/run"}) * 100
+                  query: (1 - node_filesystem_files_free{cluster="$cluster",fstype!="",mountpoint="/run"} / node_filesystem_files{cluster="$cluster",fstype!="",mountpoint="/run"}) * 100
                   seriesNameFormat: '{{instance}}'
       '4_5':
         kind: Panel
@@ -1653,7 +1670,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: node_filesystem_files{fstype!="",mountpoint="/run"} - node_filesystem_files_free{fstype!="",mountpoint="/run"}
+                  query: node_filesystem_files{cluster="$cluster",fstype!="",mountpoint="/run"} - node_filesystem_files_free{cluster="$cluster",fstype!="",mountpoint="/run"}
                   seriesNameFormat: '{{instance}}'
           - kind: TimeSeriesQuery
             spec:
@@ -1663,7 +1680,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: sum(node_filesystem_files{fstype!="",mountpoint="/run"} - node_filesystem_files_free{fstype!="",mountpoint="/run"})
+                  query: sum(node_filesystem_files{cluster="$cluster",fstype!="",mountpoint="/run"} - node_filesystem_files_free{cluster="$cluster",fstype!="",mountpoint="/run"})
                   seriesNameFormat: sum
       '5_0':
         kind: Panel
@@ -1683,7 +1700,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: sum(kube_node_info{})
+                  query: sum(kube_node_info{cluster="$cluster"})
                   seriesNameFormat: Number of nodes
           - kind: TimeSeriesQuery
             spec:
@@ -1693,7 +1710,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: sum(kube_node_status_condition{status="true"}) by (condition) > 0
+                  query: sum(kube_node_status_condition{cluster="$cluster",status="true"}) by (condition) > 0
                   seriesNameFormat: 'Node: {{ condition }}'
       '5_1':
         kind: Panel
@@ -1713,7 +1730,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: sum(kube_namespace_status_phase) by (phase)
+                  query: sum(kube_namespace_status_phase{cluster="$cluster"}) by (phase)
                   seriesNameFormat: '{{ phase }}'
       '5_2':
         kind: Panel
@@ -1733,7 +1750,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: sum(kube_pod_status_phase{}) by (phase) > 0
+                  query: sum(kube_pod_status_phase{cluster="$cluster"}) by (phase) > 0
                   seriesNameFormat: '{{ phase}} Pods'
       '5_3':
         kind: Panel
@@ -1760,7 +1777,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: sum(kube_node_info{})
+                  query: sum(kube_node_info{cluster="$cluster"})
                   seriesNameFormat: Number of nodes
           - kind: TimeSeriesQuery
             spec:
@@ -1770,7 +1787,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: sum(kube_node_status_condition{status="true"}) by (condition) > 0
+                  query: sum(kube_node_status_condition{cluster="$cluster",status="true"}) by (condition) > 0
                   seriesNameFormat: 'Node: {{ condition }}'
       '5_4':
         kind: Panel
@@ -1797,7 +1814,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: sum(kube_namespace_status_phase) by (phase) > 0
+                  query: sum(kube_namespace_status_phase{cluster="$cluster"}) by (phase) > 0
                   seriesNameFormat: '{{ phase }} namespaces'
       '5_5':
         kind: Panel
@@ -1824,7 +1841,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: sum(kube_pod_status_phase{}) by (phase)
+                  query: sum(kube_pod_status_phase{cluster="$cluster"}) by (phase)
                   seriesNameFormat: '{{phase}} pods'
       '5_6':
         kind: Panel
@@ -1851,7 +1868,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: count(kube_secret_info{})
+                  query: count(kube_secret_info{cluster="$cluster"})
                   seriesNameFormat: secrets
           - kind: TimeSeriesQuery
             spec:
@@ -1861,7 +1878,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: count(kube_configmap_info{})
+                  query: count(kube_configmap_info{cluster="$cluster"})
                   seriesNameFormat: Configmaps
       '5_7':
         kind: Panel
@@ -1888,7 +1905,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: count(kube_deployment_spec_replicas)
+                  query: count(kube_deployment_spec_replicas{cluster="$cluster"})
                   seriesNameFormat: Deployments
       '5_8':
         kind: Panel
@@ -1915,7 +1932,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: count(kube_service_info{})
+                  query: count(kube_service_info{cluster="$cluster"})
                   seriesNameFormat: Services
       '5_9':
         kind: Panel
@@ -1942,7 +1959,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: count(openshift_route_info{})
+                  query: count(openshift_route_info{cluster="$cluster"})
                   seriesNameFormat: Routes
       '5_10':
         kind: Panel
@@ -1969,7 +1986,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: topk(10,sum(ALERTS{severity!="none"}) by (alertname, severity))
+                  query: topk(10,sum(ALERTS{cluster="$cluster",severity!="none"}) by (alertname, severity))
                   seriesNameFormat: '{{severity}}: {{alertname}}'
       '5_11':
         kind: Panel
@@ -2000,7 +2017,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: count(kube_pod_info{}) by (node)
+                  query: count(kube_pod_info{cluster="$cluster"}) by (node)
                   seriesNameFormat: '{{ node }}'
       '5_12':
         kind: Panel
@@ -2031,7 +2048,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: topk(10,irate(container_cpu_usage_seconds_total{namespace!="",container!="POD",name!=""}[$interval])*100)
+                  query: topk(10,irate(container_cpu_usage_seconds_total{cluster="$cluster",namespace!="",container!="POD",name!=""}[$interval])*100)
                   seriesNameFormat: '{{ namespace }} - {{ name }} - {{ node }}'
       '5_13':
         kind: Panel
@@ -2062,7 +2079,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: topk(10, container_memory_rss{namespace!="",container!="POD",name!=""})
+                  query: topk(10, container_memory_rss{cluster="$cluster",namespace!="",container!="POD",name!=""})
                   seriesNameFormat: '{{ namespace }} - {{ name }} - {{ node }}'
       '5_14':
         kind: Panel
@@ -2093,7 +2110,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: sum by (node)(container_memory_rss{id="/system.slice"})
+                  query: sum by (node)(container_memory_rss{cluster="$cluster",id="/system.slice"})
                   seriesNameFormat: system.slice - {{ node }}
       '5_15':
         kind: Panel
@@ -2120,7 +2137,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: topk(10, sum(go_goroutines{}) by (job,instance))
+                  query: topk(10, sum(go_goroutines{cluster="$cluster"}) by (job,instance))
                   seriesNameFormat: '{{ job }} - {{ instance }}'
       '6_0':
         kind: Panel
@@ -2140,7 +2157,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: sum by (condition)(cluster_operator_conditions{condition!=""})
+                  query: sum by (condition)(cluster_operator_conditions{cluster="$cluster",condition!=""})
                   seriesNameFormat: '{{ condition }}'
       '6_1':
         kind: Panel
@@ -2171,7 +2188,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: cluster_operator_conditions{name!="",reason!=""}
+                  query: cluster_operator_conditions{cluster="$cluster",name!="",reason!=""}
                   seriesNameFormat: '{{name}} - {{reason}}'
       '6_2':
         kind: Panel
@@ -2202,7 +2219,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: cluster_operator_conditions{condition="Degraded",name!="",reason!=""}
+                  query: cluster_operator_conditions{cluster="$cluster",condition="Degraded",name!="",reason!=""}
                   seriesNameFormat: '{{name}} - {{reason}}'
       '7_0':
         kind: Panel
@@ -2233,7 +2250,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: sum by (instance, mode)(irate(node_cpu_seconds_total{instance=~"$_master_node",job=~".*"}[$interval])) * 100
+                  query: sum by (instance, mode)(irate(node_cpu_seconds_total{cluster="$cluster",instance=~"$_master_node",job=~".*"}[$interval])) * 100
                   seriesNameFormat: Busy {{mode}}
       '7_1':
         kind: Panel
@@ -2265,7 +2282,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: node_memory_Active_bytes{instance=~"$_master_node"}
+                  query: node_memory_Active_bytes{cluster="$cluster",instance=~"$_master_node"}
                   seriesNameFormat: Active
           - kind: TimeSeriesQuery
             spec:
@@ -2275,7 +2292,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: node_memory_MemTotal_bytes{instance=~"$_master_node"}
+                  query: node_memory_MemTotal_bytes{cluster="$cluster",instance=~"$_master_node"}
                   seriesNameFormat: Total
           - kind: TimeSeriesQuery
             spec:
@@ -2285,7 +2302,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: node_memory_Cached_bytes{instance=~"$_master_node"} + node_memory_Buffers_bytes{instance=~"$_master_node"}
+                  query: node_memory_Cached_bytes{cluster="$cluster",instance=~"$_master_node"} + node_memory_Buffers_bytes{cluster="$cluster",instance=~"$_master_node"}
                   seriesNameFormat: Cached + Buffers
           - kind: TimeSeriesQuery
             spec:
@@ -2295,7 +2312,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: node_memory_MemAvailable_bytes{instance=~"$_master_node"}
+                  query: node_memory_MemAvailable_bytes{cluster="$cluster",instance=~"$_master_node"}
                   seriesNameFormat: Available
           - kind: TimeSeriesQuery
             spec:
@@ -2305,7 +2322,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: (node_memory_MemTotal_bytes{instance=~"$_master_node"} - (node_memory_MemFree_bytes{instance=~"$_master_node"} + node_memory_Buffers_bytes{instance=~"$_master_node"} +  node_memory_Cached_bytes{instance=~"$_master_node"}))
+                  query: (node_memory_MemTotal_bytes{cluster="$cluster",instance=~"$_master_node"} - (node_memory_MemFree_bytes{cluster="$cluster",instance=~"$_master_node"} + node_memory_Buffers_bytes{cluster="$cluster",instance=~"$_master_node"} +  node_memory_Cached_bytes{cluster="$cluster",instance=~"$_master_node"}))
                   seriesNameFormat: Used
       '7_2':
         kind: Panel
@@ -2336,7 +2353,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: rate(node_disk_read_bytes_total{device=~"$block_device",instance=~"$_master_node"}[$interval])
+                  query: rate(node_disk_read_bytes_total{cluster="$cluster",device=~"$block_device",instance=~"$_master_node"}[$interval])
                   seriesNameFormat: '{{ device }} - read'
           - kind: TimeSeriesQuery
             spec:
@@ -2346,7 +2363,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: rate(node_disk_written_bytes_total{device=~"$block_device",instance=~"$_master_node"}[$interval])
+                  query: rate(node_disk_written_bytes_total{cluster="$cluster",device=~"$block_device",instance=~"$_master_node"}[$interval])
                   seriesNameFormat: '{{ device }} - write'
       '7_3':
         kind: Panel
@@ -2374,7 +2391,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: rate(node_disk_reads_completed_total{device=~"$block_device",instance=~"$_master_node"}[$interval])
+                  query: rate(node_disk_reads_completed_total{cluster="$cluster",device=~"$block_device",instance=~"$_master_node"}[$interval])
                   seriesNameFormat: '{{ device }} - read'
           - kind: TimeSeriesQuery
             spec:
@@ -2384,7 +2401,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: rate(node_disk_writes_completed_total{device=~"$block_device",instance=~"$_master_node"}[$interval])
+                  query: rate(node_disk_writes_completed_total{cluster="$cluster",device=~"$block_device",instance=~"$_master_node"}[$interval])
                   seriesNameFormat: '{{ device }} - write'
       '7_4':
         kind: Panel
@@ -2415,7 +2432,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: rate(node_network_receive_bytes_total{instance=~"$_master_node",device=~"$net_device"}[$interval]) * 8
+                  query: rate(node_network_receive_bytes_total{cluster="$cluster",instance=~"$_master_node",device=~"$net_device"}[$interval]) * 8
                   seriesNameFormat: '{{instance}} - {{device}} - RX'
           - kind: TimeSeriesQuery
             spec:
@@ -2425,7 +2442,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: rate(node_network_transmit_bytes_total{instance=~"$_master_node",device=~"$net_device"}[$interval]) * 8
+                  query: rate(node_network_transmit_bytes_total{cluster="$cluster",instance=~"$_master_node",device=~"$net_device"}[$interval]) * 8
                   seriesNameFormat: '{{instance}} - {{device}} - TX'
       '7_5':
         kind: Panel
@@ -2456,7 +2473,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: rate(node_network_receive_packets_total{instance=~"$_master_node",device=~"$net_device"}[$interval])
+                  query: rate(node_network_receive_packets_total{cluster="$cluster",instance=~"$_master_node",device=~"$net_device"}[$interval])
                   seriesNameFormat: '{{instance}} - {{device}} - RX'
           - kind: TimeSeriesQuery
             spec:
@@ -2466,7 +2483,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: rate(node_network_transmit_packets_total{instance=~"$_master_node",device=~"$net_device"}[$interval])
+                  query: rate(node_network_transmit_packets_total{cluster="$cluster",instance=~"$_master_node",device=~"$net_device"}[$interval])
                   seriesNameFormat: '{{instance}} - {{device}} - TX'
       '7_6':
         kind: Panel
@@ -2497,7 +2514,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: topk(10, rate(node_network_receive_drop_total{instance=~"$_master_node"}[$interval]))
+                  query: topk(10, rate(node_network_receive_drop_total{cluster="$cluster",instance=~"$_master_node"}[$interval]))
                   seriesNameFormat: rx-drop-{{ device }}
           - kind: TimeSeriesQuery
             spec:
@@ -2507,7 +2524,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: topk(10,rate(node_network_transmit_drop_total{instance=~"$_master_node"}[$interval]))
+                  query: topk(10,rate(node_network_transmit_drop_total{cluster="$cluster",instance=~"$_master_node"}[$interval]))
                   seriesNameFormat: tx-drop-{{ device }}
       '7_7':
         kind: Panel
@@ -2536,7 +2553,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: node_nf_conntrack_entries{instance=~"$_master_node"}
+                  query: node_nf_conntrack_entries{cluster="$cluster",instance=~"$_master_node"}
                   seriesNameFormat: conntrack_entries
           - kind: TimeSeriesQuery
             spec:
@@ -2546,7 +2563,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: node_nf_conntrack_entries_limit{instance=~"$_master_node"}
+                  query: node_nf_conntrack_entries_limit{cluster="$cluster",instance=~"$_master_node"}
                   seriesNameFormat: conntrack_limit
       '7_8':
         kind: Panel
@@ -2577,7 +2594,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: topk(10, sum(irate(container_cpu_usage_seconds_total{container!="POD",name!="",node=~"$_master_node",namespace!="",namespace=~"$namespace"}[$interval])) by (pod,container,namespace,name,service) * 100)
+                  query: topk(10, sum(irate(container_cpu_usage_seconds_total{cluster="$cluster",container!="POD",name!="",node=~"$_master_node",namespace!="",namespace=~"$namespace"}[$interval])) by (pod,container,namespace,name,service) * 100)
                   seriesNameFormat: '{{ pod }}: {{ container }}'
       '7_9':
         kind: Panel
@@ -2609,7 +2626,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: topk(10, container_memory_rss{container!="POD",name!="",node=~"$_master_node",namespace!="",namespace=~"$namespace"})
+                  query: topk(10, container_memory_rss{cluster="$cluster",container!="POD",name!="",node=~"$_master_node",namespace!="",namespace=~"$namespace"})
                   seriesNameFormat: '{{ pod }}: {{ container }}'
       '7_10':
         kind: Panel
@@ -2640,7 +2657,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: sum by (id) ( rate(container_cpu_usage_seconds_total{ job=~".*", id =~"/system.slice|/system.slice/kubelet.service|/.*/ovs-vswitchd.service|/system.slice/crio.service|/system.slice/systemd-journald.service|/.*/ovsdb-server.service|/system.slice/systemd-udevd.service|/kubepods.slice", node=~"$_master_node"}[$interval])) * 100
+                  query: sum by (id) ( rate(container_cpu_usage_seconds_total{cluster="$cluster", job=~".*", id =~"/system.slice|/system.slice/kubelet.service|/.*/ovs-vswitchd.service|/system.slice/crio.service|/system.slice/systemd-journald.service|/.*/ovsdb-server.service|/system.slice/systemd-udevd.service|/kubepods.slice", node=~"$_master_node"}[$interval])) * 100
                   seriesNameFormat: '{{ id }}'
       '7_11':
         kind: Panel
@@ -2672,7 +2689,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: sum by (id) ( container_memory_rss{ job=~".*", id =~"/system.slice|/system.slice/kubelet.service|/.*/ovs-vswitchd.service|/system.slice/crio.service|/system.slice/systemd-journald.service|/system.slice/.*.service|/system.slice/systemd-udevd.service|/kubepods.slice", node=~"$_master_node"})
+                  query: sum by (id) ( container_memory_rss{cluster="$cluster", job=~".*", id =~"/system.slice|/system.slice/kubelet.service|/.*/ovs-vswitchd.service|/system.slice/crio.service|/system.slice/systemd-journald.service|/system.slice/.*.service|/system.slice/systemd-udevd.service|/kubepods.slice", node=~"$_master_node"})
                   seriesNameFormat: '{{ id }}'
       '7_12':
         kind: Panel
@@ -2703,7 +2720,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: sum(rate(container_fs_writes_bytes_total{device!~".+dm.+", node=~"$_master_node", pod!=""}[$interval])) by (device, pod)
+                  query: sum(rate(container_fs_writes_bytes_total{cluster="$cluster",device!~".+dm.+", node=~"$_master_node", pod!=""}[$interval])) by (device, pod)
                   seriesNameFormat: '{{ pod }}: {{ device }} - write'
           - kind: TimeSeriesQuery
             spec:
@@ -2713,7 +2730,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: sum(rate(container_fs_reads_bytes_total{device!~".+dm.+", node=~"$_master_node", pod!=""}[$interval])) by (device, pod)
+                  query: sum(rate(container_fs_reads_bytes_total{cluster="$cluster",device!~".+dm.+", node=~"$_master_node", pod!=""}[$interval])) by (device, pod)
                   seriesNameFormat: '{{ pod }}: {{ device }} - read'
       '7_13':
         kind: Panel
@@ -2744,7 +2761,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: sum(rate(container_fs_writes_bytes_total{device!~".+dm.+", node=~"$_master_node", id =~"/system.slice/kubelet.service|/.*/ovs-vswitchd.service|/system.slice/crio.service|/system.slice/systemd-journald.service|/.*/ovsdb-server.service|/system.slice/systemd-udevd.service|/kubepods.slice"}[$interval])) by (device, id)
+                  query: sum(rate(container_fs_writes_bytes_total{cluster="$cluster",device!~".+dm.+", node=~"$_master_node", id =~"/system.slice/kubelet.service|/.*/ovs-vswitchd.service|/system.slice/crio.service|/system.slice/systemd-journald.service|/.*/ovsdb-server.service|/system.slice/systemd-udevd.service|/kubepods.slice"}[$interval])) by (device, id)
                   seriesNameFormat: '{{ id }}: {{ device }} - write'
           - kind: TimeSeriesQuery
             spec:
@@ -2754,7 +2771,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: sum(rate(container_fs_reads_bytes_total{device!~".+dm.+", node=~"$_master_node", id =~"/system.slice/kubelet.service|/.*/ovs-vswitchd.service|/system.slice/crio.service|/system.slice/systemd-journald.service|/.*/ovsdb-server.service|/system.slice/systemd-udevd.service|/kubepods.slice"}[$interval])) by (device, id)
+                  query: sum(rate(container_fs_reads_bytes_total{cluster="$cluster",device!~".+dm.+", node=~"$_master_node", id =~"/system.slice/kubelet.service|/.*/ovs-vswitchd.service|/system.slice/crio.service|/system.slice/systemd-journald.service|/.*/ovsdb-server.service|/system.slice/systemd-udevd.service|/kubepods.slice"}[$interval])) by (device, id)
                   seriesNameFormat: '{{ id }}: {{ device }} - read'
       '8_0':
         kind: Panel
@@ -2785,7 +2802,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: sum by (instance, mode)(irate(node_cpu_seconds_total{instance=~"$_worker_node",job=~".*"}[$interval])) * 100
+                  query: sum by (instance, mode)(irate(node_cpu_seconds_total{cluster="$cluster",instance=~"$_worker_node",job=~".*"}[$interval])) * 100
                   seriesNameFormat: Busy {{mode}}
       '8_1':
         kind: Panel
@@ -2817,7 +2834,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: node_memory_Active_bytes{instance=~"$_worker_node"}
+                  query: node_memory_Active_bytes{cluster="$cluster",instance=~"$_worker_node"}
                   seriesNameFormat: Active
           - kind: TimeSeriesQuery
             spec:
@@ -2827,7 +2844,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: node_memory_MemTotal_bytes{instance=~"$_worker_node"}
+                  query: node_memory_MemTotal_bytes{cluster="$cluster",instance=~"$_worker_node"}
                   seriesNameFormat: Total
           - kind: TimeSeriesQuery
             spec:
@@ -2837,7 +2854,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: node_memory_Cached_bytes{instance=~"$_worker_node"} + node_memory_Buffers_bytes{instance=~"$_worker_node"}
+                  query: node_memory_Cached_bytes{cluster="$cluster",instance=~"$_worker_node"} + node_memory_Buffers_bytes{cluster="$cluster",instance=~"$_worker_node"}
                   seriesNameFormat: Cached + Buffers
           - kind: TimeSeriesQuery
             spec:
@@ -2847,7 +2864,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: node_memory_MemAvailable_bytes{instance=~"$_worker_node"}
+                  query: node_memory_MemAvailable_bytes{cluster="$cluster",instance=~"$_worker_node"}
                   seriesNameFormat: Available
           - kind: TimeSeriesQuery
             spec:
@@ -2857,7 +2874,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: (node_memory_MemTotal_bytes{instance=~"$_worker_node"} - (node_memory_MemFree_bytes{instance=~"$_worker_node"} + node_memory_Buffers_bytes{instance=~"$_worker_node"} +  node_memory_Cached_bytes{instance=~"$_worker_node"}))
+                  query: (node_memory_MemTotal_bytes{cluster="$cluster",instance=~"$_worker_node"} - (node_memory_MemFree_bytes{cluster="$cluster",instance=~"$_worker_node"} + node_memory_Buffers_bytes{cluster="$cluster",instance=~"$_worker_node"} +  node_memory_Cached_bytes{cluster="$cluster",instance=~"$_worker_node"}))
                   seriesNameFormat: Used
       '8_2':
         kind: Panel
@@ -2888,7 +2905,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: rate(node_disk_read_bytes_total{device=~"$block_device",instance=~"$_worker_node"}[$interval])
+                  query: rate(node_disk_read_bytes_total{cluster="$cluster",device=~"$block_device",instance=~"$_worker_node"}[$interval])
                   seriesNameFormat: '{{ device }} - read'
           - kind: TimeSeriesQuery
             spec:
@@ -2898,7 +2915,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: rate(node_disk_written_bytes_total{device=~"$block_device",instance=~"$_worker_node"}[$interval])
+                  query: rate(node_disk_written_bytes_total{cluster="$cluster",device=~"$block_device",instance=~"$_worker_node"}[$interval])
                   seriesNameFormat: '{{ device }} - write'
       '8_3':
         kind: Panel
@@ -2926,7 +2943,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: rate(node_disk_reads_completed_total{device=~"$block_device",instance=~"$_worker_node"}[$interval])
+                  query: rate(node_disk_reads_completed_total{cluster="$cluster",device=~"$block_device",instance=~"$_worker_node"}[$interval])
                   seriesNameFormat: '{{ device }} - read'
           - kind: TimeSeriesQuery
             spec:
@@ -2936,7 +2953,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: rate(node_disk_writes_completed_total{device=~"$block_device",instance=~"$_worker_node"}[$interval])
+                  query: rate(node_disk_writes_completed_total{cluster="$cluster",device=~"$block_device",instance=~"$_worker_node"}[$interval])
                   seriesNameFormat: '{{ device }} - write'
       '8_4':
         kind: Panel
@@ -2967,7 +2984,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: rate(node_network_receive_bytes_total{instance=~"$_worker_node",device=~"$net_device"}[$interval]) * 8
+                  query: rate(node_network_receive_bytes_total{cluster="$cluster",instance=~"$_worker_node",device=~"$net_device"}[$interval]) * 8
                   seriesNameFormat: '{{instance}} - {{device}} - RX'
           - kind: TimeSeriesQuery
             spec:
@@ -2977,7 +2994,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: rate(node_network_transmit_bytes_total{instance=~"$_worker_node",device=~"$net_device"}[$interval]) * 8
+                  query: rate(node_network_transmit_bytes_total{cluster="$cluster",instance=~"$_worker_node",device=~"$net_device"}[$interval]) * 8
                   seriesNameFormat: '{{instance}} - {{device}} - TX'
       '8_5':
         kind: Panel
@@ -3008,7 +3025,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: rate(node_network_receive_packets_total{instance=~"$_worker_node",device=~"$net_device"}[$interval])
+                  query: rate(node_network_receive_packets_total{cluster="$cluster",instance=~"$_worker_node",device=~"$net_device"}[$interval])
                   seriesNameFormat: '{{instance}} - {{device}} - RX'
           - kind: TimeSeriesQuery
             spec:
@@ -3018,7 +3035,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: rate(node_network_transmit_packets_total{instance=~"$_worker_node",device=~"$net_device"}[$interval])
+                  query: rate(node_network_transmit_packets_total{cluster="$cluster",instance=~"$_worker_node",device=~"$net_device"}[$interval])
                   seriesNameFormat: '{{instance}} - {{device}} - TX'
       '8_6':
         kind: Panel
@@ -3049,7 +3066,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: topk(10, rate(node_network_receive_drop_total{instance=~"$_worker_node"}[$interval]))
+                  query: topk(10, rate(node_network_receive_drop_total{cluster="$cluster",instance=~"$_worker_node"}[$interval]))
                   seriesNameFormat: rx-drop-{{ device }}
           - kind: TimeSeriesQuery
             spec:
@@ -3059,7 +3076,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: topk(10,rate(node_network_transmit_drop_total{instance=~"$_worker_node"}[$interval]))
+                  query: topk(10,rate(node_network_transmit_drop_total{cluster="$cluster",instance=~"$_worker_node"}[$interval]))
                   seriesNameFormat: tx-drop-{{ device }}
       '8_7':
         kind: Panel
@@ -3088,7 +3105,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: node_nf_conntrack_entries{instance=~"$_worker_node"}
+                  query: node_nf_conntrack_entries{cluster="$cluster",instance=~"$_worker_node"}
                   seriesNameFormat: conntrack_entries
           - kind: TimeSeriesQuery
             spec:
@@ -3098,7 +3115,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: node_nf_conntrack_entries_limit{instance=~"$_worker_node"}
+                  query: node_nf_conntrack_entries_limit{cluster="$cluster",instance=~"$_worker_node"}
                   seriesNameFormat: conntrack_limit
       '8_8':
         kind: Panel
@@ -3129,7 +3146,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: topk(10, sum(irate(container_cpu_usage_seconds_total{container!="POD",name!="",node=~"$_worker_node",namespace!="",namespace=~"$namespace"}[$interval])) by (pod,container,namespace,name,service) * 100)
+                  query: topk(10, sum(irate(container_cpu_usage_seconds_total{cluster="$cluster",container!="POD",name!="",node=~"$_worker_node",namespace!="",namespace=~"$namespace"}[$interval])) by (pod,container,namespace,name,service) * 100)
                   seriesNameFormat: '{{ pod }}: {{ container }}'
       '8_9':
         kind: Panel
@@ -3161,7 +3178,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: topk(10, container_memory_rss{container!="POD",name!="",node=~"$_worker_node",namespace!="",namespace=~"$namespace"})
+                  query: topk(10, container_memory_rss{cluster="$cluster",container!="POD",name!="",node=~"$_worker_node",namespace!="",namespace=~"$namespace"})
                   seriesNameFormat: '{{ pod }}: {{ container }}'
       '8_10':
         kind: Panel
@@ -3192,7 +3209,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: sum by (id) ( rate(container_cpu_usage_seconds_total{ job=~".*", id =~"/system.slice|/system.slice/kubelet.service|/.*/ovs-vswitchd.service|/system.slice/crio.service|/system.slice/systemd-journald.service|/.*/ovsdb-server.service|/system.slice/systemd-udevd.service|/kubepods.slice", node=~"$_worker_node"}[$interval])) * 100
+                  query: sum by (id) ( rate(container_cpu_usage_seconds_total{cluster="$cluster", job=~".*", id =~"/system.slice|/system.slice/kubelet.service|/.*/ovs-vswitchd.service|/system.slice/crio.service|/system.slice/systemd-journald.service|/.*/ovsdb-server.service|/system.slice/systemd-udevd.service|/kubepods.slice", node=~"$_worker_node"}[$interval])) * 100
                   seriesNameFormat: '{{ id }}'
       '8_11':
         kind: Panel
@@ -3224,7 +3241,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: sum by (id) ( container_memory_rss{ job=~".*", id =~"/system.slice|/system.slice/kubelet.service|/.*/ovs-vswitchd.service|/system.slice/crio.service|/system.slice/systemd-journald.service|/system.slice/.*.service|/system.slice/systemd-udevd.service|/kubepods.slice", node=~"$_worker_node"})
+                  query: sum by (id) ( container_memory_rss{cluster="$cluster", job=~".*", id =~"/system.slice|/system.slice/kubelet.service|/.*/ovs-vswitchd.service|/system.slice/crio.service|/system.slice/systemd-journald.service|/system.slice/.*.service|/system.slice/systemd-udevd.service|/kubepods.slice", node=~"$_worker_node"})
                   seriesNameFormat: '{{ id }}'
       '9_0':
         kind: Panel
@@ -3255,7 +3272,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: sum by (instance, mode)(irate(node_cpu_seconds_total{instance=~"$_infra_node",job=~".*"}[$interval])) * 100
+                  query: sum by (instance, mode)(irate(node_cpu_seconds_total{cluster="$cluster",instance=~"$_infra_node",job=~".*"}[$interval])) * 100
                   seriesNameFormat: Busy {{mode}}
       '9_1':
         kind: Panel
@@ -3286,7 +3303,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: node_memory_Active_bytes{instance=~"$_infra_node"}
+                  query: node_memory_Active_bytes{cluster="$cluster",instance=~"$_infra_node"}
                   seriesNameFormat: Active
           - kind: TimeSeriesQuery
             spec:
@@ -3296,7 +3313,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: node_memory_MemTotal_bytes{instance=~"$_infra_node"}
+                  query: node_memory_MemTotal_bytes{cluster="$cluster",instance=~"$_infra_node"}
                   seriesNameFormat: Total
           - kind: TimeSeriesQuery
             spec:
@@ -3306,7 +3323,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: node_memory_Cached_bytes{instance=~"$_infra_node"} + node_memory_Buffers_bytes{instance=~"$_infra_node"}
+                  query: node_memory_Cached_bytes{cluster="$cluster",instance=~"$_infra_node"} + node_memory_Buffers_bytes{cluster="$cluster",instance=~"$_infra_node"}
                   seriesNameFormat: Cached + Buffers
           - kind: TimeSeriesQuery
             spec:
@@ -3316,7 +3333,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: node_memory_MemAvailable_bytes{instance=~"$_infra_node"}
+                  query: node_memory_MemAvailable_bytes{cluster="$cluster",instance=~"$_infra_node"}
                   seriesNameFormat: Available
           - kind: TimeSeriesQuery
             spec:
@@ -3326,7 +3343,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: (node_memory_MemTotal_bytes{instance=~"$_infra_node"} - (node_memory_MemFree_bytes{instance=~"$_infra_node"} + node_memory_Buffers_bytes{instance=~"$_infra_node"} +  node_memory_Cached_bytes{instance=~"$_infra_node"}))
+                  query: (node_memory_MemTotal_bytes{cluster="$cluster",instance=~"$_infra_node"} - (node_memory_MemFree_bytes{cluster="$cluster",instance=~"$_infra_node"} + node_memory_Buffers_bytes{cluster="$cluster",instance=~"$_infra_node"} +  node_memory_Cached_bytes{cluster="$cluster",instance=~"$_infra_node"}))
                   seriesNameFormat: Used
       '9_2':
         kind: Panel
@@ -3357,7 +3374,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: rate(node_disk_read_bytes_total{device=~"$block_device",instance=~"$_infra_node"}[$interval])
+                  query: rate(node_disk_read_bytes_total{cluster="$cluster",device=~"$block_device",instance=~"$_infra_node"}[$interval])
                   seriesNameFormat: '{{ device }} - read'
           - kind: TimeSeriesQuery
             spec:
@@ -3367,7 +3384,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: rate(node_disk_written_bytes_total{device=~"$block_device",instance=~"$_infra_node"}[$interval])
+                  query: rate(node_disk_written_bytes_total{cluster="$cluster",device=~"$block_device",instance=~"$_infra_node"}[$interval])
                   seriesNameFormat: '{{ device }} - write'
       '9_3':
         kind: Panel
@@ -3395,7 +3412,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: rate(node_disk_reads_completed_total{device=~"$block_device",instance=~"$_infra_node"}[$interval])
+                  query: rate(node_disk_reads_completed_total{cluster="$cluster",device=~"$block_device",instance=~"$_infra_node"}[$interval])
                   seriesNameFormat: '{{ device }} - read'
           - kind: TimeSeriesQuery
             spec:
@@ -3405,7 +3422,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: rate(node_disk_writes_completed_total{device=~"$block_device",instance=~"$_infra_node"}[$interval])
+                  query: rate(node_disk_writes_completed_total{cluster="$cluster",device=~"$block_device",instance=~"$_infra_node"}[$interval])
                   seriesNameFormat: '{{ device }} - write'
       '9_4':
         kind: Panel
@@ -3436,7 +3453,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: rate(node_network_receive_bytes_total{instance=~"$_infra_node",device=~"$net_device"}[$interval]) * 8
+                  query: rate(node_network_receive_bytes_total{cluster="$cluster",instance=~"$_infra_node",device=~"$net_device"}[$interval]) * 8
                   seriesNameFormat: '{{instance}} - {{device}} - RX'
           - kind: TimeSeriesQuery
             spec:
@@ -3446,7 +3463,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: rate(node_network_transmit_bytes_total{instance=~"$_infra_node",device=~"$net_device"}[$interval]) * 8
+                  query: rate(node_network_transmit_bytes_total{cluster="$cluster",instance=~"$_infra_node",device=~"$net_device"}[$interval]) * 8
                   seriesNameFormat: '{{instance}} - {{device}} - TX'
       '9_5':
         kind: Panel
@@ -3477,7 +3494,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: rate(node_network_receive_packets_total{instance=~"$_infra_node",device=~"$net_device"}[$interval])
+                  query: rate(node_network_receive_packets_total{cluster="$cluster",instance=~"$_infra_node",device=~"$net_device"}[$interval])
                   seriesNameFormat: '{{instance}} - {{device}} - RX'
           - kind: TimeSeriesQuery
             spec:
@@ -3487,7 +3504,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: rate(node_network_transmit_packets_total{instance=~"$_infra_node",device=~"$net_device"}[$interval])
+                  query: rate(node_network_transmit_packets_total{cluster="$cluster",instance=~"$_infra_node",device=~"$net_device"}[$interval])
                   seriesNameFormat: '{{instance}} - {{device}} - TX'
       '9_6':
         kind: Panel
@@ -3518,7 +3535,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: topk(10, rate(node_network_receive_drop_total{instance=~"$_infra_node"}[$interval]))
+                  query: topk(10, rate(node_network_receive_drop_total{cluster="$cluster",instance=~"$_infra_node"}[$interval]))
                   seriesNameFormat: rx-drop-{{ device }}
           - kind: TimeSeriesQuery
             spec:
@@ -3528,7 +3545,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: topk(10,rate(node_network_transmit_drop_total{instance=~"$_infra_node"}[$interval]))
+                  query: topk(10,rate(node_network_transmit_drop_total{cluster="$cluster",instance=~"$_infra_node"}[$interval]))
                   seriesNameFormat: tx-drop-{{ device }}
       '9_7':
         kind: Panel
@@ -3556,7 +3573,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: node_nf_conntrack_entries{instance=~"$_infra_node"}
+                  query: node_nf_conntrack_entries{cluster="$cluster",instance=~"$_infra_node"}
                   seriesNameFormat: conntrack_entries
           - kind: TimeSeriesQuery
             spec:
@@ -3566,7 +3583,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: node_nf_conntrack_entries_limit{instance=~"$_infra_node"}
+                  query: node_nf_conntrack_entries_limit{cluster="$cluster",instance=~"$_infra_node"}
                   seriesNameFormat: conntrack_limit
       '9_8':
         kind: Panel
@@ -3597,7 +3614,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: topk(10, sum(irate(container_cpu_usage_seconds_total{container!="POD",name!="",node=~"$_infra_node",namespace!="",namespace=~"$namespace"}[$interval])) by (pod,container,namespace,name,service) * 100)
+                  query: topk(10, sum(irate(container_cpu_usage_seconds_total{cluster="$cluster",container!="POD",name!="",node=~"$_infra_node",namespace!="",namespace=~"$namespace"}[$interval])) by (pod,container,namespace,name,service) * 100)
                   seriesNameFormat: '{{ pod }}: {{ container }}'
       '9_9':
         kind: Panel
@@ -3628,7 +3645,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: topk(10, container_memory_rss{container!="POD",name!="",node=~"$_infra_node",namespace!="",namespace=~"$namespace"})
+                  query: topk(10, container_memory_rss{cluster="$cluster",container!="POD",name!="",node=~"$_infra_node",namespace!="",namespace=~"$namespace"})
                   seriesNameFormat: '{{ pod }}: {{ container }}'
     layouts:
     - kind: Grid
