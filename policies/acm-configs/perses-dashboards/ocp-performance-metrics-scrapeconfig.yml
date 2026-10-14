@@ -1,0 +1,51 @@
+---
+apiVersion: monitoring.rhobs/v1alpha1
+kind: ScrapeConfig
+metadata:
+  name: ocp-performance-metrics
+  namespace: open-cluster-management-observability
+spec:
+  jobName: ocp-performance-metrics
+  metricsPath: /federate
+  scheme: HTTPS
+  scrapeClass: not-configurable
+  staticConfigs:
+    - targets: ["not-configurable"]
+  params:
+    match[]:
+      - '{__name__="cluster_operator_conditions"}'
+      - '{__name__="container_cpu_usage_seconds_total"}'
+      - '{__name__="container_fs_reads_bytes_total"}'
+      - '{__name__="container_fs_writes_bytes_total"}'
+      - '{__name__="container_threads"}'
+      - '{__name__="kube_configmap_info"}'
+      - '{__name__="kube_deployment_spec_replicas"}'
+      - '{__name__="kube_namespace_status_phase"}'
+      - '{__name__="kube_node_info"}'
+      - '{__name__="kube_node_status_condition"}'
+      - '{__name__="kube_pod_status_phase"}'
+      - '{__name__="kube_secret_info"}'
+      - '{__name__="kube_service_info"}'
+      - '{__name__="node_disk_read_bytes_total"}'
+      - '{__name__="node_disk_reads_completed_total"}'
+      - '{__name__="node_disk_writes_completed_total"}'
+      - '{__name__="node_disk_written_bytes_total"}'
+      - '{__name__="node_filesystem_files"}'
+      - '{__name__="node_filesystem_files_free"}'
+      - '{__name__="node_load1"}'
+      - '{__name__="node_memory_Active_bytes"}'
+      - '{__name__="node_memory_Buffers_bytes"}'
+      - '{__name__="node_memory_Cached_bytes"}'
+      - '{__name__="node_memory_MemAvailable_bytes"}'
+      - '{__name__="node_memory_MemFree_bytes"}'
+      - '{__name__="node_network_receive_bytes_total"}'
+      - '{__name__="node_network_receive_drop_total"}'
+      - '{__name__="node_network_receive_packets_total"}'
+      - '{__name__="node_network_transmit_bytes_total"}'
+      - '{__name__="node_network_transmit_drop_total"}'
+      - '{__name__="node_network_transmit_packets_total"}'
+      - '{__name__="node_nf_conntrack_entries"}'
+      - '{__name__="node_nf_conntrack_entries_limit"}'
+      - '{__name__="openshift_route_info"}'
+      - '{__name__="ovnkube_controller_pod_creation_latency_seconds_bucket"}'
+      - '{__name__="ovnkube_node_cni_request_duration_seconds_bucket"}'
