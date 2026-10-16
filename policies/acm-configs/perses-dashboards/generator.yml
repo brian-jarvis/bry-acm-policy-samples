@@ -30,33 +30,43 @@ policies:
     manifests:
       - path: ovn-dashboard-perses.yml
         name: perses-dashboard-ovn
+        complianceType: mustonlyhave
 
       - path: ocp-performance-perses.yml
         name: perses-dashboard-ocp-performance
+        complianceType: mustonlyhave
 
       - path: node-perses.yml
         name: perses-dashboard-node-performance
+        complianceType: mustonlyhave
 
       - path: etcd-on-cluster-dashboard-perses.yml
         name: perses-dashboard-etcd
+        complianceType: mustonlyhave
 
       - path: api-performance-overview-perses.yml
         name: perses-dashboard-api-performance-overview
+        complianceType: mustonlyhave
 
       - path: ovn-metrics-scrapeconfig.yml
         name: perses-dashboard-ovn-metrics-scrapeconfig
+        complianceType: mustonlyhave
 
       - path: ocp-performance-metrics-scrapeconfig.yml
         name: perses-dashboard-ocp-performance-metrics-scrapeconfig
+        complianceType: mustonlyhave
 
       - path: node-metrics-scrapeconfig.yml
         name: perses-dashboard-node-metrics-scrapeconfig
+        complianceType: mustonlyhave
 
       - path: etcd-metrics-scrapeconfig.yml
         name: perses-dashboard-etcd-metrics-scrapeconfig
+        complianceType: mustonlyhave
 
       - path: api-performance-metrics-scrapeconfig.yml
         name: perses-dashboard-api-performance-metrics-scrapeconfig
+        complianceType: mustonlyhave
 
 policySets:
   - name: perses-dashboards
