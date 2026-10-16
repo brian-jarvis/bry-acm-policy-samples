@@ -4,6 +4,9 @@ kind: ScrapeConfig
 metadata:
   name: api-performance-metrics
   namespace: open-cluster-management-observability
+  labels:
+    app.kubernetes.io/component: platform-metrics-collector
+    managed-by: bry-tam-policies
 spec:
   jobName: api-performance-metrics
   metricsPath: /federate
