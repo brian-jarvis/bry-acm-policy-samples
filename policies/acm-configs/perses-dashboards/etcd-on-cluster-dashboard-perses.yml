@@ -9,7 +9,7 @@ metadata:
 spec:
   config:
     display:
-      name: etcd-cluster-info dashboard
+      name: bry-tam / etcd-cluster-info dashboard
     variables:
     - kind: ListVariable
       spec:
@@ -44,6 +44,25 @@ spec:
               kind: PrometheusDatasource
               name: rbac-query-proxy-datasource
         name: etcd_pod
+    - kind: ListVariable
+      spec:
+        display:
+          name: interval
+          hidden: false
+        defaultValue: 10m
+        allowAllValue: false
+        allowMultiple: false
+        plugin:
+          kind: StaticListVariable
+          spec:
+            values:
+            - 1m
+            - 3m
+            - 5m
+            - 10m
+            - 20m
+            - 30m
+        name: interval
     panels:
       '0_0':
         kind: Panel
@@ -76,7 +95,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: sum(irate(container_cpu_usage_seconds_total{cluster="$cluster",namespace="openshift-etcd", container="etcd",pod=~"$etcd_pod"}[2m])) by (pod) * 100
+                  query: sum(irate(container_cpu_usage_seconds_total{cluster="$cluster",namespace="openshift-etcd", container="etcd",pod=~"$etcd_pod"}[$interval])) by (pod) * 100
                   seriesNameFormat: '{{ pod }}'
       '0_1':
         kind: Panel
@@ -109,7 +128,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: sum(avg_over_time(container_memory_working_set_bytes{cluster="$cluster",container="",pod!="", namespace=~"openshift-etcd.*",pod=~"$etcd_pod"}[2m])) BY (pod, namespace)
+                  query: sum(avg_over_time(container_memory_working_set_bytes{cluster="$cluster",container="",pod!="", namespace=~"openshift-etcd.*",pod=~"$etcd_pod"}[$interval])) BY (pod, namespace)
                   seriesNameFormat: '{{ pod }}'
       '0_2':
         kind: Panel
@@ -142,7 +161,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: histogram_quantile(0.99, sum(rate(etcd_disk_wal_fsync_duration_seconds_bucket{cluster="$cluster",namespace="openshift-etcd",pod=~"$etcd_pod"}[5m])) by (pod, le))
+                  query: histogram_quantile(0.99, sum(rate(etcd_disk_wal_fsync_duration_seconds_bucket{cluster="$cluster",namespace="openshift-etcd",pod=~"$etcd_pod"}[$interval])) by (pod, le))
                   seriesNameFormat: '{{pod}} WAL fsync'
       '0_3':
         kind: Panel
@@ -175,7 +194,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: histogram_quantile(0.99, sum(rate(etcd_disk_backend_commit_duration_seconds_bucket{cluster="$cluster",namespace="openshift-etcd",pod=~"$etcd_pod"}[5m])) by (pod, le))
+                  query: histogram_quantile(0.99, sum(rate(etcd_disk_backend_commit_duration_seconds_bucket{cluster="$cluster",namespace="openshift-etcd",pod=~"$etcd_pod"}[$interval])) by (pod, le))
                   seriesNameFormat: '{{pod}} DB fsync'
       '0_4':
         kind: Panel
@@ -208,7 +227,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: rate(container_fs_writes_bytes_total{cluster="$cluster",namespace="openshift-etcd",device!~".+dm.+"}[2m])
+                  query: rate(container_fs_writes_bytes_total{cluster="$cluster",namespace="openshift-etcd",device!~".+dm.+"}[$interval])
                   seriesNameFormat: '{{ pod }}: {{ device }}'
       '0_5':
         kind: Panel
@@ -391,7 +410,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: rate(node_vmstat_pgmajfault{cluster="$cluster"}[2m])* on (instance) group_left label_replace(kube_node_role{cluster="$cluster",role="control-plane"},"instance","$1","node","(.*)")
+                  query: rate(node_vmstat_pgmajfault{cluster="$cluster"}[$interval])* on (instance) group_left label_replace(kube_node_role{cluster="$cluster",role="control-plane"},"instance","$1","node","(.*)")
                   seriesNameFormat: 'rate pgmajfault {{instance}} '
           - kind: TimeSeriesQuery
             spec:
@@ -434,7 +453,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: histogram_quantile(0.99, sum(rate(etcd_disk_wal_fsync_duration_seconds_bucket{cluster="$cluster",namespace="openshift-etcd",pod=~"$etcd_pod"}[5m])) by (pod, le))
+                  query: histogram_quantile(0.99, sum(rate(etcd_disk_wal_fsync_duration_seconds_bucket{cluster="$cluster",namespace="openshift-etcd",pod=~"$etcd_pod"}[$interval])) by (pod, le))
                   seriesNameFormat: '{{pod}} WAL fsync'
       '2_1':
         kind: Panel
@@ -474,7 +493,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: irate(etcd_disk_wal_fsync_duration_seconds_sum{cluster="$cluster",namespace="openshift-etcd",pod=~"$etcd_pod"}[2m])
+                  query: irate(etcd_disk_wal_fsync_duration_seconds_sum{cluster="$cluster",namespace="openshift-etcd",pod=~"$etcd_pod"}[$interval])
                   seriesNameFormat: '2m irate WAL sum {{instance}} '
           - kind: TimeSeriesQuery
             spec:
@@ -524,7 +543,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: irate(etcd_disk_wal_fsync_duration_seconds_count{cluster="$cluster",namespace="openshift-etcd",pod=~"$etcd_pod"}[2m])
+                  query: irate(etcd_disk_wal_fsync_duration_seconds_count{cluster="$cluster",namespace="openshift-etcd",pod=~"$etcd_pod"}[$interval])
                   seriesNameFormat: '2m irate WAL count {{instance}} '
           - kind: TimeSeriesQuery
             spec:
@@ -567,7 +586,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: histogram_quantile(0.99, sum(rate(etcd_disk_backend_commit_duration_seconds_bucket{cluster="$cluster",namespace="openshift-etcd",pod=~"$etcd_pod"}[5m])) by (pod, le))
+                  query: histogram_quantile(0.99, sum(rate(etcd_disk_backend_commit_duration_seconds_bucket{cluster="$cluster",namespace="openshift-etcd",pod=~"$etcd_pod"}[$interval])) by (pod, le))
                   seriesNameFormat: '{{pod}} DB fsync'
       '3_1':
         kind: Panel
@@ -607,7 +626,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: irate(etcd_disk_backend_commit_duration_seconds_sum{cluster="$cluster",namespace="openshift-etcd",pod=~"$etcd_pod"}[2m])
+                  query: irate(etcd_disk_backend_commit_duration_seconds_sum{cluster="$cluster",namespace="openshift-etcd",pod=~"$etcd_pod"}[$interval])
                   seriesNameFormat: '2m irate WAL sum {{instance}} '
           - kind: TimeSeriesQuery
             spec:
@@ -657,7 +676,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: irate(etcd_disk_backend_commit_duration_seconds_count{cluster="$cluster",namespace="openshift-etcd",pod=~"$etcd_pod"}[2m])
+                  query: irate(etcd_disk_backend_commit_duration_seconds_count{cluster="$cluster",namespace="openshift-etcd",pod=~"$etcd_pod"}[$interval])
                   seriesNameFormat: '2m irate WAL count {{instance}} '
           - kind: TimeSeriesQuery
             spec:
@@ -700,7 +719,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: sum(rate(container_network_receive_bytes_total{cluster="$cluster", namespace=~"openshift-etcd.*"}[2m])) BY (namespace, pod)
+                  query: sum(rate(container_network_receive_bytes_total{cluster="$cluster", namespace=~"openshift-etcd.*"}[$interval])) BY (namespace, pod)
                   seriesNameFormat: rx {{ pod }}
           - kind: TimeSeriesQuery
             spec:
@@ -710,7 +729,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: sum(rate(container_network_transmit_bytes_total{cluster="$cluster", namespace=~"openshift-etcd.*"}[2m])) BY (namespace, pod)
+                  query: sum(rate(container_network_transmit_bytes_total{cluster="$cluster", namespace=~"openshift-etcd.*"}[$interval])) BY (namespace, pod)
                   seriesNameFormat: tx {{ pod }}
       '4_1':
         kind: Panel
@@ -743,7 +762,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: histogram_quantile(0.99, rate(etcd_network_peer_round_trip_time_seconds_bucket{cluster="$cluster",namespace="openshift-etcd",pod=~"$etcd_pod"}[2m]))
+                  query: histogram_quantile(0.99, rate(etcd_network_peer_round_trip_time_seconds_bucket{cluster="$cluster",namespace="openshift-etcd",pod=~"$etcd_pod"}[$interval]))
                   seriesNameFormat: '{{pod}}'
       '4_2':
         kind: Panel
@@ -776,7 +795,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: rate(etcd_network_peer_received_bytes_total{cluster="$cluster",namespace="openshift-etcd",pod=~"$etcd_pod"}[2m])
+                  query: rate(etcd_network_peer_received_bytes_total{cluster="$cluster",namespace="openshift-etcd",pod=~"$etcd_pod"}[$interval])
                   seriesNameFormat: rx {{pod}} Peer Traffic
           - kind: TimeSeriesQuery
             spec:
@@ -786,7 +805,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: rate(etcd_network_peer_sent_bytes_total{cluster="$cluster",namespace="openshift-etcd",pod=~"$etcd_pod"}[2m])
+                  query: rate(etcd_network_peer_sent_bytes_total{cluster="$cluster",namespace="openshift-etcd",pod=~"$etcd_pod"}[$interval])
                   seriesNameFormat: tx {{pod}} Peer Traffic
       '4_3':
         kind: Panel
@@ -819,7 +838,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: rate(etcd_network_client_grpc_received_bytes_total{cluster="$cluster",namespace="openshift-etcd",pod=~"$etcd_pod"}[2m])
+                  query: rate(etcd_network_client_grpc_received_bytes_total{cluster="$cluster",namespace="openshift-etcd",pod=~"$etcd_pod"}[$interval])
                   seriesNameFormat: rx {{pod}}
           - kind: TimeSeriesQuery
             spec:
@@ -829,7 +848,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: rate(etcd_network_client_grpc_sent_bytes_total{cluster="$cluster",namespace="openshift-etcd",pod=~"$etcd_pod"}[2m])
+                  query: rate(etcd_network_client_grpc_sent_bytes_total{cluster="$cluster",namespace="openshift-etcd",pod=~"$etcd_pod"}[$interval])
                   seriesNameFormat: tx {{pod}}
       '4_4':
         kind: Panel
@@ -896,7 +915,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: sum(rate(etcd_debugging_snap_save_total_duration_seconds_sum{cluster="$cluster",namespace="openshift-etcd"}[2m]))
+                  query: sum(rate(etcd_debugging_snap_save_total_duration_seconds_sum{cluster="$cluster",namespace="openshift-etcd"}[$interval]))
                   seriesNameFormat: the total latency distributions of save called by snapshot
       '5_0':
         kind: Panel
@@ -1013,7 +1032,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: sum(rate(etcd_server_proposals_failed_total{cluster="$cluster",namespace="openshift-etcd"}[2m]))
+                  query: sum(rate(etcd_server_proposals_failed_total{cluster="$cluster",namespace="openshift-etcd"}[$interval]))
                   seriesNameFormat: Proposal Failure Rate
           - kind: TimeSeriesQuery
             spec:
@@ -1033,7 +1052,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: sum(rate(etcd_server_proposals_committed_total{cluster="$cluster",namespace="openshift-etcd"}[2m]))
+                  query: sum(rate(etcd_server_proposals_committed_total{cluster="$cluster",namespace="openshift-etcd"}[$interval]))
                   seriesNameFormat: Proposal Commit Rate
           - kind: TimeSeriesQuery
             spec:
@@ -1043,7 +1062,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: sum(rate(etcd_server_proposals_applied_total{cluster="$cluster",namespace="openshift-etcd"}[2m]))
+                  query: sum(rate(etcd_server_proposals_applied_total{cluster="$cluster",namespace="openshift-etcd"}[$interval]))
                   seriesNameFormat: Proposal Apply Rate
       '6_1':
         kind: Panel
@@ -1070,7 +1089,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: sum(rate(etcd_server_leader_changes_seen_total{cluster="$cluster",namespace="openshift-etcd"}[2m]))
+                  query: sum(rate(etcd_server_leader_changes_seen_total{cluster="$cluster",namespace="openshift-etcd"}[$interval]))
                   seriesNameFormat: ''
       '6_2':
         kind: Panel
@@ -1223,7 +1242,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: delta(etcd_server_slow_apply_total{cluster="$cluster",namespace="openshift-etcd",pod=~"$etcd_pod"}[2m])
+                  query: delta(etcd_server_slow_apply_total{cluster="$cluster",namespace="openshift-etcd",pod=~"$etcd_pod"}[$interval])
                   seriesNameFormat: '{{ pod }} slow applies'
           - kind: TimeSeriesQuery
             spec:
@@ -1233,7 +1252,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: delta(etcd_server_slow_read_indexes_total{cluster="$cluster",namespace="openshift-etcd",pod=~"$etcd_pod"}[2m])
+                  query: delta(etcd_server_slow_read_indexes_total{cluster="$cluster",namespace="openshift-etcd",pod=~"$etcd_pod"}[$interval])
                   seriesNameFormat: '{{ pod }} slow read indexes'
       '6_7':
         kind: Panel
@@ -1263,7 +1282,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: rate(etcd_mvcc_put_total{cluster="$cluster",namespace="openshift-etcd",pod=~"$etcd_pod"}[2m])
+                  query: rate(etcd_mvcc_put_total{cluster="$cluster",namespace="openshift-etcd",pod=~"$etcd_pod"}[$interval])
                   seriesNameFormat: '{{ pod }} puts/s'
           - kind: TimeSeriesQuery
             spec:
@@ -1273,7 +1292,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: rate(etcd_mvcc_delete_total{cluster="$cluster",namespace="openshift-etcd",pod=~"$etcd_pod"}[2m])
+                  query: rate(etcd_mvcc_delete_total{cluster="$cluster",namespace="openshift-etcd",pod=~"$etcd_pod"}[$interval])
                   seriesNameFormat: '{{ pod }} deletes/s'
       '6_8':
         kind: Panel

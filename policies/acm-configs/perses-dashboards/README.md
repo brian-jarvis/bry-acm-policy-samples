@@ -155,3 +155,26 @@ This was done with a scripted regex-based PromQL transform (not a full parser, s
 isn't available in this environment) with a stoplist of aggregation operators, functions, and keywords
 to avoid misidentifying them as metric names. When converting another dashboard in the future, apply
 the same cluster-scoping to its variables and panel queries before committing it.
+
+### Dynamic intervals
+
+Every dashboard that has an `interval` variable (`ovn-dashboard`, `etcd-on-cluster-dashboard`,
+`api-performance-overview`, `node-performance`, `ocp-performance`) uses the same `StaticListVariable`
+scale: `1m, 3m, 5m, 10m, 20m, 30m`, defaulting to `10m`. `api-performance-overview` additionally keeps
+an `auto` ($__auto_interval_interval) option as an extra first choice; the others don't.
+
+`ovn-dashboard` and `etcd-on-cluster-dashboard` originally had no `interval` variable at all, and every
+panel's rate-style range-vector window (`[2m]`/`[5m]`) was hardcoded. Both dashboards gained the
+`interval` variable above, and every `rate()`/`irate()`/`increase()` window was switched to
+`[$interval]`. The one exception is `etcd-on-cluster-dashboard`'s
+`changes(etcd_server_leader_changes_seen_total{...}[1d])` panel, which intentionally stays hardcoded at
+`[1d]` — it's a full-day leader-election-stability check, not a rate-smoothing window, so tying it to
+the (max 30m) interval selector would change its meaning rather than just its resolution.
+
+The other three dashboards already had an `interval` variable wired up for most panels, but a handful
+of panels were missed and still had a hardcoded `[5m]`: one in `api-performance-overview`
+(`apiserver_flowcontrol_request_wait_duration_seconds_bucket`) and four in `node-performance` (three
+`kubelet_cgroup_manager_duration_seconds_bucket` panels plus one `kubelet_pleg_relist_duration_seconds_count`
+panel). These were switched to `[$interval]` as well. `ocp-performance` had no leftover hardcoded
+windows. When converting or auditing another dashboard, grep its queries for `\[[0-9]+[smhd]\]` to find
+any windows that should be tied to the `interval` variable instead.
