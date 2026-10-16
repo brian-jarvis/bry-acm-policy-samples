@@ -21,6 +21,7 @@ spec:
       - '{__name__="container_fs_reads_bytes_total"}'
       - '{__name__="container_fs_writes_bytes_total"}'
       - '{__name__="container_threads"}'
+      - '{__name__="go_goroutines"}'
       - '{__name__="kube_configmap_info"}'
       - '{__name__="kube_deployment_spec_replicas"}'
       - '{__name__="kube_namespace_status_phase"}'
@@ -52,3 +53,5 @@ spec:
       - '{__name__="openshift_route_info"}'
       - '{__name__="ovnkube_controller_pod_creation_latency_seconds_bucket"}'
       - '{__name__="ovnkube_node_cni_request_duration_seconds_bucket"}'
+      - '{__name__="process_cpu_seconds_total"}'
+      - '{__name__="process_resident_memory_bytes"}'
