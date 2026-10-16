@@ -9,7 +9,7 @@ metadata:
 spec:
   config:
     display:
-      name: API Performance Dashboard
+      name: bry-tam / API Performance Dashboard
     variables:
     - kind: ListVariable
       spec:
@@ -629,7 +629,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: histogram_quantile(0.99, sum(rate(apiserver_flowcontrol_request_wait_duration_seconds_bucket{cluster="$cluster",instance=~"$instance",flow_schema=~"$flow_schema",priority_level=~"$priority_level"}[5m])) by(flow_schema, priority_level, le))
+                  query: histogram_quantile(0.99, sum(rate(apiserver_flowcontrol_request_wait_duration_seconds_bucket{cluster="$cluster",instance=~"$instance",flow_schema=~"$flow_schema",priority_level=~"$priority_level"}[$interval])) by(flow_schema, priority_level, le))
                   seriesNameFormat: '{{flow_schema}}:{{priority_level}}'
       '14':
         kind: Panel

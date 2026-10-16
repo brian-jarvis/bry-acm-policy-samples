@@ -9,7 +9,7 @@ metadata:
 spec:
   config:
     display:
-      name: Openshift Performance
+      name: bry-tam / Openshift Performance
     variables:
     - kind: ListVariable
       spec:

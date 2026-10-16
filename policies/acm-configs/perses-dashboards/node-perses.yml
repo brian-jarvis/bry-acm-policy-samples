@@ -9,7 +9,7 @@ metadata:
 spec:
   config:
     display:
-      name: Node Performance
+      name: bry-tam / Node Performance
     variables:
     - kind: ListVariable
       spec:
@@ -904,7 +904,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: sum(rate(kubelet_cgroup_manager_duration_seconds_bucket{cluster="$cluster",node=~".*",operation_type="create"}[5m])) by (node, operation_type, le)
+                  query: sum(rate(kubelet_cgroup_manager_duration_seconds_bucket{cluster="$cluster",node=~".*",operation_type="create"}[$interval])) by (node, operation_type, le)
                   seriesNameFormat: '{{node}}: {{operation_type}}'
       '5_1':
         kind: Panel
@@ -936,7 +936,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: sum(rate(kubelet_cgroup_manager_duration_seconds_bucket{cluster="$cluster",node=~".*",operation_type="update"}[5m])) by (node, operation_type, le)
+                  query: sum(rate(kubelet_cgroup_manager_duration_seconds_bucket{cluster="$cluster",node=~".*",operation_type="update"}[$interval])) by (node, operation_type, le)
                   seriesNameFormat: '{{node}}: {{operation_type}}'
       '5_2':
         kind: Panel
@@ -968,7 +968,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: sum(rate(kubelet_cgroup_manager_duration_seconds_bucket{cluster="$cluster",node=~".*",operation_type="destroy"}[5m])) by (node, operation_type, le)
+                  query: sum(rate(kubelet_cgroup_manager_duration_seconds_bucket{cluster="$cluster",node=~".*",operation_type="destroy"}[$interval])) by (node, operation_type, le)
                   seriesNameFormat: '{{node}}: {{operation_type}}'
       '6_0':
         kind: Panel
@@ -1542,7 +1542,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: sum(increase(kubelet_pleg_relist_duration_seconds_count{cluster="$cluster"}[5m])) by (node)
+                  query: sum(increase(kubelet_pleg_relist_duration_seconds_count{cluster="$cluster"}[$interval])) by (node)
                   seriesNameFormat: '{{node}}'
       '12_0':
         kind: Panel
