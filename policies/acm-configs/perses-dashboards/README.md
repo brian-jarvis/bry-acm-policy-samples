@@ -97,6 +97,21 @@ ScrapeConfig — that overlap is expected and harmless (duplicate `match[]` entr
 ScrapeConfigs don't double-scrape). When converting another dashboard in the future, repeat this
 diffing process against the then-current set of forwarded metrics before writing its ScrapeConfig.
 
+**Required label — `app.kubernetes.io/component: platform-metrics-collector`:** being listed in the
+`multicluster-observability-addon` ClusterManagementAddOn's config (which happens automatically via
+[Observability Addon Config](../observability-addon-config/)'s discovery) only delivers the `ScrapeConfig`
+object to each managed cluster; it does **not** make the local `PrometheusAgent` actually scrape it. The
+agent (`platform-metrics-collector` in `open-cluster-management-agent-addon`) only picks up
+`ScrapeConfig`s matching its `scrapeConfigSelector` label selector,
+`app.kubernetes.io/component: platform-metrics-collector` — the same label every one of ACM's own
+built-in platform ScrapeConfigs carries. Every `*-metrics-scrapeconfig.yml` here must set this label
+(along with `managed-by: bry-tam-policies` for consistency with the rest of this repo), otherwise the
+object exists but is silently never scraped and dashboard panels render empty. This was the root cause
+of an initial empty-data bug found after deployment (`node_load1` panels showing no data); confirmed
+fixed by checking the generated agent config
+(`oc get secret -n open-cluster-management-agent-addon prom-agent-platform-metrics-collector -o jsonpath='{.data.prometheus\.yaml\.gz}' | base64 -d | gunzip`)
+for a `job_name: scrapeConfig/.../<name>` entry with the expected `match[]` list.
+
 ### Multicluster compatibility
 
 The converted dashboards originally had no managed-cluster selector, unlike ACM's own built-in
