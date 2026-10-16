@@ -135,17 +135,19 @@ spec:
         display:
           name: interval
           hidden: false
-        defaultValue: 2m
+        defaultValue: 10m
         allowAllValue: false
         allowMultiple: false
         plugin:
           kind: StaticListVariable
           spec:
             values:
-            - 2m
+            - 1m
             - 3m
-            - 4m
             - 5m
+            - 10m
+            - 20m
+            - 30m
         name: interval
     panels:
       '0_0':
