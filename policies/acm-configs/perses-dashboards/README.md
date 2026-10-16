@@ -178,3 +178,21 @@ of panels were missed and still had a hardcoded `[5m]`: one in `api-performance-
 panel). These were switched to `[$interval]` as well. `ocp-performance` had no leftover hardcoded
 windows. When converting or auditing another dashboard, grep its queries for `\[[0-9]+[smhd]\]` to find
 any windows that should be tied to the `interval` variable instead.
+
+### `complianceType: mustonlyhave` on every manifest
+
+Every manifest in this policy explicitly sets `complianceType: mustonlyhave`. The default
+`musthave` compares list fields (like a `PersesDashboard`'s `spec.config.variables` or a
+`ScrapeConfig`'s `params.match[]`) by checking that each desired entry is present — it never removes
+entries that are no longer in the desired manifest. In practice this meant edits that shrank or
+renamed a variable (e.g. removing a one-off `interval` entry that had been added twice across two
+edits) left stale, duplicate entries on the live object indefinitely, even though the repo file and
+`git diff` looked correct. This was discovered by comparing the live `PersesDashboard` objects
+(`oc get persesdashboard <name> -n open-cluster-management-observability -o json`) against the
+checked-in YAML and finding duplicate variable names (e.g. two `interval` entries on
+`ocp-performance`, two `etcd_pod` entries on `etcd-on-cluster-dashboard`) that didn't exist in the
+repo. With `mustonlyhave`, the governance framework does an exact replace of every field covered by
+the template instead, so the live object always matches the committed file precisely — this both
+fixes the existing drift (the policy controller will correct it on its next evaluation) and prevents
+it from recurring. Any new manifest added to this policy should also set `complianceType: mustonlyhave`
+unless there's a specific reason to allow unmanaged fields to persist.
