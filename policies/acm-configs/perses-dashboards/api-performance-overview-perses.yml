@@ -152,7 +152,7 @@ spec:
         display:
           name: interval
           hidden: false
-        defaultValue: $__auto_interval_interval
+        defaultValue: 10m
         allowAllValue: true
         allowMultiple: false
         plugin:
@@ -162,7 +162,11 @@ spec:
             - label: auto
               value: $__auto_interval_interval
             - 1m
+            - 3m
             - 5m
+            - 10m
+            - 20m
+            - 30m
         name: interval
     panels:
       '0':
