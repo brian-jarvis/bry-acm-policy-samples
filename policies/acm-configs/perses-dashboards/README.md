@@ -112,6 +112,25 @@ fixed by checking the generated agent config
 (`oc get secret -n open-cluster-management-agent-addon prom-agent-platform-metrics-collector -o jsonpath='{.data.prometheus\.yaml\.gz}' | base64 -d | gunzip`)
 for a `job_name: scrapeConfig/.../<name>` entry with the expected `match[]` list.
 
+**Watch out for generic metric names that are already forwarded under a restrictive `job=`/`service=`
+filter.** The "already forwarded" diffing above only checks metric *names*, not the label filters those
+names are forwarded with. A handful of ACM's built-in ScrapeConfigs forward common `client_golang`
+process metrics (`process_cpu_seconds_total`, `process_resident_memory_bytes`, `go_goroutines`,
+`workqueue_adds_total`, `workqueue_depth`) but restricted to specific jobs (`job="apiserver"` or
+`job="etcd"`). Several converted dashboards query these same metric names for *different* jobs
+(`node`/`ocp-performance` query `process_cpu_seconds_total`/`process_resident_memory_bytes` with
+`job="kubelet"`/`job="crio"`; `node`/`ocp-performance` query `go_goroutines` unfiltered/aggregated by
+job; `ovn-dashboard` queries `workqueue_adds_total`/`workqueue_depth` with
+`job=~"ovnkube-controller.*"`), so the name-only diff incorrectly treated them as already covered and
+they were left out of the original `match[]` lists, leaving those specific panels empty while others on
+the same dashboard worked fine. Fixed by adding unrestricted `{__name__="..."}` entries for these 5
+metric names to the relevant ScrapeConfigs (`ovn-metrics`: `workqueue_adds_total`, `workqueue_depth`;
+`node-metrics` and `ocp-performance-metrics`: `go_goroutines`, `process_cpu_seconds_total`,
+`process_resident_memory_bytes`) — the extra unrestricted federation is a harmless superset of what's
+already forwarded under the job-restricted entries. When converting another dashboard, check any
+generic/common metric name against the *label-filtered* match list of ACM's existing ScrapeConfigs, not
+just its name, before concluding it's already covered.
+
 ### Multicluster compatibility
 
 The converted dashboards originally had no managed-cluster selector, unlike ACM's own built-in

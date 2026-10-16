@@ -30,5 +30,7 @@ spec:
       - '{__name__="ovnkube_node_cni_request_duration_seconds_bucket"}'
       - '{__name__="ovnkube_node_ready_duration_seconds_bucket"}'
       - '{__name__="scheduler_pod_scheduling_sli_duration_seconds_bucket"}'
+      - '{__name__="workqueue_adds_total"}'
+      - '{__name__="workqueue_depth"}'
       - '{__name__="workqueue_queue_duration_seconds_bucket"}'
       - '{__name__="workqueue_unfinished_work_seconds"}'
