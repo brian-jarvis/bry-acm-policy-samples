@@ -206,6 +206,18 @@ set of valid scrape classes for a given `PrometheusAgent` via
 `oc get prometheusagent <name> -n open-cluster-management-agent-addon -o jsonpath='{.spec.scrapeClasses}'`
 before assuming the `not-configurable` placeholder will work for a new collector label.
 
+**`staticConfigs.targets` also needs a real value, not the `not-configurable` placeholder.** For
+`platform-metrics-collector` ScrapeConfigs, MCOA automatically rewrites the placeholder target to the
+managed cluster's platform Prometheus (`prometheus-k8s.openshift-monitoring.svc:9091`) — but it does
+**not** do the same substitution for `user-workload-metrics-collector` ScrapeConfigs; the generated
+agent config keeps the literal string `not-configurable` as the target host, which fails DNS resolution
+(`dial tcp: lookup not-configurable ...: no such host`, confirmed via
+`oc exec -n open-cluster-management-agent-addon prom-agent-user-workload-metrics-collector-0 -c prometheus -- curl -s http://localhost:9090/api/v1/targets`).
+`ocp-lifecycle-metrics-scrapeconfig.yml` therefore sets `staticConfigs.targets` explicitly to
+`prometheus-user-workload.openshift-user-workload-monitoring.svc:9091` — the user workload monitoring
+equivalent of the platform target, on the same `9091` kube-rbac-proxy-fronted port. Any future
+`user-workload-metrics-collector`-labeled ScrapeConfig in this folder should do the same.
+
 ### Dynamic intervals
 
 Every dashboard that has an `interval` variable (`ovn-dashboard`, `etcd-on-cluster-dashboard`,
