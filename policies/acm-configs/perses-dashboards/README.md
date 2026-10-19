@@ -196,3 +196,52 @@ the template instead, so the live object always matches the committed file preci
 fixes the existing drift (the policy controller will correct it on its next evaluation) and prevents
 it from recurring. Any new manifest added to this policy should also set `complianceType: mustonlyhave`
 unless there's a specific reason to allow unmanaged fields to persist.
+
+# OCP Lifecycle Exporter
+
+## Description
+`generator-ocp-lifecycle-exporter.yml` is a second, independent `PolicyGenerator` kept in this same
+directory (not part of the `perses-dashboards` policy above). It deploys
+[ocp-lifecycle-exporter](https://github.com/bry-tam/ocp-lifecycle-exporter) — a self-contained app that
+builds its own container image in-cluster with Shipwright and runs it, exposing OpenShift/operator
+lifecycle metrics on `:9120/metrics` — to every managed cluster.
+
+Rather than vendoring a copy of that repo's manifests here, the `ocp-lifecycle-exporter/` subdirectory
+is a thin local Kustomization whose only `resources:` entry is the remote repository itself:
+```yaml
+resources:
+  - https://github.com/bry-tam/ocp-lifecycle-exporter?ref=main
+```
+The `manifests:` path in `generator-ocp-lifecycle-exporter.yml` points at that subdirectory, which
+`kustomize` (and therefore the PolicyGenerator plugin) resolves at build time into the 13 objects the
+upstream repo's own root `kustomization.yaml` produces (Namespace, ServiceAccounts, RBAC, a Shipwright
+`Build`/`BuildRun`, an `ImageStream`, a `Deployment`, and a `Service`), bundled into a single
+`consolidateManifests: true` `ConfigurationPolicy` with `complianceType: mustonlyhave` (see above for
+why `mustonlyhave` matters for list-shaped fields like RBAC rules).
+
+**Tradeoff:** this is the only policy in the repo whose manifest content is fetched over the network at
+`kustomize build` time instead of being vendored locally. Every time this policy is regenerated (CI,
+local build, or an ArgoCD render), it re-fetches `bry-tam/ocp-lifecycle-exporter@main` live — a new
+commit to that repo's `main` branch changes what this policy deploys without any change to this repo.
+
+## Dependencies
+  - [Builds for Red Hat OpenShift Operator](../../operators/openshift-builds/) — the exporter's image is
+    built in-cluster via a Shipwright `Build`/`BuildRun`, which requires this operator (and, transitively,
+    the Pipelines Operator it depends on). The `ocp-lifecycle-exporter` policy declares a `dependencies:`
+    entry on the `openshift-builds-operator` policy (`compliance: Compliant`) so it won't attempt to
+    deploy until that operator is installed and healthy.
+
+## Details
+ACM Minimal Version: 2.12
+
+Upstream: [bry-tam/ocp-lifecycle-exporter](https://github.com/bry-tam/ocp-lifecycle-exporter)
+
+Notes:
+  - Deployed to every managed cluster via the `env-bound-placement` Placement (the same "all clusters in
+    this environment's clusterset" placement used by `cluster-health`/`cluster-version`) — not gated
+    behind any `ft-*` feature flag
+  - Scraping/alerting for the exporter's metrics (a `ServiceMonitor`/`ScrapeConfig` wiring it into
+    Perses or OpenShift monitoring) is intentionally out of scope here, matching the upstream repo's own
+    README, which leaves that to the consumer
+  - To pin to a specific commit or tag instead of tracking `main`, change the `?ref=main` query
+    parameter in `ocp-lifecycle-exporter/kustomization.yaml`
