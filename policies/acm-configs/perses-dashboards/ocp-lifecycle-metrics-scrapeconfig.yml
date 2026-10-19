@@ -13,7 +13,7 @@ spec:
   scheme: HTTPS
   scrapeClass: ocp-monitoring
   staticConfigs:
-    - targets: ["not-configurable"]
+    - targets: ["prometheus-user-workload.openshift-user-workload-monitoring.svc:9091"]
   params:
     match[]:
       - '{__name__="ocp_lifecycle_api_fetch_failures_total"}'
