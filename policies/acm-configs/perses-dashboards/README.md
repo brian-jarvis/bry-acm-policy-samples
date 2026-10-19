@@ -214,9 +214,13 @@ agent config keeps the literal string `not-configurable` as the target host, whi
 (`dial tcp: lookup not-configurable ...: no such host`, confirmed via
 `oc exec -n open-cluster-management-agent-addon prom-agent-user-workload-metrics-collector-0 -c prometheus -- curl -s http://localhost:9090/api/v1/targets`).
 `ocp-lifecycle-metrics-scrapeconfig.yml` therefore sets `staticConfigs.targets` explicitly to
-`prometheus-user-workload.openshift-user-workload-monitoring.svc:9091` — the user workload monitoring
-equivalent of the platform target, on the same `9091` kube-rbac-proxy-fronted port. Any future
-`user-workload-metrics-collector`-labeled ScrapeConfig in this folder should do the same.
+`prometheus-user-workload.openshift-user-workload-monitoring.svc:9092`. Note the port is **not** the
+same `9091` used for the platform target — the two services expose `/federate` on different ports:
+`prometheus-k8s` (platform) serves all endpoints including `/federate` on `9091`, while
+`prometheus-user-workload` (UWM) splits them, serving `/metrics`-only on `9091` and `/federate`-only on
+`9092` (confirmed via each Service's own description annotation, and by reproducing a `404 Not Found`
+scrape error on `9091` before switching to `9092`). Any future `user-workload-metrics-collector`-labeled
+ScrapeConfig in this folder should target `9092`, not `9091`.
 
 ### Dynamic intervals
 
