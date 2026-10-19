@@ -4,3 +4,4 @@ kind: Kustomization
 
 generators:
   - generator.yml
+  - generator-ocp-lifecycle-exporter.yml
