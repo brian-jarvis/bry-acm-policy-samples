@@ -184,8 +184,7 @@ Prometheus by a `ServiceMonitor` shipped in that repo. Its `ocp-lifecycle-metric
 therefore uses `app.kubernetes.io/component: user-workload-metrics-collector` instead of
 `platform-metrics-collector` — a second `PrometheusAgent` (also named `user-workload-metrics-collector`,
 in `open-cluster-management-agent-addon`) federates ScrapeConfigs carrying that label from user
-workload monitoring instead of the platform Prometheus, by default pointed at the cluster's own UWM
-Prometheus (no manual `scrapeClass`/`staticConfigs` override needed). This requires user workload
+workload monitoring instead of the platform Prometheus. This requires user workload
 monitoring to be enabled both on the managed cluster (`enableUserWorkload: true` in
 `cluster-monitoring-config`) and in the `MultiClusterObservability` CR
 (`spec.capabilities.userWorkloads.metrics.default.enabled`, already wired up in
@@ -193,6 +192,19 @@ monitoring to be enabled both on the managed cluster (`enableUserWorkload: true`
 label). Its `params.match[]` list includes all 26 `ocp_lifecycle_*` metrics the exporter exposes
 (confirmed against its live `/metrics` output), not just the 19 the dashboard's panels query, so the
 exporter-health/debug metrics are available for future panels without another ScrapeConfig edit.
+
+**`scrapeClass: ocp-monitoring`, not `not-configurable`.** Unlike every `platform-metrics-collector`
+ScrapeConfig in this folder (which use the literal placeholder `scrapeClass: not-configurable` — MCOA
+substitutes the real value for those), the `user-workload-metrics-collector` `PrometheusAgent` does not
+support that placeholder: it only defines one real scrape class, `ocp-monitoring` (which also happens to
+be its `default: true` class). Using `not-configurable` here causes COO's Prometheus Operator to reject
+the object outright (`scrapeConfig/ocp-lifecycle-metrics ... rejected due to invalid configuration:
+scrapeClass "not-configurable" not found in Prometheus scrapeClasses`, visible via
+`oc get events -n open-cluster-management-agent-addon`), so the dashboard rendered with no data even
+though the ServiceMonitor, the ScrapeConfig, and the CMA wiring were all otherwise correct. Confirm the
+set of valid scrape classes for a given `PrometheusAgent` via
+`oc get prometheusagent <name> -n open-cluster-management-agent-addon -o jsonpath='{.spec.scrapeClasses}'`
+before assuming the `not-configurable` placeholder will work for a new collector label.
 
 ### Dynamic intervals
 

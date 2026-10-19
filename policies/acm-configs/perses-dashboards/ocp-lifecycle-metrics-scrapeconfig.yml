@@ -11,7 +11,7 @@ spec:
   jobName: ocp-lifecycle-metrics
   metricsPath: /federate
   scheme: HTTPS
-  scrapeClass: not-configurable
+  scrapeClass: ocp-monitoring
   staticConfigs:
     - targets: ["not-configurable"]
   params:
