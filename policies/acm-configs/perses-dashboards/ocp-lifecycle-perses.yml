@@ -192,8 +192,7 @@ spec:
                     spec:
                       value: '0'
                   text: OK
-                - backgroundColor: text
-                  condition:
+                - condition:
                     kind: Value
                     spec:
                       value: '-1'
@@ -226,8 +225,7 @@ spec:
                     spec:
                       value: '0'
                   text: End of life
-                - backgroundColor: text
-                  condition:
+                - condition:
                     kind: Value
                     spec:
                       value: '-1'
@@ -406,8 +404,7 @@ spec:
                     spec:
                       value: '0'
                   text: OK
-                - backgroundColor: text
-                  condition:
+                - condition:
                     kind: Value
                     spec:
                       value: '-1'
@@ -489,8 +486,7 @@ spec:
                     spec:
                       value: '0'
                   text: End of life
-                - backgroundColor: text
-                  condition:
+                - condition:
                     kind: Value
                     spec:
                       value: '-1'
@@ -514,8 +510,7 @@ spec:
                     spec:
                       value: '0'
                   text: 'No'
-                - backgroundColor: text
-                  condition:
+                - condition:
                     kind: Value
                     spec:
                       value: '-1'
@@ -536,8 +531,7 @@ spec:
                     spec:
                       value: '0'
                   text: 'No'
-                - backgroundColor: text
-                  condition:
+                - condition:
                     kind: Value
                     spec:
                       value: '-1'
@@ -720,8 +714,7 @@ spec:
                   spec:
                     value: '1'
                 text: "\u2713"
-              - backgroundColor: '#00000000'
-                condition:
+              - condition:
                   kind: Misc
                   spec:
                     value: 'null'
@@ -828,8 +821,7 @@ spec:
                     spec:
                       value: '0'
                   text: End of life
-                - backgroundColor: text
-                  condition:
+                - condition:
                     kind: Value
                     spec:
                       value: '-1'
