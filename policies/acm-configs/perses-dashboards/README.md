@@ -34,6 +34,13 @@ cluster, and every panel's PromQL query is scoped to it as well. See
 | Node Performance | `node.json` | `node-performance` | `node-metrics` |
 | etcd Cluster Info | `etcd-on-cluster-dashboard.json` | `etcd-on-cluster-dashboard` | `etcd-metrics` |
 | API Performance | `api-performance-overview.json` | `api-performance-overview` | `api-performance-metrics` |
+| OpenShift & operator lifecycle | sourced from [brian-jarvis/ocp-lifecycle-dashboard](https://github.com/brian-jarvis/ocp-lifecycle-dashboard) (not vendored here) | `ocp-lifecycle` | `ocp-lifecycle-metrics` |
+
+The "OpenShift & operator lifecycle" dashboard is a fleet-wide summary (cluster counts, operator
+support tables, OpenShift version compatibility) fed by the
+[ocp-lifecycle-exporter](https://github.com/bry-tam/ocp-lifecycle-exporter) app deployed below — see
+[Multicluster compatibility](#multicluster-compatibility) for how its `cluster` variable deliberately
+differs from the other five dashboards.
 
 ## Dependencies
   - [ACM Observability](../observability/) — requires the `MultiClusterObservability` stack and the
@@ -48,6 +55,10 @@ cluster, and every panel's PromQL query is scoped to it as well. See
     `multicluster-observability-addon` ClusterManagementAddOn's global metrics config in sync with
     them. The `ScrapeConfig` manifests here are picked up automatically; no changes to that policy are
     needed.
+  - The "OpenShift & operator lifecycle" dashboard additionally requires
+    [ocp-lifecycle-exporter](#ocp-lifecycle-exporter) (below) to be deployed and its `ServiceMonitor` to
+    be scraping it into user workload monitoring — see
+    [Multicluster compatibility](#multicluster-compatibility) for details.
 
 ## Details
 ACM Minimal Version: 2.17
@@ -156,6 +167,33 @@ isn't available in this environment) with a stoplist of aggregation operators, f
 to avoid misidentifying them as metric names. When converting another dashboard in the future, apply
 the same cluster-scoping to its variables and panel queries before committing it.
 
+**`ocp-lifecycle` is a deliberate exception to the single-cluster convention above.** It's a fleet-wide
+summary dashboard (cluster counts, operator support tables, compatibility matrices) that only makes
+sense showing multiple clusters at once, so its `cluster` variable keeps `allowMultiple: true` and
+`allowAllValue: true` (defaulting to all clusters), and every panel query uses `cluster=~"$cluster"`
+(regex match) instead of the other five dashboards' `cluster="$cluster"` (exact match) — both of these
+were already present in the upstream Grafana source and were preserved as-is; only the variable's
+datasource/matcher were swapped to the ACM-standard `acm_managed_cluster_labels` source (for
+friendly cluster display names) in place of the original `ocp_lifecycle_cluster_info`-based one.
+
+Unlike the other five dashboards, `ocp-lifecycle`'s metrics don't come from the managed cluster's
+platform Prometheus — they come from
+[ocp-lifecycle-exporter](https://github.com/bry-tam/ocp-lifecycle-exporter) (deployed by
+`generator-ocp-lifecycle-exporter.yml` below), scraped into OpenShift's **user workload monitoring**
+Prometheus by a `ServiceMonitor` shipped in that repo. Its `ocp-lifecycle-metrics-scrapeconfig.yml`
+therefore uses `app.kubernetes.io/component: user-workload-metrics-collector` instead of
+`platform-metrics-collector` — a second `PrometheusAgent` (also named `user-workload-metrics-collector`,
+in `open-cluster-management-agent-addon`) federates ScrapeConfigs carrying that label from user
+workload monitoring instead of the platform Prometheus, by default pointed at the cluster's own UWM
+Prometheus (no manual `scrapeClass`/`staticConfigs` override needed). This requires user workload
+monitoring to be enabled both on the managed cluster (`enableUserWorkload: true` in
+`cluster-monitoring-config`) and in the `MultiClusterObservability` CR
+(`spec.capabilities.userWorkloads.metrics.default.enabled`, already wired up in
+[../observability/observability.yml](../observability/observability.yml) via the `observability-mcoa`
+label). Its `params.match[]` list includes all 26 `ocp_lifecycle_*` metrics the exporter exposes
+(confirmed against its live `/metrics` output), not just the 19 the dashboard's panels query, so the
+exporter-health/debug metrics are available for future panels without another ScrapeConfig edit.
+
 ### Dynamic intervals
 
 Every dashboard that has an `interval` variable (`ovn-dashboard`, `etcd-on-cluster-dashboard`,
@@ -240,8 +278,10 @@ Notes:
   - Deployed to every managed cluster via the `env-bound-placement` Placement (the same "all clusters in
     this environment's clusterset" placement used by `cluster-health`/`cluster-version`) — not gated
     behind any `ft-*` feature flag
-  - Scraping/alerting for the exporter's metrics (a `ServiceMonitor`/`ScrapeConfig` wiring it into
-    Perses or OpenShift monitoring) is intentionally out of scope here, matching the upstream repo's own
-    README, which leaves that to the consumer
+  - The upstream repo now ships a `ServiceMonitor` (`deployment/servicemonitor.yml`) that scrapes the
+    exporter into OpenShift user workload monitoring, so it's included automatically as one of the 13
+    objects this policy deploys. Alerting is still intentionally out of scope, matching the upstream
+    repo's own README. See the [`ocp-lifecycle` dashboard](#description) above and its
+    `ocp-lifecycle-metrics-scrapeconfig.yml` for how that data then gets federated up to the hub.
   - To pin to a specific commit or tag instead of tracking `main`, change the `?ref=main` query
     parameter in `ocp-lifecycle-exporter/kustomization.yaml`
