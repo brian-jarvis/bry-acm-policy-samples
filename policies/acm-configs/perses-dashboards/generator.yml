@@ -48,6 +48,10 @@ policies:
         name: perses-dashboard-api-performance-overview
         complianceType: mustonlyhave
 
+      - path: ocp-lifecycle-perses.yml
+        name: perses-dashboard-ocp-lifecycle
+        complianceType: mustonlyhave
+
       - path: ovn-metrics-scrapeconfig.yml
         name: perses-dashboard-ovn-metrics-scrapeconfig
         complianceType: mustonlyhave
@@ -66,6 +70,10 @@ policies:
 
       - path: api-performance-metrics-scrapeconfig.yml
         name: perses-dashboard-api-performance-metrics-scrapeconfig
+        complianceType: mustonlyhave
+
+      - path: ocp-lifecycle-metrics-scrapeconfig.yml
+        name: perses-dashboard-ocp-lifecycle-metrics-scrapeconfig
         complianceType: mustonlyhave
 
 policySets:
