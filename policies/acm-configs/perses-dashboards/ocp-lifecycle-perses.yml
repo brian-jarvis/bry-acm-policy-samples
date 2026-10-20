@@ -269,8 +269,10 @@ spec:
                 name: status
               density: compact
               transforms:
-              - kind: MergeSeries
-                spec: {}
+              - kind: JoinByColumnValue
+                spec:
+                  columns:
+                  - cluster
           queries:
           - kind: TimeSeriesQuery
             spec:
@@ -567,8 +569,12 @@ spec:
                 name: 'value #8'
               density: compact
               transforms:
-              - kind: MergeSeries
-                spec: {}
+              - kind: JoinByColumnValue
+                spec:
+                  columns:
+                  - cluster
+                  - operator_namespace
+                  - package
           queries:
           - kind: TimeSeriesQuery
             spec:
@@ -836,8 +842,10 @@ spec:
                 name: timestamp
               density: compact
               transforms:
-              - kind: MergeSeries
-                spec: {}
+              - kind: JoinByColumnValue
+                spec:
+                  columns:
+                  - ocp_version
           queries:
           - kind: TimeSeriesQuery
             spec:
