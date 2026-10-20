@@ -836,6 +836,8 @@ spec:
                 name: 'value #5'
               - header: '5.1'
                 name: 'value #6'
+              - hide: true
+                name: timestamp
               density: compact
               transforms:
               - kind: JoinByColumnValue
