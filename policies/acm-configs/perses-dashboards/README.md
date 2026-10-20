@@ -274,34 +274,36 @@ label). Its `params.match[]` list includes all 26 `ocp_lifecycle_*` metrics the 
 (confirmed against its live `/metrics` output), not just the 19 the dashboard's panels query, so the
 exporter-health/debug metrics are available for future panels without another ScrapeConfig edit.
 
-**`scrapeClass: ocp-monitoring`, not `not-configurable`.** Unlike every `platform-metrics-collector`
-ScrapeConfig in this folder (which use the literal placeholder `scrapeClass: not-configurable` — MCOA
-substitutes the real value for those), the `user-workload-metrics-collector` `PrometheusAgent` does not
-support that placeholder: it only defines one real scrape class, `ocp-monitoring` (which also happens to
-be its `default: true` class). Using `not-configurable` here causes COO's Prometheus Operator to reject
-the object outright (`scrapeConfig/ocp-lifecycle-metrics ... rejected due to invalid configuration:
+**`user-workload-metrics-collector` ScrapeConfigs must NOT set `staticConfigs` (or `scrapeClass`/`scheme`)
+— leave them out entirely and let MCOA populate them.** This folder's `platform-metrics-collector`
+ScrapeConfigs all carry a placeholder `scrapeClass: not-configurable` and a placeholder `staticConfigs`
+target, because MCOA's `multicluster-observability-addon` *unconditionally* rewrites
+`scrapeClassName`/`scheme`/`staticConfigs` for every platform-labeled ScrapeConfig regardless of what's
+already set (see
+[`internal/metrics/manifests/values.go`](https://github.com/stolostron/multicluster-observability-addon/blob/main/internal/metrics/manifests/values.go),
+`BuildValues()`, the `opts.Platform.ScrapeConfigs` loop). The `user-workload-metrics-collector` path is
+different: MCOA only auto-populates those same three fields `if len(scrapeConfig.Spec.StaticConfigs) == 0`
+(i.e. only when the ScrapeConfig doesn't already define `staticConfigs`). Earlier revisions of
+`ocp-lifecycle-metrics-scrapeconfig.yml` copied the platform convention and shipped a placeholder
+`staticConfigs: [{targets: ["not-configurable"]}]`, which made that length check non-zero and silently
+skipped MCOA's auto-population entirely — leaving `scrapeClass` unset/wrong (COO's Prometheus Operator
+rejected the object: `scrapeConfig/ocp-lifecycle-metrics ... rejected due to invalid configuration:
 scrapeClass "not-configurable" not found in Prometheus scrapeClasses`, visible via
-`oc get events -n open-cluster-management-agent-addon`), so the dashboard rendered with no data even
-though the ServiceMonitor, the ScrapeConfig, and the CMA wiring were all otherwise correct. Confirm the
-set of valid scrape classes for a given `PrometheusAgent` via
-`oc get prometheusagent <name> -n open-cluster-management-agent-addon -o jsonpath='{.spec.scrapeClasses}'`
-before assuming the `not-configurable` placeholder will work for a new collector label.
-
-**`staticConfigs.targets` also needs a real value, not the `not-configurable` placeholder.** For
-`platform-metrics-collector` ScrapeConfigs, MCOA automatically rewrites the placeholder target to the
-managed cluster's platform Prometheus (`prometheus-k8s.openshift-monitoring.svc:9091`) — but it does
-**not** do the same substitution for `user-workload-metrics-collector` ScrapeConfigs; the generated
-agent config keeps the literal string `not-configurable` as the target host, which fails DNS resolution
-(`dial tcp: lookup not-configurable ...: no such host`, confirmed via
-`oc exec -n open-cluster-management-agent-addon prom-agent-user-workload-metrics-collector-0 -c prometheus -- curl -s http://localhost:9090/api/v1/targets`).
-`ocp-lifecycle-metrics-scrapeconfig.yml` therefore sets `staticConfigs.targets` explicitly to
-`prometheus-user-workload.openshift-user-workload-monitoring.svc:9092`. Note the port is **not** the
-same `9091` used for the platform target — the two services expose `/federate` on different ports:
-`prometheus-k8s` (platform) serves all endpoints including `/federate` on `9091`, while
-`prometheus-user-workload` (UWM) splits them, serving `/metrics`-only on `9091` and `/federate`-only on
-`9092` (confirmed via each Service's own description annotation, and by reproducing a `404 Not Found`
-scrape error on `9091` before switching to `9092`). Any future `user-workload-metrics-collector`-labeled
-ScrapeConfig in this folder should target `9092`, not `9091`.
+`oc get events -n open-cluster-management-agent-addon`) and then, after that was hand-fixed, left
+`staticConfigs.targets` as the literal unresolvable string `not-configurable` (`dial tcp: lookup
+not-configurable ...: no such host`). Both problems were originally worked around by hand (setting
+`scrapeClass: ocp-monitoring` and `staticConfigs.targets:
+prometheus-user-workload.openshift-user-workload-monitoring.svc:9092` explicitly, the latter requiring
+discovering that UWM's `prometheus-user-workload` Service splits `/metrics` and `/federate` across ports
+9091/9092 unlike platform's `prometheus-k8s`, which serves everything on 9091) — but the *correct* fix,
+confirmed from the MCOA source above, is to **omit `staticConfigs` (and `scrapeClass`/`scheme`) from the
+ScrapeConfig manifest entirely**. With no `staticConfigs` defined, MCOA's own length check passes and it
+fills in the correct `scrapeClassName` (`ocp-monitoring`), `scheme` (`HTTPS`), and `staticConfigs` target
+(an internal `ScrapeClassUWLTarget` constant it maintains itself) automatically — this is both simpler
+and more durable than hardcoding a target that could change between MCOA releases. Any future
+`user-workload-metrics-collector`-labeled ScrapeConfig in this folder should follow this same pattern:
+set `jobName`, `metricsPath: /federate`, and `params.match[]` only, and leave `scheme`/`scrapeClass`/
+`staticConfigs` out of the spec.
 
 ### Dynamic intervals
 
