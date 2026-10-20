@@ -126,6 +126,29 @@ the same three `ocp-lifecycle` panels (`Clusters`, `Operators`, `OpenShift minor
 when converting a future dashboard, check every Table panel with more than one query for bare
 label-named `columnSettings` entries and fix them the same way.
 
+**Epoch-millisecond timestamp columns need an explicit `format.unit`.** Grafana field overrides like
+`unit: "time:YYYY-MM-DD"` (used on the `ocp-lifecycle` dashboard's "Phase ends"/"Support ends" columns,
+all computed as `(max(..._timestamp_seconds{...}) + 43200) * 1000`) are dropped entirely by `percli` —
+without a `format` key Perses renders the raw epoch-millisecond number instead of a date. The fix is
+adding `format: {unit: unix-timestamp-ms}` to the affected `columnSettings` entry (the unit name comes
+from the `#dateFormat` schema in `github.com/perses/shared/cue/common/format.cue`, a separate repo from
+`perses/perses` and `perses/plugins`). This affected 5 columns across the `Clusters`, `Operators`, and
+`OpenShift minors: current phase` panels on `ocp-lifecycle`.
+
+**`JoinByColumnValue` does not reliably support a composite multi-column join key.** Despite the docs
+listing `columns` as a list, passing more than one column (e.g. `[cluster, operator_namespace, package]`)
+on the `Operators` panel collapsed every row into one instead of one row per operator — consistent with
+the transform only ever matching on a single column's value (here, every row shared the same `cluster`
+value, since this environment has only one managed cluster, so a single-column match against `cluster`
+alone was enough to merge everything). When a Table panel genuinely needs to join on more than one label,
+synthesize a single combined key label in every one of that panel's queries via PromQL's
+`label_join(<expr>, "join_key", "/", "label1", "label2", ...)`, point the transform at
+`columns: [join_key]` only, and add a hidden `columnSettings` entry (`'join_key #N'` per query, suffixed
+per the rule above) so the synthetic column doesn't clutter the table. Keeping `cluster` as part of the
+combined key (not just `operator_namespace`/`package`) matters for dashboards like `ocp-lifecycle` whose
+`cluster` variable is `allowMultiple: true`/`allowAllValue: true` — otherwise the same operator name in
+two different clusters would incorrectly merge into one row once more managed clusters exist.
+
 ### ScrapeConfigs
 
 MCOA does not use the `observability-metrics-(custom-)allowlist` ConfigMap mechanism from classic ACM
