@@ -251,15 +251,21 @@ spec:
                 width: 140
               - header: Phase
                 name: 'phase #3'
-              - header: Phase ends
+              - format:
+                  unit: unix-timestamp-ms
+                header: Phase ends
                 name: 'value #4'
               - format:
                   unit: decimal
                 header: Days left in phase
                 name: 'value #5'
-              - header: Standard support ends
+              - format:
+                  unit: unix-timestamp-ms
+                header: Standard support ends
                 name: 'value #6'
-              - header: Extended support ends
+              - format:
+                  unit: unix-timestamp-ms
+                header: Extended support ends
                 name: 'value #7'
               - cellSettings:
                 - condition:
@@ -601,7 +607,9 @@ spec:
                 width: 110
               - header: Compatible OCP versions
                 name: 'compatible_ocp_versions #1'
-              - header: Support ends
+              - format:
+                  unit: unix-timestamp-ms
+                header: Support ends
                 name: 'value #6'
                 width: 110
               - header: For current OCP
@@ -896,7 +904,9 @@ spec:
                 name: 'value #1'
               - header: Phase
                 name: 'phase #1'
-              - header: Standard support ends
+              - format:
+                  unit: unix-timestamp-ms
+                header: Standard support ends
                 name: 'value #2'
               - hide: true
                 name: timestamp
