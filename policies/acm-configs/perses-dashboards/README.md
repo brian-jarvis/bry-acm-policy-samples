@@ -149,6 +149,27 @@ combined key (not just `operator_namespace`/`package`) matters for dashboards li
 `cluster` variable is `allowMultiple: true`/`allowAllValue: true` — otherwise the same operator name in
 two different clusters would incorrectly merge into one row once more managed clusters exist.
 
+**`percli` drops Grafana's `groupingToMatrix` transform entirely — Perses has no dynamic pivot
+equivalent.** `ocp-lifecycle`'s `Operator × OpenShift compatibility` and `OpenShift minors: phase end
+dates` panels both pivot a single query's results into a wide matrix (one column per distinct label
+value — `ocp_version` and `phase` respectively). `percli` converts the query but silently drops the
+transform, leaving `columnSettings` that reference the *post-pivot* Grafana column names (e.g. `'4.12'`,
+`'Full support'`), which never match any real raw column (`ocp_version`/`phase`/`value`). The symptom is
+the raw, unformatted metric value showing up in the table instead of the expected matrix. Since Perses'
+Table plugin has no declarative pivot transform, the fix is to rebuild the panel with one query per
+pivoted column value (filtered via a label matcher, e.g. `ocp_version="4.12"` or `phase="Full support"`),
+grouped by the row label only, then join all of those queries back together on the row label via
+`JoinByColumnValue` — the same per-query column-suffixing and join-key rules documented above apply.
+For `OpenShift minors: phase end dates`, the `phase` label only ever takes a small fixed set of values
+(confirmed live: `Full support`, `Maintenance support`, `Extended update support`, `Extended update
+support Term 2`, `Extended update support Term 3`, plus `Extended life phase` which doesn't occur yet),
+so one query per phase is a stable, low-maintenance fix. For `Operator × OpenShift compatibility`, the
+pivot column is `ocp_version`, which is an open-ended, growing set — the fix uses a **hardcoded list of
+OCP minor versions** (currently `4.12` through `4.26`, with a few versions of headroom past what's
+observed live) as one query per version. **This list needs periodic maintenance** as new OpenShift
+minors are released and old ones age out of relevance; there is no way to make it fully dynamic without
+a pivot transform Perses doesn't support.
+
 ### ScrapeConfigs
 
 MCOA does not use the `observability-metrics-(custom-)allowlist` ConfigMap mechanism from classic ACM
