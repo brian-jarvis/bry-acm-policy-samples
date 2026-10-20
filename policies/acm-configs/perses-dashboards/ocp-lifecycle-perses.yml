@@ -633,14 +633,28 @@ spec:
                 name: 'value #7'
               - hide: true
                 name: 'value #8'
+              - hide: true
+                name: 'join_key #1'
+              - hide: true
+                name: 'join_key #2'
+              - hide: true
+                name: 'join_key #3'
+              - hide: true
+                name: 'join_key #4'
+              - hide: true
+                name: 'join_key #5'
+              - hide: true
+                name: 'join_key #6'
+              - hide: true
+                name: 'join_key #7'
+              - hide: true
+                name: 'join_key #8'
               density: compact
               transforms:
               - kind: JoinByColumnValue
                 spec:
                   columns:
-                  - cluster
-                  - operator_namespace
-                  - package
+                  - join_key
           queries:
           - kind: TimeSeriesQuery
             spec:
@@ -650,7 +664,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: max by (cluster, operator_namespace, package, product, installed_version, lifecycle_version, channel, phase, compatible_ocp_versions, link) (ocp_lifecycle_operator_info{cluster=~"$cluster"})
+                  query: label_join(max by (cluster, operator_namespace, package, product, installed_version, lifecycle_version, channel, phase, compatible_ocp_versions, link) (ocp_lifecycle_operator_info{cluster=~"$cluster"}), "join_key", "/", "cluster", "operator_namespace", "package")
                   seriesNameFormat: ''
           - kind: TimeSeriesQuery
             spec:
@@ -660,7 +674,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: max by (cluster, operator_namespace, package, status, reasons) (ocp_lifecycle_operator_status{cluster=~"$cluster"})
+                  query: label_join(max by (cluster, operator_namespace, package, status, reasons) (ocp_lifecycle_operator_status{cluster=~"$cluster"}), "join_key", "/", "cluster", "operator_namespace", "package")
                   seriesNameFormat: ''
           - kind: TimeSeriesQuery
             spec:
@@ -670,7 +684,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: max by (cluster, operator_namespace, package) (ocp_lifecycle_operator_support_phase{cluster=~"$cluster"})
+                  query: label_join(max by (cluster, operator_namespace, package) (ocp_lifecycle_operator_support_phase{cluster=~"$cluster"}), "join_key", "/", "cluster", "operator_namespace", "package")
                   seriesNameFormat: ''
           - kind: TimeSeriesQuery
             spec:
@@ -680,7 +694,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: max by (cluster, operator_namespace, package) (ocp_lifecycle_operator_compatible_with_cluster{cluster=~"$cluster"})
+                  query: label_join(max by (cluster, operator_namespace, package) (ocp_lifecycle_operator_compatible_with_cluster{cluster=~"$cluster"}), "join_key", "/", "cluster", "operator_namespace", "package")
                   seriesNameFormat: ''
           - kind: TimeSeriesQuery
             spec:
@@ -690,7 +704,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: max by (cluster, operator_namespace, package) (ocp_lifecycle_operator_compatible_with_target{cluster=~"$cluster"})
+                  query: label_join(max by (cluster, operator_namespace, package) (ocp_lifecycle_operator_compatible_with_target{cluster=~"$cluster"}), "join_key", "/", "cluster", "operator_namespace", "package")
                   seriesNameFormat: ''
           - kind: TimeSeriesQuery
             spec:
@@ -700,7 +714,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: (max by (cluster, operator_namespace, package) (ocp_lifecycle_operator_support_end_timestamp_seconds{cluster=~"$cluster"}) + 43200) * 1000
+                  query: label_join((max by (cluster, operator_namespace, package) (ocp_lifecycle_operator_support_end_timestamp_seconds{cluster=~"$cluster"}) + 43200) * 1000, "join_key", "/", "cluster", "operator_namespace", "package")
                   seriesNameFormat: ''
           - kind: TimeSeriesQuery
             spec:
@@ -710,7 +724,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: max by (cluster, operator_namespace, package, recommended_version) (ocp_lifecycle_operator_recommended_version_info{cluster=~"$cluster", for="current"})
+                  query: label_join(max by (cluster, operator_namespace, package, recommended_version) (ocp_lifecycle_operator_recommended_version_info{cluster=~"$cluster", for="current"}), "join_key", "/", "cluster", "operator_namespace", "package")
                   seriesNameFormat: ''
           - kind: TimeSeriesQuery
             spec:
@@ -720,7 +734,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: max by (cluster, operator_namespace, package, target_version) (label_replace(ocp_lifecycle_operator_recommended_version_info{cluster=~"$cluster", for="target"}, "target_version", "$1", "recommended_version", "(.*)"))
+                  query: label_join(max by (cluster, operator_namespace, package, target_version) (label_replace(ocp_lifecycle_operator_recommended_version_info{cluster=~"$cluster", for="target"}, "target_version", "$1", "recommended_version", "(.*)")), "join_key", "/", "cluster", "operator_namespace", "package")
                   seriesNameFormat: ''
       '1_1':
         kind: Panel
