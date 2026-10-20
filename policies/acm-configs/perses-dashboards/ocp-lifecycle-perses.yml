@@ -807,58 +807,72 @@ spec:
                 text: "\u2013"
               columnSettings:
               - header: Operator
-                name: package\ocp_version
+                name: 'package #1'
                 width: 280
-              - name: '4.1'
-              - name: '4.2'
-              - name: '4.3'
-              - name: '4.4'
-              - name: '4.5'
-              - name: '4.6'
-              - name: '4.7'
-              - name: '4.8'
-              - name: '4.9'
-              - name: '4.10'
-              - name: '4.11'
-              - name: '4.12'
-              - name: '4.13'
-              - name: '4.14'
-              - name: '4.15'
-              - name: '4.16'
-              - name: '4.17'
-              - name: '4.18'
-              - name: '4.19'
-              - name: '4.20'
-              - name: '4.21'
-              - name: '4.22'
-              - name: '4.23'
-              - name: '4.24'
-              - name: '4.25'
-              - name: '4.26'
-              - name: '4.27'
-              - name: '4.28'
-              - name: '4.29'
-              - name: '5.0'
-              - name: '5.1'
-              - name: '5.2'
-              - name: '5.3'
-              - name: '5.4'
-              - name: '5.5'
-              - name: '5.6'
-              - name: '5.7'
-              - name: '5.8'
-              - name: '5.9'
-              - name: '5.10'
-              - name: '5.11'
-              - name: '5.12'
-              - name: '5.13'
-              - name: '5.14'
-              - name: '5.15'
-              - name: '5.16'
-              - name: '5.17'
-              - name: '5.18'
-              - name: '5.19'
+              - hide: true
+                name: 'package #2'
+              - hide: true
+                name: 'package #3'
+              - hide: true
+                name: 'package #4'
+              - hide: true
+                name: 'package #5'
+              - hide: true
+                name: 'package #6'
+              - hide: true
+                name: 'package #7'
+              - hide: true
+                name: 'package #8'
+              - hide: true
+                name: 'package #9'
+              - hide: true
+                name: 'package #10'
+              - hide: true
+                name: 'package #11'
+              - hide: true
+                name: 'package #12'
+              - hide: true
+                name: 'package #13'
+              - hide: true
+                name: 'package #14'
+              - hide: true
+                name: 'package #15'
+              - header: '4.12'
+                name: 'value #1'
+              - header: '4.13'
+                name: 'value #2'
+              - header: '4.14'
+                name: 'value #3'
+              - header: '4.15'
+                name: 'value #4'
+              - header: '4.16'
+                name: 'value #5'
+              - header: '4.17'
+                name: 'value #6'
+              - header: '4.18'
+                name: 'value #7'
+              - header: '4.19'
+                name: 'value #8'
+              - header: '4.20'
+                name: 'value #9'
+              - header: '4.21'
+                name: 'value #10'
+              - header: '4.22'
+                name: 'value #11'
+              - header: '4.23'
+                name: 'value #12'
+              - header: '4.24'
+                name: 'value #13'
+              - header: '4.25'
+                name: 'value #14'
+              - header: '4.26'
+                name: 'value #15'
               density: compact
+              transforms:
+              - kind: JoinByColumnValue
+                spec:
+                  columns:
+                  - package
           queries:
           - kind: TimeSeriesQuery
             spec:
@@ -868,7 +882,147 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: max by (package, lifecycle_version, ocp_version) (ocp_lifecycle_operator_ocp_compatibility{cluster=~"$cluster"})
+                  query: max by (package) (ocp_lifecycle_operator_ocp_compatibility{cluster=~"$cluster", ocp_version="4.12"})
+                  seriesNameFormat: ''
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: max by (package) (ocp_lifecycle_operator_ocp_compatibility{cluster=~"$cluster", ocp_version="4.13"})
+                  seriesNameFormat: ''
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: max by (package) (ocp_lifecycle_operator_ocp_compatibility{cluster=~"$cluster", ocp_version="4.14"})
+                  seriesNameFormat: ''
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: max by (package) (ocp_lifecycle_operator_ocp_compatibility{cluster=~"$cluster", ocp_version="4.15"})
+                  seriesNameFormat: ''
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: max by (package) (ocp_lifecycle_operator_ocp_compatibility{cluster=~"$cluster", ocp_version="4.16"})
+                  seriesNameFormat: ''
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: max by (package) (ocp_lifecycle_operator_ocp_compatibility{cluster=~"$cluster", ocp_version="4.17"})
+                  seriesNameFormat: ''
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: max by (package) (ocp_lifecycle_operator_ocp_compatibility{cluster=~"$cluster", ocp_version="4.18"})
+                  seriesNameFormat: ''
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: max by (package) (ocp_lifecycle_operator_ocp_compatibility{cluster=~"$cluster", ocp_version="4.19"})
+                  seriesNameFormat: ''
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: max by (package) (ocp_lifecycle_operator_ocp_compatibility{cluster=~"$cluster", ocp_version="4.20"})
+                  seriesNameFormat: ''
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: max by (package) (ocp_lifecycle_operator_ocp_compatibility{cluster=~"$cluster", ocp_version="4.21"})
+                  seriesNameFormat: ''
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: max by (package) (ocp_lifecycle_operator_ocp_compatibility{cluster=~"$cluster", ocp_version="4.22"})
+                  seriesNameFormat: ''
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: max by (package) (ocp_lifecycle_operator_ocp_compatibility{cluster=~"$cluster", ocp_version="4.23"})
+                  seriesNameFormat: ''
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: max by (package) (ocp_lifecycle_operator_ocp_compatibility{cluster=~"$cluster", ocp_version="4.24"})
+                  seriesNameFormat: ''
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: max by (package) (ocp_lifecycle_operator_ocp_compatibility{cluster=~"$cluster", ocp_version="4.25"})
+                  seriesNameFormat: ''
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: max by (package) (ocp_lifecycle_operator_ocp_compatibility{cluster=~"$cluster", ocp_version="4.26"})
                   seriesNameFormat: ''
       '3_0':
         kind: Panel
@@ -962,14 +1116,49 @@ spec:
             spec:
               columnSettings:
               - header: Minor
-                name: ocp_version\phase
-              - name: Full support
-              - name: Maintenance support
-              - name: Extended update support
-              - name: Extended update support Term 2
-              - name: Extended update support Term 3
-              - name: Extended life phase
+                name: 'ocp_version #1'
+              - hide: true
+                name: 'ocp_version #2'
+              - hide: true
+                name: 'ocp_version #3'
+              - hide: true
+                name: 'ocp_version #4'
+              - hide: true
+                name: 'ocp_version #5'
+              - hide: true
+                name: 'ocp_version #6'
+              - format:
+                  unit: unix-timestamp-ms
+                header: Full support
+                name: 'value #1'
+              - format:
+                  unit: unix-timestamp-ms
+                header: Maintenance support
+                name: 'value #2'
+              - format:
+                  unit: unix-timestamp-ms
+                header: Extended update support
+                name: 'value #3'
+              - format:
+                  unit: unix-timestamp-ms
+                header: Extended update support Term 2
+                name: 'value #4'
+              - format:
+                  unit: unix-timestamp-ms
+                header: Extended update support Term 3
+                name: 'value #5'
+              - format:
+                  unit: unix-timestamp-ms
+                header: Extended life phase
+                name: 'value #6'
+              - hide: true
+                name: timestamp
               density: compact
+              transforms:
+              - kind: JoinByColumnValue
+                spec:
+                  columns:
+                  - ocp_version
           queries:
           - kind: TimeSeriesQuery
             spec:
@@ -979,7 +1168,57 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: (max by (ocp_version, phase) (ocp_lifecycle_ocp_version_phase_end_timestamp_seconds{cluster=~"$cluster"}) + 43200) * 1000
+                  query: (max by (ocp_version) (ocp_lifecycle_ocp_version_phase_end_timestamp_seconds{cluster=~"$cluster", phase="Full support"}) + 43200) * 1000
+                  seriesNameFormat: ''
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: (max by (ocp_version) (ocp_lifecycle_ocp_version_phase_end_timestamp_seconds{cluster=~"$cluster", phase="Maintenance support"}) + 43200) * 1000
+                  seriesNameFormat: ''
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: (max by (ocp_version) (ocp_lifecycle_ocp_version_phase_end_timestamp_seconds{cluster=~"$cluster", phase="Extended update support"}) + 43200) * 1000
+                  seriesNameFormat: ''
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: (max by (ocp_version) (ocp_lifecycle_ocp_version_phase_end_timestamp_seconds{cluster=~"$cluster", phase="Extended update support Term 2"}) + 43200) * 1000
+                  seriesNameFormat: ''
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: (max by (ocp_version) (ocp_lifecycle_ocp_version_phase_end_timestamp_seconds{cluster=~"$cluster", phase="Extended update support Term 3"}) + 43200) * 1000
+                  seriesNameFormat: ''
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: (max by (ocp_version) (ocp_lifecycle_ocp_version_phase_end_timestamp_seconds{cluster=~"$cluster", phase="Extended life phase"}) + 43200) * 1000
                   seriesNameFormat: ''
       '4_0':
         kind: Panel
