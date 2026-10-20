@@ -1,19 +1,24 @@
 ---
-# Perses UI/core issue: `JoinByColumnValue` requires every per-query-suffixed
-# column name to be listed explicitly
+# Perses UI/core issues: Table panel transform bugs
 
-While debugging an "Installed operators" table that always rendered exactly
-one row (instead of one row per operator, ~24 expected) in the `ocp-lifecycle`
-dashboard in this folder, we traced the behavior to Perses' own `Join by
-column value` transform implementation, not to anything `percli` generated
-incorrectly. This document exists to be filed as an upstream issue against
-[`perses/perses`](https://github.com/perses/perses) (the core table
-transform/UI behavior, implemented in
+While building Table panels for the `ocp-lifecycle` dashboard in this folder,
+we hit two distinct bugs in Perses' own Table transform implementation (not
+anything `percli` generated incorrectly). Both are documented here to be filed
+as upstream issues against [`perses/perses`](https://github.com/perses/perses)
+(core table transform/UI behavior, implemented in
 [`perses/shared`](https://github.com/perses/shared)).
+
+- Issue 1: `JoinByColumnValue` requires every per-query-suffixed column name
+  to be listed explicitly, or it silently collapses every row into one.
+- Issue 2: `MergeIndexedColumns`/`MergeColumns`, when run on rows that already
+  have more than one matching indexed column present (e.g. after a
+  `JoinByColumnValue` join), multiply the row instead of collapsing it.
 
 ---
 
-## Summary
+## Issue 1: `JoinByColumnValue` requires every per-query-suffixed column name to be listed explicitly
+
+### Summary
 
 A Table panel with more than one query gets every label key — not just the
 synthetic `value` column — suffixed with ` #<queryIndex+1>` before any
@@ -33,7 +38,7 @@ per-query-suffixed instance of the join column(s) explicitly (e.g. `['cluster
 unintuitive, verbose, and easy to get subtly wrong (see "Why this is
 dangerous" below).
 
-## Source: the transform implementation
+### Source: the transform implementation
 
 `perses/shared`, `components/src/utils/transform-data.ts`,
 `applyJoinTransform()`:
@@ -85,7 +90,7 @@ const labels =
 So by the time `applyJoinTransform` runs, a row never has a bare `cluster`
 key to match against — only `cluster #1`, `cluster #2`, etc.
 
-## What was generated / observed
+### What was generated / observed
 
 Dashboard config (8 queries, all grouping by `cluster`, `operator_namespace`,
 `package` among other per-query labels — see this folder's
@@ -115,7 +120,7 @@ equal the bare string `join_key`), so `[].join('|')` produces the same empty
 string `''` as the `rowHash` for all 24 rows, and the accumulating `{
 ...rowHashedValue, ...row }` spread silently merges all of them into one.
 
-## Why this is dangerous (a second, worse manifestation)
+### Why this is dangerous (a second, worse manifestation)
 
 A second panel in the same dashboard ("Clusters") was, at the time, assumed
 to be working correctly with the simpler, intuitive config:
@@ -141,7 +146,7 @@ A dashboard author relying on the `columns: [cluster]` form has no way to
 detect this ahead of time short of already knowing to list the suffixed
 variants.
 
-## What was expected
+### What was expected
 
 Either of the following would resolve this:
 
@@ -192,7 +197,7 @@ from the panel silently breaks the join unless every `columns` list in that
 panel is updated to match the new query count — again with no warning if
 missed).
 
-## Environment used to reproduce
+### Environment used to reproduce
 
 - Perses version: `v0.54.0` (confirmed as the pinned upstream version
   compiled into Red Hat's Cluster Observability Operator 1.5.3 downstream
@@ -204,3 +209,143 @@ missed).
   cluster
 - Affected panel type: Table (`perses/plugins`, `table` plugin)
 - Affected transform: `Join by column value` (`JoinByColumnValue`)
+
+---
+
+## Issue 2: `MergeIndexedColumns`/`MergeColumns` multiply rows instead of collapsing them
+
+### Summary
+
+Both `MergeIndexedColumns` (`spec: {column: string}`) and `MergeColumns`
+(`spec: {columns: string[], name: string}`) are documented/intended to collapse
+several same-meaning indexed columns (e.g. `package #1`, `package #2`,
+`package #3`, produced by a multi-query panel per Issue 1's suffixing
+behavior) into a single column containing whichever value is actually present
+on a given row. In the real implementation, when a row already has **more
+than one** of those indexed keys present at once — which is exactly what
+happens on a row that was just produced by a `JoinByColumnValue` join across
+several queries — both transforms instead emit **one duplicate output row per
+matching key**, silently multiplying every already-correctly-joined row.
+
+### Source: the transform implementation
+
+Found by fetching and reading the real minified JS actually served by the
+cluster's Perses instance (`@perses-dev/core@0.53.0`, Module Federation chunk
+`__mf/js/async/1117.b21b0ae4.js`, loaded via the `Table` plugin's
+`mf-manifest.json`) rather than source on GitHub, since the deployed build is
+a Red Hat downstream fork that can lag/diverge from upstream `main`. De-minified
+for readability (`oA` = `MergeIndexedColumns`, `oT` = `MergeColumns`):
+
+```js
+// MergeIndexedColumns(column): for every row, find every key matching
+// `^((<column> #\d+)|(<column>))$`, then push ONE NEW ROW PER MATCHING KEY.
+function applyMergeIndexedColumnsTransform(rows, column) {
+  const out = [];
+  for (const row of rows) {
+    const matchingKeys = Object.keys(row).filter((k) =>
+      new RegExp(`^((${column} #\\d+)|(${column}))$`).test(k)
+    );
+    const extracted = {};
+    for (const k of matchingKeys) {
+      extracted[k] = row[k];
+      delete row[k];
+    }
+    for (const k of matchingKeys) {
+      out.push({ ...row, [column]: extracted[k] }); // <-- one row PER key
+    }
+    if (matchingKeys.length === 0) out.push(row);
+  }
+  return out;
+}
+
+// MergeColumns(columns, name): identical per-matching-key row multiplication,
+// just against an explicit column list instead of a regex pattern.
+function applyMergeColumnsTransform(rows, columns, name) {
+  const out = [];
+  for (const row of rows) {
+    const matchingKeys = Object.keys(row).filter((k) => columns.includes(k));
+    const extracted = {};
+    for (const k of matchingKeys) {
+      extracted[k] = row[k];
+      delete row[k];
+    }
+    for (const k of matchingKeys) {
+      out.push({ ...row, [name]: extracted[k] }); // <-- same bug
+    }
+    if (matchingKeys.length === 0) out.push(row);
+  }
+  return out;
+}
+```
+
+If a row has exactly one matching key (the only case these transforms are
+ever demonstrated for in the Table plugin's own placeholder text — "Example:
+'value' for merging 'value #1', 'value #2' and 'value #...'" — which implies
+a **set** of rows each with one key, not one row with several), this works as
+documented: one key, one output row. But the natural, intended workflow —
+`JoinByColumnValue` first (to merge a multi-query panel's per-query rows into
+one row per entity), then `MergeIndexedColumns`/`MergeColumns` second (to
+collapse that merged row's now-multiple surviving indexed columns into one
+plain column) — guarantees the opposite: the join step's `{ ...rowHashedValue,
+...row }` spread (see Issue 1) deliberately accumulates *every* matching
+query's suffixed keys onto the single merged row, so by the time
+`MergeIndexedColumns` runs, the row legitimately has 2+ matching keys. The
+transform then treats that as "N separate rows to emit" instead of "N
+candidate values to pick one from."
+
+### What was generated / observed
+
+`ocp-lifecycle-perses.yml`'s "Operator × OpenShift compatibility" panel (6
+per-OCP-version queries, each grouping by `package`): after `JoinByColumnValue`
+correctly merges each operator's per-version rows into one row per operator,
+that row holds `package #1`, `package #2`, `package #3` (one per OCP version
+the operator is compatible with). Running `MergeIndexedColumns(column:
+"package")` on it produced **three duplicate rows** for that operator instead
+of one — exactly matching the number of OCP versions it was compatible with.
+Confirmed live in the dashboard UI (screenshot showed every visible operator
+duplicated 2-3×, with identical data in every duplicate) and reproduced by
+hand-tracing the real deployed implementation above against the panel's actual
+query/transform config.
+
+### What was expected
+
+`MergeIndexedColumns`/`MergeColumns` should pick a single value when a row has
+multiple matching indexed keys (e.g. first non-null, by stated precedence, or
+documented "last wins"/"first wins" semantics) and emit exactly one row,
+regardless of how many matching keys are present — not treat "more than one
+match" as "more rows to emit." This is the only way the transform can be
+safely chained after `JoinByColumnValue`, which is the obvious and, per the
+Table plugin's own two-step UI (both transforms selectable from the same
+dropdown in the same transform list), clearly an intended combination.
+
+### Workaround used in this repo
+
+Avoid `MergeIndexedColumns`/`MergeColumns` for this use case entirely. Instead
+of relying on a post-join merge step to collapse `package #1..#N` into one
+display column, add an extra, version-unconditional query that is guaranteed
+to return every tracked entity regardless of which of the "real" per-column
+queries matched (here: `max by (package) (ocp_lifecycle_operator_info{cluster=~"$cluster"})`,
+with no `ocp_version` filter), then reference *that* query's suffixed column
+directly as the visible name column (hiding the other N per-column-value
+queries' duplicate name columns, same hidden-duplicate convention used
+everywhere else in this dashboard for shared join-key labels). This sidesteps
+the bug by never calling a transform that multiplies rows — `JoinByColumnValue`
+alone, which our Issue 1 investigation already confirmed merges rows correctly
+when every suffixed instance of the join column is listed, is sufficient.
+
+### Environment used to reproduce
+
+- Perses version: `v0.54.0` (Red Hat Cluster Observability Operator 1.5.3
+  downstream build, same as Issue 1).
+- Reproduced by reading the actual deployed JS directly from the live
+  `perses-0` pod (`@perses-dev/core@0.53.0` Module Federation chunk), then
+  hand-tracing it against the panel's real query/transform config and
+  confirming the row count matched the predicted multiplication factor;
+  additionally confirmed visually via a dashboard screenshot and the earlier
+  symptom-matching (blank-name) CSV export from Issue 1's companion bug on the
+  same panel.
+- Affected panel type: Table (`perses/plugins`, `table` plugin).
+- Affected transforms: `Merge indexed columns` (`MergeIndexedColumns`) and,
+  by code inspection, `Merge columns` (`MergeColumns`) — not independently
+  reproduced in a live dashboard, since this repo never needed it, but the
+  bug is present in the exact same shape in the minified source.
