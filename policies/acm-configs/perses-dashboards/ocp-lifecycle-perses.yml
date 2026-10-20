@@ -809,12 +809,6 @@ spec:
             kind: Table
             spec:
               cellSettings:
-              - backgroundColor: '#73bf69'
-                condition:
-                  kind: Value
-                  spec:
-                    value: '1'
-                text: "\u2713"
               - condition:
                   kind: Misc
                   spec:
@@ -825,16 +819,28 @@ spec:
                 name: package
                 width: 280
               - header: '4.20'
-                name: 'value #1'
+                name: 'lifecycle_version #1'
               - header: '4.21'
-                name: 'value #2'
+                name: 'lifecycle_version #2'
               - header: '4.22'
-                name: 'value #3'
+                name: 'lifecycle_version #3'
               - header: '4.23'
-                name: 'value #4'
+                name: 'lifecycle_version #4'
               - header: '5.0'
-                name: 'value #5'
+                name: 'lifecycle_version #5'
               - header: '5.1'
+                name: 'lifecycle_version #6'
+              - hide: true
+                name: 'value #1'
+              - hide: true
+                name: 'value #2'
+              - hide: true
+                name: 'value #3'
+              - hide: true
+                name: 'value #4'
+              - hide: true
+                name: 'value #5'
+              - hide: true
                 name: 'value #6'
               - hide: true
                 name: timestamp
@@ -861,7 +867,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: max by (package) (ocp_lifecycle_operator_ocp_compatibility{cluster=~"$cluster", ocp_version="4.20"})
+                  query: max by (package, lifecycle_version) (ocp_lifecycle_operator_ocp_compatibility{cluster=~"$cluster", ocp_version="4.20"})
                   seriesNameFormat: ''
           - kind: TimeSeriesQuery
             spec:
@@ -871,7 +877,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: max by (package) (ocp_lifecycle_operator_ocp_compatibility{cluster=~"$cluster", ocp_version="4.21"})
+                  query: max by (package, lifecycle_version) (ocp_lifecycle_operator_ocp_compatibility{cluster=~"$cluster", ocp_version="4.21"})
                   seriesNameFormat: ''
           - kind: TimeSeriesQuery
             spec:
@@ -881,7 +887,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: max by (package) (ocp_lifecycle_operator_ocp_compatibility{cluster=~"$cluster", ocp_version="4.22"})
+                  query: max by (package, lifecycle_version) (ocp_lifecycle_operator_ocp_compatibility{cluster=~"$cluster", ocp_version="4.22"})
                   seriesNameFormat: ''
           - kind: TimeSeriesQuery
             spec:
@@ -891,7 +897,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: max by (package) (ocp_lifecycle_operator_ocp_compatibility{cluster=~"$cluster", ocp_version="4.23"})
+                  query: max by (package, lifecycle_version) (ocp_lifecycle_operator_ocp_compatibility{cluster=~"$cluster", ocp_version="4.23"})
                   seriesNameFormat: ''
           - kind: TimeSeriesQuery
             spec:
@@ -901,7 +907,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: max by (package) (ocp_lifecycle_operator_ocp_compatibility{cluster=~"$cluster", ocp_version="5.0"})
+                  query: max by (package, lifecycle_version) (ocp_lifecycle_operator_ocp_compatibility{cluster=~"$cluster", ocp_version="5.0"})
                   seriesNameFormat: ''
           - kind: TimeSeriesQuery
             spec:
@@ -911,7 +917,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: max by (package) (ocp_lifecycle_operator_ocp_compatibility{cluster=~"$cluster", ocp_version="5.1"})
+                  query: max by (package, lifecycle_version) (ocp_lifecycle_operator_ocp_compatibility{cluster=~"$cluster", ocp_version="5.1"})
                   seriesNameFormat: ''
       '3_0':
         kind: Panel

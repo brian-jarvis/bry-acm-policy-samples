@@ -241,6 +241,21 @@ then the one actually referenced by `columnSettings`. The per-version `value #N`
 *not* passed through `MergeIndexedColumns` — each must stay distinct since it represents a different
 OpenShift version's compatibility flag, not duplicate copies of the same fact.
 
+**Each version column shows the compatible operator version, not just a checkmark.** The underlying
+metric, `ocp_lifecycle_operator_ocp_compatibility`, carries a `lifecycle_version` label (the operator's
+own version/channel string, e.g. `1.20`) alongside the `package`/`ocp_version` labels already used for
+grouping and joining. The panel's 6 per-version queries now group by `(package, lifecycle_version)`
+instead of `(package)` alone, so each query's result row carries `lifecycle_version` as a column — the
+`columnSettings` reference `lifecycle_version #1`..`#6` (one per query, same per-query suffixing rule as
+everywhere else in this panel) as the visible content for each OCP-version column, instead of the raw
+`value #N` compatibility flag (now hidden). A cell is blank when the operator has no reported compatibility
+for that OCP version, same as before. Today every tracked operator reports exactly one `lifecycle_version`
+across all the OCP versions it's compatible with, so this doesn't change row counts — but if an operator
+ever reports *different* `lifecycle_version` values as compatible with the same `ocp_version` (e.g. two
+channels both certified for the same release), it would produce one row per distinct `(package,
+lifecycle_version)` pair for that query, which is the correct behavior to surface the distinction rather
+than silently collapsing it.
+
 **Follow-up: revisit these two panels once the cluster's Perses version moves past v0.54.0.** Perses has
 since added a `PivotByLabel` transform (true parity with Grafana's `groupingToMatrix`: a declarative,
 dynamic pivot that turns distinct values of a label into columns, with no fixed query-per-column list
