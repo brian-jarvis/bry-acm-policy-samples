@@ -164,15 +164,31 @@ spec:
             spec:
               columnSettings:
               - header: Cluster
-                name: cluster
+                name: 'cluster #1'
               - header: Version
-                name: version
+                name: 'version #1'
               - header: Minor
-                name: ocp_version
+                name: 'ocp_version #1'
               - header: Channel
-                name: channel
+                name: 'channel #1'
               - header: Channel target
-                name: target_ocp_version
+                name: 'target_ocp_version #1'
+              - hide: true
+                name: 'cluster #2'
+              - hide: true
+                name: 'cluster #3'
+              - hide: true
+                name: 'cluster #4'
+              - hide: true
+                name: 'cluster #5'
+              - hide: true
+                name: 'cluster #6'
+              - hide: true
+                name: 'cluster #7'
+              - hide: true
+                name: 'cluster #8'
+              - hide: true
+                name: 'cluster #9'
               - cellSettings:
                 - backgroundColor: '#f2495c'
                   condition:
@@ -234,7 +250,7 @@ spec:
                 name: 'value #3'
                 width: 140
               - header: Phase
-                name: phase
+                name: 'phase #3'
               - header: Phase ends
                 name: 'value #4'
               - format:
@@ -266,7 +282,7 @@ spec:
               - hide: true
                 name: 'value #1'
               - hide: true
-                name: status
+                name: 'status #2'
               density: compact
               transforms:
               - kind: JoinByColumnValue
@@ -375,18 +391,60 @@ spec:
             spec:
               columnSettings:
               - header: Cluster
-                name: cluster
+                name: 'cluster #1'
+              - hide: true
+                name: 'cluster #2'
+              - hide: true
+                name: 'cluster #3'
+              - hide: true
+                name: 'cluster #4'
+              - hide: true
+                name: 'cluster #5'
+              - hide: true
+                name: 'cluster #6'
+              - hide: true
+                name: 'cluster #7'
+              - hide: true
+                name: 'cluster #8'
               - header: Package
-                name: package
+                name: 'package #1'
                 width: 260
+              - hide: true
+                name: 'package #2'
+              - hide: true
+                name: 'package #3'
+              - hide: true
+                name: 'package #4'
+              - hide: true
+                name: 'package #5'
+              - hide: true
+                name: 'package #6'
+              - hide: true
+                name: 'package #7'
+              - hide: true
+                name: 'package #8'
               - header: Namespace
-                name: operator_namespace
+                name: 'operator_namespace #1'
+              - hide: true
+                name: 'operator_namespace #2'
+              - hide: true
+                name: 'operator_namespace #3'
+              - hide: true
+                name: 'operator_namespace #4'
+              - hide: true
+                name: 'operator_namespace #5'
+              - hide: true
+                name: 'operator_namespace #6'
+              - hide: true
+                name: 'operator_namespace #7'
+              - hide: true
+                name: 'operator_namespace #8'
               - header: Installed
-                name: installed_version
+                name: 'installed_version #1'
               - header: Lifecycle stream
-                name: lifecycle_version
+                name: 'lifecycle_version #1'
               - header: Channel
-                name: channel
+                name: 'channel #1'
               - cellSettings:
                 - backgroundColor: '#f2495c'
                   condition:
@@ -461,7 +519,7 @@ spec:
                       value: ok
                   text: OK
                 header: Finding
-                name: status
+                name: 'status #2'
                 width: 230
               - cellSettings:
                 - backgroundColor: '#73bf69'
@@ -498,7 +556,7 @@ spec:
                 width: 130
               - header: Phase
                 hide: true
-                name: phase
+                name: 'phase #1'
               - cellSettings:
                 - backgroundColor: '#73bf69'
                   condition:
@@ -542,23 +600,23 @@ spec:
                 name: 'value #5'
                 width: 110
               - header: Compatible OCP versions
-                name: compatible_ocp_versions
+                name: 'compatible_ocp_versions #1'
               - header: Support ends
                 name: 'value #6'
                 width: 110
               - header: For current OCP
-                name: recommended_version
+                name: 'recommended_version #7'
               - header: For target OCP
-                name: target_version
+                name: 'target_version #8'
               - dataLink:
                   openNewTab: true
                   title: Red Hat lifecycle policy
-                  url: ${__data.fields.link}
+                  url: ${__data.fields["link #1"]}
                 header: Product
-                name: product
+                name: 'product #1'
               - header: All findings
-                name: reasons
-              - name: link
+                name: 'reasons #2'
+              - name: 'link #1'
               - hide: true
                 name: timestamp
               - hide: true
@@ -801,7 +859,9 @@ spec:
             spec:
               columnSettings:
               - header: Minor
-                name: ocp_version
+                name: 'ocp_version #1'
+              - hide: true
+                name: 'ocp_version #2'
               - cellSettings:
                 - backgroundColor: '#73bf69'
                   condition:
@@ -835,7 +895,7 @@ spec:
                 header: Support level
                 name: 'value #1'
               - header: Phase
-                name: phase
+                name: 'phase #1'
               - header: Standard support ends
                 name: 'value #2'
               - hide: true

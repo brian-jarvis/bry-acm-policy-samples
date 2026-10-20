@@ -105,6 +105,27 @@ When converting a future dashboard, check the source JSON for any panel with a `
 and verify after migration that its Perses `transforms` use `JoinByColumnValue` with the right columns,
 not `MergeSeries`.
 
+**Table panels with more than one query need their `columnSettings` label columns suffixed by query
+index.** Perses' Table panel suffixes *every* label key (not just `value`) with ` #<queryIndex+1>`
+(1-indexed by the query's position in that panel's `queries` list) whenever the panel has more than one
+query — this happens as a raw data-building step before any `transforms` run. `percli` already applies
+this convention correctly to `value` columns (`value #1`, `value #2`, ...) but leaves label-derived
+`columnSettings.name` entries as bare label names (e.g. `cluster`, `phase`, `ocp_version`), which no
+longer match any real column once the suffixing happens. The symptom is a blank friendly header (e.g.
+"Cluster") with the real data sitting in unmapped, unhidden columns like `cluster #1`..`cluster #9`
+visible in a CSV/table export. The fix: rename each affected `columnSettings.name` to
+`<label> #<queryIndex+1>`, matching the query that actually produces that label, and add a hidden
+(`hide: true`) duplicate entry for every other query index that also happens to produce the same label
+(e.g. a `cluster` column that's grouped-by in every query of the panel) — keep only one instance visible
+as the authoritative column. The one exception is the join/merge transform's own
+`transforms[].spec.columns` field, which must stay as the bare/unsuffixed label name (the transform
+internally matches it against all of the suffixed `<name> #N` variants). Also update any `dataLink` URL
+that references a renamed column to Perses' `${__data.fields["column_name"]}` bracket-notation syntax
+(not the older dot-notation `${__data.fields.column_name}`) using the new suffixed name. This affected
+the same three `ocp-lifecycle` panels (`Clusters`, `Operators`, `OpenShift minors: current phase`) —
+when converting a future dashboard, check every Table panel with more than one query for bare
+label-named `columnSettings` entries and fix them the same way.
+
 ### ScrapeConfigs
 
 MCOA does not use the `observability-metrics-(custom-)allowlist` ConfigMap mechanism from classic ACM
