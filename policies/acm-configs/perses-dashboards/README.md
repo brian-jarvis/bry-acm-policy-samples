@@ -267,6 +267,21 @@ channels both certified for the same release), it would produce one row per dist
 lifecycle_version)` pair for that query, which is the correct behavior to surface the distinction rather
 than silently collapsing it.
 
+**`OpenShift minors: current phase` was removed; its current-phase signal was merged into
+`OpenShift minors: phase end dates`.** The two panels showed overlapping information: `current phase`
+displayed each version's current support phase (via `ocp_lifecycle_ocp_version_support_phase`, a numeric
+0-3 indicator) plus a generic "Standard support ends" date that duplicated information already visible
+in `phase end dates`' own per-phase end-date columns. The `current phase` panel was dropped entirely, and
+its `ocp_lifecycle_ocp_version_support_phase` query — along with its `cellSettings` color mapping (`3`
+→ green "Full support", `2` → blue "Maintenance", `1` → orange "Extended (EUS)", `0` → red "End of life",
+`-1` → plain "Unknown") — was added as a 7th query to `phase end dates`, producing a new, visible, colored
+"Current phase" column positioned right after "Minor". The same per-query-suffixing and
+`JoinByColumnValue` rules documented above apply here too: the new query's `ocp_version` column is
+suffixed `#7` and listed in the transform's `columns`, and its plain-text `phase #7` column is hidden
+since the colored cell's own text already conveys the same phase name. The dashboard row (previously
+titled "OpenShift lifecycle") was renamed to "OpenShift Release Lifecycle" and widened to the panel's
+full 24-column grid width now that it holds a single panel instead of two side by side.
+
 **Follow-up: revisit these two panels once the cluster's Perses version moves past v0.54.0.** Perses has
 since added a `PivotByLabel` transform (true parity with Grafana's `groupingToMatrix`: a declarative,
 dynamic pivot that turns distinct values of a label into columns, with no fixed query-per-column list

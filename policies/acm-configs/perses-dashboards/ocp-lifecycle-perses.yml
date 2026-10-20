@@ -941,20 +941,18 @@ spec:
                     name: rbac-query-proxy-datasource
                   query: max by (package) (ocp_lifecycle_operator_info{cluster=~"$cluster"})
                   seriesNameFormat: ''
-      '3_0':
+      '3_1':
         kind: Panel
         spec:
           display:
-            name: 'OpenShift minors: current phase'
-            description: Every supported OpenShift minor, plus any minor a cluster is running or targeting.
+            name: 'OpenShift minors: phase end dates'
+            description: Published end date of each lifecycle phase. Empty where the phase does not apply (e.g. EUS on odd minors).
           plugin:
             kind: Table
             spec:
               columnSettings:
               - header: Minor
                 name: 'ocp_version #1'
-              - hide: true
-                name: 'ocp_version #2'
               - cellSettings:
                 - backgroundColor: '#73bf69'
                   condition:
@@ -985,56 +983,8 @@ spec:
                     spec:
                       value: '-1'
                   text: Unknown
-                header: Support level
-                name: 'value #1'
-              - header: Phase
-                name: 'phase #1'
-              - format:
-                  unit: date-iso
-                header: Standard support ends
-                name: 'value #2'
-              - hide: true
-                name: timestamp
-              density: compact
-              transforms:
-              - kind: JoinByColumnValue
-                spec:
-                  columns:
-                  - 'ocp_version #1'
-                  - 'ocp_version #2'
-          queries:
-          - kind: TimeSeriesQuery
-            spec:
-              plugin:
-                kind: PrometheusTimeSeriesQuery
-                spec:
-                  datasource:
-                    kind: PrometheusDatasource
-                    name: rbac-query-proxy-datasource
-                  query: max by (ocp_version, phase) (ocp_lifecycle_ocp_version_support_phase{cluster=~"$cluster"})
-                  seriesNameFormat: ''
-          - kind: TimeSeriesQuery
-            spec:
-              plugin:
-                kind: PrometheusTimeSeriesQuery
-                spec:
-                  datasource:
-                    kind: PrometheusDatasource
-                    name: rbac-query-proxy-datasource
-                  query: (max by (ocp_version) (ocp_lifecycle_ocp_version_support_end_timestamp_seconds{cluster=~"$cluster"}) + 43200) * 1000
-                  seriesNameFormat: ''
-      '3_1':
-        kind: Panel
-        spec:
-          display:
-            name: 'OpenShift minors: phase end dates'
-            description: Published end date of each lifecycle phase. Empty where the phase does not apply (e.g. EUS on odd minors).
-          plugin:
-            kind: Table
-            spec:
-              columnSettings:
-              - header: Minor
-                name: 'ocp_version #1'
+                header: Current phase
+                name: 'value #7'
               - hide: true
                 name: 'ocp_version #2'
               - hide: true
@@ -1045,6 +995,10 @@ spec:
                 name: 'ocp_version #5'
               - hide: true
                 name: 'ocp_version #6'
+              - hide: true
+                name: 'ocp_version #7'
+              - hide: true
+                name: 'phase #7'
               - format:
                   unit: date-iso
                 header: Full support
@@ -1082,6 +1036,7 @@ spec:
                   - 'ocp_version #4'
                   - 'ocp_version #5'
                   - 'ocp_version #6'
+                  - 'ocp_version #7'
           queries:
           - kind: TimeSeriesQuery
             spec:
@@ -1142,6 +1097,16 @@ spec:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
                   query: (max by (ocp_version) (ocp_lifecycle_ocp_version_phase_end_timestamp_seconds{cluster=~"$cluster", phase="Extended life phase"}) + 43200) * 1000
+                  seriesNameFormat: ''
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: max by (ocp_version, phase) (ocp_lifecycle_ocp_version_support_phase{cluster=~"$cluster"})
                   seriesNameFormat: ''
       '4_0':
         kind: Panel
@@ -1300,19 +1265,13 @@ spec:
     - kind: Grid
       spec:
         display:
-          title: OpenShift lifecycle
+          title: OpenShift Release Lifecycle
           collapse:
             open: true
         items:
         - x: 0
           "y": 54
-          width: 8
-          height: 10
-          content:
-            $ref: '#/spec/panels/3_0'
-        - x: 8
-          "y": 54
-          width: 16
+          width: 24
           height: 10
           content:
             $ref: '#/spec/panels/3_1'
