@@ -294,7 +294,15 @@ spec:
               - kind: JoinByColumnValue
                 spec:
                   columns:
-                  - cluster
+                  - 'cluster #1'
+                  - 'cluster #2'
+                  - 'cluster #3'
+                  - 'cluster #4'
+                  - 'cluster #5'
+                  - 'cluster #6'
+                  - 'cluster #7'
+                  - 'cluster #8'
+                  - 'cluster #9'
           queries:
           - kind: TimeSeriesQuery
             spec:
@@ -654,7 +662,14 @@ spec:
               - kind: JoinByColumnValue
                 spec:
                   columns:
-                  - join_key
+                  - 'join_key #1'
+                  - 'join_key #2'
+                  - 'join_key #3'
+                  - 'join_key #4'
+                  - 'join_key #5'
+                  - 'join_key #6'
+                  - 'join_key #7'
+                  - 'join_key #8'
           queries:
           - kind: TimeSeriesQuery
             spec:
@@ -872,7 +887,21 @@ spec:
               - kind: JoinByColumnValue
                 spec:
                   columns:
-                  - package
+                  - 'package #1'
+                  - 'package #2'
+                  - 'package #3'
+                  - 'package #4'
+                  - 'package #5'
+                  - 'package #6'
+                  - 'package #7'
+                  - 'package #8'
+                  - 'package #9'
+                  - 'package #10'
+                  - 'package #11'
+                  - 'package #12'
+                  - 'package #13'
+                  - 'package #14'
+                  - 'package #15'
           queries:
           - kind: TimeSeriesQuery
             spec:
@@ -1083,7 +1112,8 @@ spec:
               - kind: JoinByColumnValue
                 spec:
                   columns:
-                  - ocp_version
+                  - 'ocp_version #1'
+                  - 'ocp_version #2'
           queries:
           - kind: TimeSeriesQuery
             spec:
@@ -1158,7 +1188,12 @@ spec:
               - kind: JoinByColumnValue
                 spec:
                   columns:
-                  - ocp_version
+                  - 'ocp_version #1'
+                  - 'ocp_version #2'
+                  - 'ocp_version #3'
+                  - 'ocp_version #4'
+                  - 'ocp_version #5'
+                  - 'ocp_version #6'
           queries:
           - kind: TimeSeriesQuery
             spec:

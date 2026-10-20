@@ -89,6 +89,10 @@ API version (`v1alpha1` → `v1alpha2`), the missing `spec.config` wrapper, the 
 label, and swapping every `$Datasource` reference (and the `Datasource` template variable itself) for
 a direct reference to the `rbac-query-proxy-datasource` `PersesDatasource`.
 
+See [percli-issues.md](./percli-issues.md) for the full list of `percli` conversion bugs encountered
+across all six dashboards (written up as standalone upstream bug reports — summary, source snippet,
+what was generated, what was expected), several of which are summarized again below.
+
 **Table panels with a Grafana `merge` transformation need a manual transform fix after migration.**
 `percli` always converts Grafana's `transformations: [{id: merge}]` into Perses' `MergeSeries`
 transform, but `MergeSeries` only merges series that share an *identical* full label set — it doesn't
@@ -117,9 +121,9 @@ visible in a CSV/table export. The fix: rename each affected `columnSettings.nam
 `<label> #<queryIndex+1>`, matching the query that actually produces that label, and add a hidden
 (`hide: true`) duplicate entry for every other query index that also happens to produce the same label
 (e.g. a `cluster` column that's grouped-by in every query of the panel) — keep only one instance visible
-as the authoritative column. The one exception is the join/merge transform's own
-`transforms[].spec.columns` field, which must stay as the bare/unsuffixed label name (the transform
-internally matches it against all of the suffixed `<name> #N` variants). Also update any `dataLink` URL
+as the authoritative column. The join/merge transform's own `transforms[].spec.columns` field is
+**not** exempt from suffixing either — see the dedicated `JoinByColumnValue` gotcha below, which
+corrects an earlier (wrong) assumption that this field could stay bare. Also update any `dataLink` URL
 that references a renamed column to Perses' `${__data.fields["column_name"]}` bracket-notation syntax
 (not the older dot-notation `${__data.fields.column_name}`) using the new suffixed name. This affected
 the same three `ocp-lifecycle` panels (`Clusters`, `Operators`, `OpenShift minors: current phase`) —
@@ -135,19 +139,37 @@ from the `#dateFormat` schema in `github.com/perses/shared/cue/common/format.cue
 `perses/perses` and `perses/plugins`). This affected 5 columns across the `Clusters`, `Operators`, and
 `OpenShift minors: current phase` panels on `ocp-lifecycle`.
 
-**`JoinByColumnValue` does not reliably support a composite multi-column join key.** Despite the docs
-listing `columns` as a list, passing more than one column (e.g. `[cluster, operator_namespace, package]`)
-on the `Operators` panel collapsed every row into one instead of one row per operator — consistent with
-the transform only ever matching on a single column's value (here, every row shared the same `cluster`
-value, since this environment has only one managed cluster, so a single-column match against `cluster`
-alone was enough to merge everything). When a Table panel genuinely needs to join on more than one label,
-synthesize a single combined key label in every one of that panel's queries via PromQL's
-`label_join(<expr>, "join_key", "/", "label1", "label2", ...)`, point the transform at
-`columns: [join_key]` only, and add a hidden `columnSettings` entry (`'join_key #N'` per query, suffixed
-per the rule above) so the synthetic column doesn't clutter the table. Keeping `cluster` as part of the
-combined key (not just `operator_namespace`/`package`) matters for dashboards like `ocp-lifecycle` whose
-`cluster` variable is `allowMultiple: true`/`allowAllValue: true` — otherwise the same operator name in
-two different clusters would incorrectly merge into one row once more managed clusters exist.
+**`JoinByColumnValue`'s `columns` list requires the exact, fully-suffixed column name(s) — it does not
+fuzzy-match bare names against the per-query-suffixed variants.** This was found by reading the actual
+runtime implementation (`applyJoinTransform` in `perses/shared`'s
+`components/src/utils/transform-data.ts`, the same package consumed by the Table plugin): for each raw
+row it computes `Object.keys(row).filter((k) => columns.includes(k)).map((k) => row[k]).join('|')` and
+groups rows whose hash matches. This is a plain **exact string match** against each row's own keys — it
+never strips a ` #N` suffix or matches a bare name like `cluster` against a suffixed key like
+`cluster #3`. Since every Table panel with more than one query suffixes *every* key (per the gotcha
+above), a bare `columns: [cluster]` (or `[join_key]`) matches **zero** keys on every row, so
+`Object.keys(...).filter(...)` is always empty and every row hashes to the same empty string `''` —
+**silently collapsing all rows into one.** This explains two things discovered in this project: (1) the
+`Operators` panel showing only one merged row despite ~24 distinct operators existing in the data, and
+(2) the `Clusters` panel *appearing* to work correctly with a bare `columns: [cluster]` — it was actually
+hitting the exact same empty-hash collapse-to-one-row bug, which happened to produce the visually correct
+result only because this environment currently has exactly one managed cluster. That panel is a latent
+bug that will silently merge every cluster into one row again as soon as a second managed cluster exists.
+The correct fix is to list **every per-query-suffixed instance** of the join column(s) in
+`transforms[].spec.columns`, e.g. `['cluster #1', 'cluster #2', ..., 'cluster #9']` for a panel with 9
+queries all grouping by `cluster`. Since each raw row only ever contains the one suffix matching its own
+query index, `Object.keys(row).filter(...)` finds exactly one matching key per row, and the values hash
+correctly across queries as long as the underlying label value is the same. This repo's earlier
+mitigation of wrapping the `Operators` panel's 8 queries in a `label_join(<expr>, "join_key", "/",
+"cluster", "operator_namespace", "package")` to synthesize a single composite key (rather than listing
+`cluster`/`operator_namespace`/`package` directly) is **still the right approach** for a true
+multi-column composite join — it was just missing the suffixing fix on top: the transform now reads
+`columns: ['join_key #1', ..., 'join_key #8']`, not bare `[join_key]`. All five `JoinByColumnValue`
+transforms on `ocp-lifecycle` (`Clusters`, `Operators`, `OpenShift minors: current phase`,
+`Operator × OpenShift compatibility`, `OpenShift minors: phase end dates`) were corrected to list every
+suffixed variant. When converting a future multi-query Table panel, always list every `<name> #N`
+instance of the join column(s) — never a bare name — regardless of how the panel currently appears to
+behave.
 
 **`percli` drops Grafana's `groupingToMatrix` transform entirely — Perses has no dynamic pivot
 equivalent.** `ocp-lifecycle`'s `Operator × OpenShift compatibility` and `OpenShift minors: phase end
