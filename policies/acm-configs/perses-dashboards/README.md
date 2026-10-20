@@ -241,6 +241,16 @@ then the one actually referenced by `columnSettings`. The per-version `value #N`
 *not* passed through `MergeIndexedColumns` — each must stay distinct since it represents a different
 OpenShift version's compatibility flag, not duplicate copies of the same fact.
 
+**Follow-up: revisit these two panels once the cluster's Perses version moves past v0.54.0.** Perses has
+since added a `PivotByLabel` transform (true parity with Grafana's `groupingToMatrix`: a declarative,
+dynamic pivot that turns distinct values of a label into columns, with no fixed query-per-column list
+needed) — confirmed present on `perses/shared`'s current `main` branch but confirmed *absent* from the
+v0.54.0-vendored copy that Red Hat's Cluster Observability Operator 1.5.3 actually ships on this cluster.
+Once an upgrade brings `PivotByLabel` into the deployed version, `Operator × OpenShift compatibility` and
+`OpenShift minors: phase end dates` should be rebuilt to use it instead of the hardcoded
+one-query-per-column-value workaround described above, eliminating the periodic version-list maintenance
+burden entirely.
+
 ### ScrapeConfigs
 
 MCOA does not use the `observability-metrics-(custom-)allowlist` ConfigMap mechanism from classic ACM
