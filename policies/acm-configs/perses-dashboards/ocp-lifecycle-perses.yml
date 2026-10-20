@@ -252,7 +252,7 @@ spec:
               - header: Phase
                 name: 'phase #3'
               - format:
-                  unit: unix-timestamp-ms
+                  unit: date-iso
                 header: Phase ends
                 name: 'value #4'
               - format:
@@ -260,11 +260,11 @@ spec:
                 header: Days left in phase
                 name: 'value #5'
               - format:
-                  unit: unix-timestamp-ms
+                  unit: date-iso
                 header: Standard support ends
                 name: 'value #6'
               - format:
-                  unit: unix-timestamp-ms
+                  unit: date-iso
                 header: Extended support ends
                 name: 'value #7'
               - cellSettings:
@@ -616,7 +616,7 @@ spec:
               - header: Compatible OCP versions
                 name: 'compatible_ocp_versions #1'
               - format:
-                  unit: unix-timestamp-ms
+                  unit: date-iso
                 header: Support ends
                 name: 'value #6'
                 width: 110
@@ -1102,7 +1102,7 @@ spec:
               - header: Phase
                 name: 'phase #1'
               - format:
-                  unit: unix-timestamp-ms
+                  unit: date-iso
                 header: Standard support ends
                 name: 'value #2'
               - hide: true
@@ -1158,27 +1158,27 @@ spec:
               - hide: true
                 name: 'ocp_version #6'
               - format:
-                  unit: unix-timestamp-ms
+                  unit: date-iso
                 header: Full support
                 name: 'value #1'
               - format:
-                  unit: unix-timestamp-ms
+                  unit: date-iso
                 header: Maintenance support
                 name: 'value #2'
               - format:
-                  unit: unix-timestamp-ms
+                  unit: date-iso
                 header: Extended update support
                 name: 'value #3'
               - format:
-                  unit: unix-timestamp-ms
+                  unit: date-iso
                 header: Extended update support Term 2
                 name: 'value #4'
               - format:
-                  unit: unix-timestamp-ms
+                  unit: date-iso
                 header: Extended update support Term 3
                 name: 'value #5'
               - format:
-                  unit: unix-timestamp-ms
+                  unit: date-iso
                 header: Extended life phase
                 name: 'value #6'
               - hide: true
