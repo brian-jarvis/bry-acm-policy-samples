@@ -822,66 +822,20 @@ spec:
                 text: "\u2013"
               columnSettings:
               - header: Operator
-                name: 'package #1'
+                name: package
                 width: 280
-              - hide: true
-                name: 'package #2'
-              - hide: true
-                name: 'package #3'
-              - hide: true
-                name: 'package #4'
-              - hide: true
-                name: 'package #5'
-              - hide: true
-                name: 'package #6'
-              - hide: true
-                name: 'package #7'
-              - hide: true
-                name: 'package #8'
-              - hide: true
-                name: 'package #9'
-              - hide: true
-                name: 'package #10'
-              - hide: true
-                name: 'package #11'
-              - hide: true
-                name: 'package #12'
-              - hide: true
-                name: 'package #13'
-              - hide: true
-                name: 'package #14'
-              - hide: true
-                name: 'package #15'
-              - header: '4.12'
-                name: 'value #1'
-              - header: '4.13'
-                name: 'value #2'
-              - header: '4.14'
-                name: 'value #3'
-              - header: '4.15'
-                name: 'value #4'
-              - header: '4.16'
-                name: 'value #5'
-              - header: '4.17'
-                name: 'value #6'
-              - header: '4.18'
-                name: 'value #7'
-              - header: '4.19'
-                name: 'value #8'
               - header: '4.20'
-                name: 'value #9'
+                name: 'value #1'
               - header: '4.21'
-                name: 'value #10'
+                name: 'value #2'
               - header: '4.22'
-                name: 'value #11'
+                name: 'value #3'
               - header: '4.23'
-                name: 'value #12'
-              - header: '4.24'
-                name: 'value #13'
-              - header: '4.25'
-                name: 'value #14'
-              - header: '4.26'
-                name: 'value #15'
+                name: 'value #4'
+              - header: '5.0'
+                name: 'value #5'
+              - header: '5.1'
+                name: 'value #6'
               density: compact
               transforms:
               - kind: JoinByColumnValue
@@ -893,96 +847,10 @@ spec:
                   - 'package #4'
                   - 'package #5'
                   - 'package #6'
-                  - 'package #7'
-                  - 'package #8'
-                  - 'package #9'
-                  - 'package #10'
-                  - 'package #11'
-                  - 'package #12'
-                  - 'package #13'
-                  - 'package #14'
-                  - 'package #15'
+              - kind: MergeIndexedColumns
+                spec:
+                  column: package
           queries:
-          - kind: TimeSeriesQuery
-            spec:
-              plugin:
-                kind: PrometheusTimeSeriesQuery
-                spec:
-                  datasource:
-                    kind: PrometheusDatasource
-                    name: rbac-query-proxy-datasource
-                  query: max by (package) (ocp_lifecycle_operator_ocp_compatibility{cluster=~"$cluster", ocp_version="4.12"})
-                  seriesNameFormat: ''
-          - kind: TimeSeriesQuery
-            spec:
-              plugin:
-                kind: PrometheusTimeSeriesQuery
-                spec:
-                  datasource:
-                    kind: PrometheusDatasource
-                    name: rbac-query-proxy-datasource
-                  query: max by (package) (ocp_lifecycle_operator_ocp_compatibility{cluster=~"$cluster", ocp_version="4.13"})
-                  seriesNameFormat: ''
-          - kind: TimeSeriesQuery
-            spec:
-              plugin:
-                kind: PrometheusTimeSeriesQuery
-                spec:
-                  datasource:
-                    kind: PrometheusDatasource
-                    name: rbac-query-proxy-datasource
-                  query: max by (package) (ocp_lifecycle_operator_ocp_compatibility{cluster=~"$cluster", ocp_version="4.14"})
-                  seriesNameFormat: ''
-          - kind: TimeSeriesQuery
-            spec:
-              plugin:
-                kind: PrometheusTimeSeriesQuery
-                spec:
-                  datasource:
-                    kind: PrometheusDatasource
-                    name: rbac-query-proxy-datasource
-                  query: max by (package) (ocp_lifecycle_operator_ocp_compatibility{cluster=~"$cluster", ocp_version="4.15"})
-                  seriesNameFormat: ''
-          - kind: TimeSeriesQuery
-            spec:
-              plugin:
-                kind: PrometheusTimeSeriesQuery
-                spec:
-                  datasource:
-                    kind: PrometheusDatasource
-                    name: rbac-query-proxy-datasource
-                  query: max by (package) (ocp_lifecycle_operator_ocp_compatibility{cluster=~"$cluster", ocp_version="4.16"})
-                  seriesNameFormat: ''
-          - kind: TimeSeriesQuery
-            spec:
-              plugin:
-                kind: PrometheusTimeSeriesQuery
-                spec:
-                  datasource:
-                    kind: PrometheusDatasource
-                    name: rbac-query-proxy-datasource
-                  query: max by (package) (ocp_lifecycle_operator_ocp_compatibility{cluster=~"$cluster", ocp_version="4.17"})
-                  seriesNameFormat: ''
-          - kind: TimeSeriesQuery
-            spec:
-              plugin:
-                kind: PrometheusTimeSeriesQuery
-                spec:
-                  datasource:
-                    kind: PrometheusDatasource
-                    name: rbac-query-proxy-datasource
-                  query: max by (package) (ocp_lifecycle_operator_ocp_compatibility{cluster=~"$cluster", ocp_version="4.18"})
-                  seriesNameFormat: ''
-          - kind: TimeSeriesQuery
-            spec:
-              plugin:
-                kind: PrometheusTimeSeriesQuery
-                spec:
-                  datasource:
-                    kind: PrometheusDatasource
-                    name: rbac-query-proxy-datasource
-                  query: max by (package) (ocp_lifecycle_operator_ocp_compatibility{cluster=~"$cluster", ocp_version="4.19"})
-                  seriesNameFormat: ''
           - kind: TimeSeriesQuery
             spec:
               plugin:
@@ -1031,7 +899,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: max by (package) (ocp_lifecycle_operator_ocp_compatibility{cluster=~"$cluster", ocp_version="4.24"})
+                  query: max by (package) (ocp_lifecycle_operator_ocp_compatibility{cluster=~"$cluster", ocp_version="5.0"})
                   seriesNameFormat: ''
           - kind: TimeSeriesQuery
             spec:
@@ -1041,17 +909,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: max by (package) (ocp_lifecycle_operator_ocp_compatibility{cluster=~"$cluster", ocp_version="4.25"})
-                  seriesNameFormat: ''
-          - kind: TimeSeriesQuery
-            spec:
-              plugin:
-                kind: PrometheusTimeSeriesQuery
-                spec:
-                  datasource:
-                    kind: PrometheusDatasource
-                    name: rbac-query-proxy-datasource
-                  query: max by (package) (ocp_lifecycle_operator_ocp_compatibility{cluster=~"$cluster", ocp_version="4.26"})
+                  query: max by (package) (ocp_lifecycle_operator_ocp_compatibility{cluster=~"$cluster", ocp_version="5.1"})
                   seriesNameFormat: ''
       '3_0':
         kind: Panel

@@ -135,14 +135,37 @@ the same three `ocp-lifecycle` panels (`Clusters`, `Operators`, `OpenShift minor
 when converting a future dashboard, check every Table panel with more than one query for bare
 label-named `columnSettings` entries and fix them the same way.
 
-**Epoch-millisecond timestamp columns need an explicit `format.unit`.** Grafana field overrides like
+**Epoch-millisecond timestamp columns need an explicit `format.unit`, and `unix-timestamp`/
+`unix-timestamp-ms` are NOT "format as a date" units.** Grafana field overrides like
 `unit: "time:YYYY-MM-DD"` (used on the `ocp-lifecycle` dashboard's "Phase ends"/"Support ends" columns,
 all computed as `(max(..._timestamp_seconds{...}) + 43200) * 1000`) are dropped entirely by `percli` —
-without a `format` key Perses renders the raw epoch-millisecond number instead of a date. The fix is
-adding `format: {unit: unix-timestamp-ms}` to the affected `columnSettings` entry (the unit name comes
-from the `#dateFormat` schema in `github.com/perses/shared/cue/common/format.cue`, a separate repo from
-`perses/perses` and `perses/plugins`). This affected 5 columns across the `Clusters`, `Operators`, and
-`OpenShift minors: current phase` panels on `ocp-lifecycle`.
+without a `format` key Perses renders the raw epoch-millisecond number instead of a date.
+
+Our first attempt at a fix added `format: {unit: unix-timestamp-ms}` (a valid unit per the `#dateFormat`
+schema in `github.com/perses/shared/cue/common/format.cue`) — this is schema-valid and does **not** fix
+the symptom: the raw number (e.g. `1808308800000`) kept rendering as-is, even after a hard browser
+refresh/private window. We confirmed why by fetching and reading the actual compiled JS Perses serves to
+the browser (`oc exec` into the `perses-0` pod, `GET /plugins/Table/mf-manifest.json` to find the shared
+`@perses-dev/core` Module Federation chunk, then `GET` that chunk directly and grepping it). The date
+formatter's real logic is:
+```js
+if ("unix-timestamp" === n) return (e > 1e12 ? Math.floor(e / 1e3) : e).toString();
+if ("unix-timestamp-ms" === n) return Math.floor(e < 1e11 ? 1e3 * e : e).toString();
+// ... only for every OTHER date unit does it proceed to `new Date(e)` + Intl.DateTimeFormat
+```
+`unix-timestamp`/`unix-timestamp-ms` are "normalize to a given epoch scale and print the raw number"
+units (useful if your data mixes seconds- and milliseconds-scale timestamps) — they are not a
+human-readable date format, despite the misleading `#dateFormat` grouping and display labels ("Unix
+Timestamp (s)"/"Unix Timestamp (ms)") suggesting otherwise. The actual fix is to use one of the units
+that reach the `new Date(e)`/`Intl.DateTimeFormat` branch instead — `date-iso`, `date-us`, `date-local`,
+`datetime-iso`, `datetime-us`, `datetime-local`, `time-iso`, `time-us`, `time-local`, or
+`relative-time`. We used `format: {unit: date-iso}` (renders `YYYY-MM-DD`, matching Grafana's original
+`time:YYYY-MM-DD`). The date-parsing helper auto-detects seconds vs. milliseconds (treats a value
+`< 1e10` as seconds and multiplies by 1000, otherwise uses it as-is), so our existing epoch-millisecond
+values needed no query changes — only the `format.unit` value. This affected all 11 of our
+`unix-timestamp-ms` columns across the `Clusters`, `Operators`, `OpenShift minors: current phase`, and
+`OpenShift minors: phase end dates`/`Operator × OpenShift compatibility` (added by the `groupingToMatrix`
+rebuild below) panels on `ocp-lifecycle`.
 
 **`JoinByColumnValue`'s `columns` list requires the exact, fully-suffixed column name(s) — it does not
 fuzzy-match bare names against the per-query-suffixed variants.** This was found by reading the actual
@@ -192,10 +215,31 @@ For `OpenShift minors: phase end dates`, the `phase` label only ever takes a sma
 support Term 2`, `Extended update support Term 3`, plus `Extended life phase` which doesn't occur yet),
 so one query per phase is a stable, low-maintenance fix. For `Operator × OpenShift compatibility`, the
 pivot column is `ocp_version`, which is an open-ended, growing set — the fix uses a **hardcoded list of
-OCP minor versions** (currently `4.12` through `4.26`, with a few versions of headroom past what's
-observed live) as one query per version. **This list needs periodic maintenance** as new OpenShift
-minors are released and old ones age out of relevance; there is no way to make it fully dynamic without
-a pivot transform Perses doesn't support.
+OCP minor versions** as one query per version. **This list needs periodic maintenance** as clusters
+upgrade and new OpenShift minors are released; there is no way to make it fully dynamic without a pivot
+transform Perses doesn't support. The list was originally seeded with every version `4.12`-`4.26`
+(mirroring the dashboard's other hardcoded ranges), but most of those were irrelevant: versions below
+what any managed cluster is running will never need an upgrade-compatibility check, and the exporter
+only reports compatibility data up to the newest release it knows about. The range was narrowed to the
+lowest `ocp_version` currently reported by `ocp_lifecycle_cluster_info` across managed clusters (today:
+`4.20`) through the highest version with real compatibility data in `ocp_lifecycle_operator_ocp_compatibility`
+(today: `4.22`), plus a few explicit extra columns for near-future versions chosen when this was last
+refreshed (`4.23`, `5.0`, `5.1`). Re-derive both ends of this range (via the two queries above) whenever
+this panel is revisited, rather than assuming the existing list is still current.
+
+A second, independent bug was found in this same panel: the visible "Operator" column was pinned to
+`package #1` (the per-query-suffixed column from only the *first* listed version query), so any operator
+whose earliest compatible version wasn't that first column showed a blank name even though its row held
+real data for later columns — confirmed via a CSV export showing only 2 of ~24 operators (the ones
+supporting the oldest listed version) with a populated name. Listing every suffixed instance in
+`JoinByColumnValue.spec.columns` (per the gotcha above) correctly merges each operator's per-version data
+into one row, but a Table panel with N queries always produces N separate `package #1..#N` columns after
+that join — there's no single "pick whichever is set" column by default. The fix is a second transform,
+`MergeIndexedColumns` (`spec: {column: package}`), run *after* the `JoinByColumnValue` join: it collapses
+`package #1..#N` into one plain `package` column containing whichever per-row value is non-null, which is
+then the one actually referenced by `columnSettings`. The per-version `value #N` columns are deliberately
+*not* passed through `MergeIndexedColumns` — each must stay distinct since it represents a different
+OpenShift version's compatibility flag, not duplicate copies of the same fact.
 
 ### ScrapeConfigs
 
