@@ -89,6 +89,22 @@ API version (`v1alpha1` → `v1alpha2`), the missing `spec.config` wrapper, the 
 label, and swapping every `$Datasource` reference (and the `Datasource` template variable itself) for
 a direct reference to the `rbac-query-proxy-datasource` `PersesDatasource`.
 
+**Table panels with a Grafana `merge` transformation need a manual transform fix after migration.**
+`percli` always converts Grafana's `transformations: [{id: merge}]` into Perses' `MergeSeries`
+transform, but `MergeSeries` only merges series that share an *identical* full label set — it doesn't
+help when each underlying query returns a different subset of labels (e.g. one query has
+`{cluster, version, channel}`, another has only `{cluster, status}`). In that (common) case the correct
+equivalent is `JoinByColumnValue`, which merges rows that share the same value in one or more named
+columns, matching Grafana's `merge` behavior. This bit the three multi-query table panels on the
+`ocp-lifecycle` dashboard (`Clusters`, `Operators`, `OpenShift minors: current phase`) — each row
+rendered as several partially-populated rows instead of one row per cluster/operator/minor until the
+panels' `transforms` were changed from `{kind: MergeSeries, spec: {}}` to
+`{kind: JoinByColumnValue, spec: {columns: [...]}}` with the same join column(s) Grafana's `merge` was
+implicitly keying on (found by checking which labels are common across all of that panel's queries).
+When converting a future dashboard, check the source JSON for any panel with a `merge` transformation
+and verify after migration that its Perses `transforms` use `JoinByColumnValue` with the right columns,
+not `MergeSeries`.
+
 ### ScrapeConfigs
 
 MCOA does not use the `observability-metrics-(custom-)allowlist` ConfigMap mechanism from classic ACM
