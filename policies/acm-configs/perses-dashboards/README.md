@@ -93,6 +93,11 @@ See [percli-issues.md](./percli-issues.md) for the full list of `percli` convers
 across all six dashboards (written up as standalone upstream bug reports — summary, source snippet,
 what was generated, what was expected), several of which are summarized again below.
 
+See [perses-ui-issues.md](./perses-ui-issues.md) for a Perses *core/UI* bug (not a `percli` conversion
+bug): the `JoinByColumnValue` transform requires every per-query-suffixed instance of a join column to
+be listed explicitly, and silently collapses every row into one if a bare/unsuffixed column name is used
+instead — see the dedicated `JoinByColumnValue` entry below for the short version.
+
 **Table panels with a Grafana `merge` transformation need a manual transform fix after migration.**
 `percli` always converts Grafana's `transformations: [{id: merge}]` into Perses' `MergeSeries`
 transform, but `MergeSeries` only merges series that share an *identical* full label set — it doesn't
