@@ -10,10 +10,15 @@ metadata:
 spec:
   jobName: ocp-lifecycle-metrics
   metricsPath: /federate
-  scheme: HTTPS
-  scrapeClass: ocp-monitoring
-  staticConfigs:
-    - targets: ["prometheus-user-workload.openshift-user-workload-monitoring.svc:9092"]
+  # NOTE: staticConfigs (and scrapeClass/scheme) are intentionally omitted here.
+  # MCOA only auto-populates scrapeClassName, scheme, and staticConfigs for a
+  # user-workload-metrics-collector ScrapeConfig when staticConfigs is empty to
+  # begin with (see stolostron/multicluster-observability-addon
+  # internal/metrics/manifests/values.go, BuildValues(): the UserWorkloads loop
+  # only sets these fields `if len(scrapeConfig.Spec.StaticConfigs) == 0`).
+  # Defining staticConfigs ourselves (even as a placeholder) skips that
+  # auto-population entirely, which is what originally forced us to hand-derive
+  # the "ocp-monitoring" scrapeClass and the ":9092" federate target below.
   params:
     match[]:
       - '{__name__="ocp_lifecycle_api_fetch_failures_total"}'
