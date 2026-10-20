@@ -231,15 +231,26 @@ A second, independent bug was found in this same panel: the visible "Operator" c
 `package #1` (the per-query-suffixed column from only the *first* listed version query), so any operator
 whose earliest compatible version wasn't that first column showed a blank name even though its row held
 real data for later columns — confirmed via a CSV export showing only 2 of ~24 operators (the ones
-supporting the oldest listed version) with a populated name. Listing every suffixed instance in
-`JoinByColumnValue.spec.columns` (per the gotcha above) correctly merges each operator's per-version data
-into one row, but a Table panel with N queries always produces N separate `package #1..#N` columns after
-that join — there's no single "pick whichever is set" column by default. The fix is a second transform,
-`MergeIndexedColumns` (`spec: {column: package}`), run *after* the `JoinByColumnValue` join: it collapses
-`package #1..#N` into one plain `package` column containing whichever per-row value is non-null, which is
-then the one actually referenced by `columnSettings`. The per-version `value #N` columns are deliberately
-*not* passed through `MergeIndexedColumns` — each must stay distinct since it represents a different
-OpenShift version's compatibility flag, not duplicate copies of the same fact.
+supporting the oldest listed version) with a populated name. The first fix attempted was a second
+transform, `MergeIndexedColumns` (`spec: {column: package}`), run *after* the `JoinByColumnValue` join, on
+the theory that it would collapse `package #1..#N` into one plain `package` column containing whichever
+per-row value is non-null. **This introduced a worse bug: every operator rendered 2-3 duplicate rows.**
+Reading the actual deployed JS (same `oc exec`-into-`perses-0`/Module Federation approach used for the
+date-format investigation below) found the real `MergeIndexedColumns` implementation: for each input row it
+finds *every* key matching `^((package #\d+)|(package))$`, and then — instead of picking one and collapsing
+the row — pushes **one new output row per matching key**. After `JoinByColumnValue` correctly merges an
+operator's per-version queries into a single row containing e.g. `package #1`, `package #2`, `package #3`
+(three matched version queries), `MergeIndexedColumns` explodes that single merged row back into three
+near-identical copies — exactly reproducing the number-of-matched-queries as duplicate rows. (`MergeColumns`
+has the identical per-matching-key row-multiplication bug in its implementation and is equally unsafe for
+this purpose.) The fix: drop `MergeIndexedColumns` entirely and add a 7th, version-unconditional query —
+`max by (package) (ocp_lifecycle_operator_info{cluster=~"$cluster"})` — which returns every tracked operator
+regardless of OCP-version compatibility. `JoinByColumnValue` is extended to list `package #1` through
+`package #7`; the panel then displays `package #7` (always present) as the "Operator" column and hides
+`package #1..#6` as duplicates, the same hidden-duplicate convention used by every other multi-query Table
+panel in this dashboard. This fixes both bugs at once without ever calling `MergeIndexedColumns`: the name
+column is always populated (query 7 has no version filter) and no row-exploding merge step is involved. The
+per-version `value #N`/`lifecycle_version #N` columns are unaffected and remain one per query.
 
 **Each version column shows the compatible operator version, not just a checkmark.** The underlying
 metric, `ocp_lifecycle_operator_ocp_compatibility`, carries a `lifecycle_version` label (the operator's

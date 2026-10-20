@@ -816,7 +816,7 @@ spec:
                 text: "\u2013"
               columnSettings:
               - header: Operator
-                name: package
+                name: 'package #7'
                 width: 280
               - header: '4.20'
                 name: 'lifecycle_version #1'
@@ -831,6 +831,18 @@ spec:
               - header: '5.1'
                 name: 'lifecycle_version #6'
               - hide: true
+                name: 'package #1'
+              - hide: true
+                name: 'package #2'
+              - hide: true
+                name: 'package #3'
+              - hide: true
+                name: 'package #4'
+              - hide: true
+                name: 'package #5'
+              - hide: true
+                name: 'package #6'
+              - hide: true
                 name: 'value #1'
               - hide: true
                 name: 'value #2'
@@ -842,6 +854,8 @@ spec:
                 name: 'value #5'
               - hide: true
                 name: 'value #6'
+              - hide: true
+                name: 'value #7'
               - hide: true
                 name: timestamp
               density: compact
@@ -855,9 +869,7 @@ spec:
                   - 'package #4'
                   - 'package #5'
                   - 'package #6'
-              - kind: MergeIndexedColumns
-                spec:
-                  column: package
+                  - 'package #7'
           queries:
           - kind: TimeSeriesQuery
             spec:
@@ -918,6 +930,16 @@ spec:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
                   query: max by (package, lifecycle_version) (ocp_lifecycle_operator_ocp_compatibility{cluster=~"$cluster", ocp_version="5.1"})
+                  seriesNameFormat: ''
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: max by (package) (ocp_lifecycle_operator_info{cluster=~"$cluster"})
                   seriesNameFormat: ''
       '3_0':
         kind: Panel
