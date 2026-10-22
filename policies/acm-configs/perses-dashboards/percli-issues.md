@@ -16,6 +16,14 @@ source snippet, what `percli` actually generated, and what was expected instead.
 
 ---
 
+The dashboards used for this issue can be found at:
+- https://github.com/brian-jarvis/ocp-lifecycle-dashboard/blob/main/dashboards/ocp-lifecycle.json
+- https://gitlab.cee.redhat.com/sbr-shift/metrics-dashboards/-/tree/main/dashboards?ref_type=heads
+
+The inprogress migrated dashboards to be used with ACM MCOA can be found at:
+- https://github.com/brian-jarvis/bry-acm-policy-samples/tree/implement-perses-dashboards/policies/acm-configs/perses-dashboards
+
+
 ## 1. Generated CR uses `apiVersion: perses.dev/v1alpha1` and omits the `spec.config` wrapper
 
 **Summary:** `percli migrate --format cr` emits a `PersesDashboard` manifest with
