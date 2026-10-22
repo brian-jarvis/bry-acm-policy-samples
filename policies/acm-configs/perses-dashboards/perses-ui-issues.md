@@ -1,20 +1,32 @@
 ---
-# Perses UI/core issues: Table panel transform bugs
+# Perses UI/core issues: Table panel transform bugs and feature gaps
 
 While building Table panels for the `ocp-lifecycle` dashboard in this folder,
 we hit two distinct bugs in Perses' own Table transform implementation (not
-anything `percli` generated incorrectly). Both are documented here to be filed
-as upstream issues against [`perses/perses`](https://github.com/perses/perses)
-(core table transform/UI behavior, implemented in
-[`perses/shared`](https://github.com/perses/shared)).
+anything `percli` generated incorrectly), plus one feature gap. All three are
+documented here to be filed as upstream issues/RFEs against
+[`perses/perses`](https://github.com/perses/perses) (core table transform/UI
+behavior, implemented in [`perses/shared`](https://github.com/perses/shared)).
 
 - Issue 1: `JoinByColumnValue` requires every per-query-suffixed column name
   to be listed explicitly, or it silently collapses every row into one.
 - Issue 2: `MergeIndexedColumns`/`MergeColumns`, when run on rows that already
   have more than one matching indexed column present (e.g. after a
   `JoinByColumnValue` join), multiply the row instead of collapsing it.
+- Issue 3 (RFE): Table panel `columnSettings.header` has no way to control
+  text styling (e.g. bold), so column headers can't be visually emphasized
+  from dashboard config.
 
 ---
+
+
+The dashboards used for this issue can be found at:
+- https://github.com/brian-jarvis/ocp-lifecycle-dashboard/blob/main/dashboards/ocp-lifecycle.json
+- https://gitlab.cee.redhat.com/sbr-shift/metrics-dashboards/-/tree/main/dashboards?ref_type=heads
+
+The inprogress migrated dashboards to be used with ACM MCOA can be found at:
+- https://github.com/brian-jarvis/bry-acm-policy-samples/tree/implement-perses-dashboards/policies/acm-configs/perses-dashboards
+
 
 ## Issue 1: `JoinByColumnValue` requires every per-query-suffixed column name to be listed explicitly
 
@@ -349,3 +361,71 @@ when every suffixed instance of the join column is listed, is sufficient.
   by code inspection, `Merge columns` (`MergeColumns`) — not independently
   reproduced in a live dashboard, since this repo never needed it, but the
   bug is present in the exact same shape in the minified source.
+
+---
+
+## Issue 3 (RFE): Table panel column headers cannot be styled (e.g. bold)
+
+### Summary
+
+There is no way to make a Table panel's column header text bold (or apply any
+other text styling) from dashboard configuration. The `Column Settings`
+specification's `header` field is a plain string with no accompanying
+style/weight option, and there is no panel-wide or dashboard-wide setting that
+controls header font weight either. Header rendering appears to be a fixed
+decision baked into the Perses UI/theme, not something a dashboard author can
+influence.
+
+### Source: the documented model
+
+[`perses.dev/plugins/docs/table/model/`](https://perses.dev/plugins/docs/table/model/),
+Column Settings specification:
+
+```
+name: <string> # Required
+header: <string> # Optional
+headerDescription: <string> # Optional
+cellDescription: <string> # Optional
+plugin: <Plugin specification> # Optional
+format: <Format specification> # Optional
+align: <enum = "left" | "center" | "right"> # Optional
+enableSorting: <boolean> # Optional
+sort: <enum = "asc" | "desc"> # Optional
+width: <anyOf = number | "auto"> # Optional
+hide: <boolean> # Optional
+dataLink: <Data Link specification> # Optional
+```
+
+No field anywhere in this spec (or in the sibling `Cell Settings`/`Format`
+specs) controls font weight, style, or any other header text presentation.
+
+### What was generated / observed
+
+We wanted to bold all column headers across the `ocp-lifecycle` dashboard's
+Table panels for readability. There is no `columnSettings` field, panel-level
+`Table` plugin option, or dashboard-level setting to express this — it simply
+cannot be configured.
+
+### What was expected
+
+A way to mark a column's header (or all headers in a panel, or all headers in
+a dashboard) as bold/emphasized — e.g. an optional `headerStyle` field on
+Column Settings (`{fontWeight: "bold" | "normal" | ...}`), or support for
+lightweight markup (e.g. Markdown `**bold**`) in the `header` string itself,
+similar to how some other dashboarding tools treat panel/column titles.
+
+### Workaround used in this repo
+
+None available. This is purely a feature gap, not a bug with a workaround —
+recorded here to be filed as an RFE rather than acted on in
+`ocp-lifecycle-perses.yml`.
+
+### Environment used to reproduce
+
+- Perses version: `v0.54.0` (Red Hat Cluster Observability Operator 1.5.3
+  downstream build, same as Issues 1 and 2).
+- Confirmed against the published model documentation
+  ([`perses.dev/plugins/docs/table/model/`](https://perses.dev/plugins/docs/table/model/))
+  rather than the deployed JS, since this is an absence of a documented
+  feature rather than a runtime bug.
+- Affected panel type: Table (`perses/plugins`, `table` plugin).
