@@ -18,10 +18,10 @@ spec:
   severity: critical
   upgradeApproval: Automatic
   subscription:
-    channel: release-2.17
+    channel: release-5.0
     name: advanced-cluster-management
     namespace: open-cluster-management
-    source: redhat-operators
+    source: acm-stage
     sourceNamespace: openshift-marketplace
   operatorGroup:
     name: open-cluster-management
