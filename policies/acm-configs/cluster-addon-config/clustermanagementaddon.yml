@@ -2,31 +2,18 @@
 object-templates-raw: |
   {{- $deplyConfig := `
     group: addon.open-cluster-management.io
+    name: clusteraddon-resource-config
+    namespace: open-cluster-management-hub
     resource: addondeploymentconfigs
-    defaultConfig:
-      name: clusteraddon-resource-config
-      namespace: open-cluster-management-hub
   ` }}
-  {{- range $cma := (lookup "addon.open-cluster-management.io/v1alpha1" "ClusterManagementAddOn" "" "").items }}
+  {{- range $cma := (lookup "addon.open-cluster-management.io/v1beta1" "ClusterManagementAddOn" "" "").items }}
     {{- if eq $cma.metadata.name "governance-policy-framework" "config-policy-controller" }}
-      {{- $inject := true}}
-      {{- if not $cma.spec.supportedConfigs }}
-        {{- $_ := set $cma.spec "supportedConfigs" list }}
-      {{- else }}
-        {{- range $sc := $cma.spec.supportedConfigs }}
-          {{- if eq $sc.defaultConfig.name "clusteraddon-resource-config" }}
-            {{- $inject = false }}
-            {{- break }}
-          {{- end }}
-        {{- end }}
-      {{- end }}
+      {{- $_ := set $cma.spec "defaultConfigs" list }}
+      {{- $_ := set $cma.spec "defaultConfigs" (append $cma.spec.defaultConfigs ($deplyConfig | fromYaml)) }}
 
-      {{- if $inject }}
-        {{- $_ := set $cma.spec "supportedConfigs" (append $cma.spec.supportedConfigs ($deplyConfig | fromYaml)) }}
-      {{- end }}
   - complianceType: mustonlyhave
     objectDefinition:
-      apiVersion: addon.open-cluster-management.io/v1alpha1
+      apiVersion: addon.open-cluster-management.io/v1beta1
       kind: ClusterManagementAddOn
       metadata:
         name: {{ $cma.metadata.name }}
