@@ -1,22 +1,35 @@
 ---
 object-templates-raw: |
-  {{- range $cma := (lookup "addon.open-cluster-management.io/v1alpha1" "ClusterManagementAddOn" "" "").items }}
+  {{- $deplyConfig := `
+    group: addon.open-cluster-management.io
+    resource: addondeploymentconfigs
+    defaultConfig:
+      name: clusteraddon-resource-config
+      namespace: open-cluster-management-hub
+  ` }}
+  {{- range $cma := (lookup "addon.open-cluster-management.io/v1beta1" "ClusterManagementAddOn" "" "").items }}
     {{- if eq $cma.metadata.name "governance-policy-framework" "config-policy-controller" }}
+      {{- $inject := true}}
+      {{- if not $cma.spec.supportedConfigs }}
+        {{- $_ := set $cma.spec "supportedConfigs" list }}
+      {{- else }}
+        {{- range $sc := $cma.spec.supportedConfigs }}
+          {{- if eq $sc.defaultConfig.name "clusteraddon-resource-config" }}
+            {{- $inject = false }}
+            {{- break }}
+          {{- end }}
+        {{- end }}
+      {{- end }}
 
+      {{- if $inject }}
+        {{- $_ := set $cma.spec "supportedConfigs" (append $cma.spec.supportedConfigs ($deplyConfig | fromYaml)) }}
+      {{- end }}
   - complianceType: mustonlyhave
     objectDefinition:
-      apiVersion: addon.open-cluster-management.io/v1alpha1
+      apiVersion: addon.open-cluster-management.io/v1beta1
       kind: ClusterManagementAddOn
       metadata:
         name: {{ $cma.metadata.name }}
-      spec:
-        addOnMeta: '{{ $cma.spec.addOnMeta | toRawJson | toLiteral }}'
-        installStrategy: '{{ $cma.spec.installStrategy | toRawJson | toLiteral }}'
-        supportedConfigs:
-          - group: addon.open-cluster-management.io
-            resource: addondeploymentconfigs
-            defaultConfig:
-              name: clusteraddon-resource-config
-              namespace: open-cluster-management-hub
+      spec: '{{ $cma.spec | toRawJson | toLiteral }}'
     {{- end }}
   {{- end }}
