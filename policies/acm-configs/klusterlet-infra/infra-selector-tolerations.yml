@@ -2,7 +2,7 @@
 object-templates-raw: |
   {{/* ##  Gather all AddOnDeploymentConfig  to reference later ## */}}
   {{- $aodc := dict }}
-  {{- range $ao := (lookup "addon.open-cluster-management.io/v1beta1" "AddOnDeploymentConfig" "" "").items }}
+  {{- range $ao := (lookup "addon.open-cluster-management.io/v1alpha1" "AddOnDeploymentConfig" "" "").items }}
     {{- $_ := set $aodc (printf "%s-%s" $ao.metadata.namespace $ao.metadata.name) $ao }}
   {{- end }}
 
