@@ -2,7 +2,7 @@
 object-templates-raw: |
   {{/* ##  Gather all AddOnDeploymentConfig  to reference later ## */}}
   {{- $aodc := dict }}
-  {{- range $ao := (lookup "addon.open-cluster-management.io/v1alpha1" "AddOnDeploymentConfig" "" "").items }}
+  {{- range $ao := (lookup "addon.open-cluster-management.io/v1beta1" "AddOnDeploymentConfig" "" "").items }}
     {{- $_ := set $aodc (printf "%s-%s" $ao.metadata.namespace $ao.metadata.name) $ao }}
   {{- end }}
 
@@ -43,15 +43,18 @@ object-templates-raw: |
     {{- range $mca := (lookup "addon.open-cluster-management.io/v1alpha1" "ManagedClusterAddOn" $mc.metadata.name "").items }}
       {{- $aodcSpec := ((printf $nodeSelector $roleLabel) | fromYaml) }}
       {{- $aodcName := (dig "annotations" "org_addondeploymentconfig_name" "" $mca.metadata) }}
+      {{- if (get $aodc $aodcName) }}
+        {{- $aodcSpec = merge $aodcSpec (get $aodc $aodcName).spec }}
+      {{- else }}
+        {{/* ##  Check if there is an existing AddOnDeploymentConfig created for this MCAO ## */}}
+        {{- range $configRef := $mca.status.configReferences }}
+          {{- if eq $configRef.resource "addondeploymentconfigs" }}
+            {{- if eq $aodcName "" }}
+              {{- $aodcName = (printf "%s-%s" $configRef.desiredConfig.namespace $configRef.desiredConfig.name) }}
+            {{- end }}
 
-      {{/* ##  Check if there is an existing AddOnDeploymentConfig created for this MCAO ## */}}
-      {{- range $configRef := $mca.status.configReferences }}
-        {{- if eq $configRef.resource "addondeploymentconfigs" }}
-          {{- if not $aodcName }}
-            {{- $aodcName = (printf "%s-%s" $configRef.desiredConfig.namespace $configRef.desiredConfig.name) }}
+            {{- break }}
           {{- end }}
-          {{- $aodcSpec = merge $aodcSpec (get $aodc $aodcName).spec }}
-          {{- break }}
         {{- end }}
       {{- end }}
 
