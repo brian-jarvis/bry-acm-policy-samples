@@ -36,6 +36,10 @@ object-templates-raw: |
 
   {{hub- $ManagedClusterAnnotations := (lookup "cluster.open-cluster-management.io/v1" "ManagedCluster" "" $.ManagedClusterName).metadata.annotations hub}}
   {{hub- if not (empty (index $ManagedClusterAnnotations "hub-cluster-id")) hub}}
+    {{hub- $acm_version := (default "2.17" (index $ManagedClusterAnnotations "hub-acm-version")) hub}}
+    {{hub- $isACM5 := (semverCompare  ">= 5.0" $acm_version) hub}}
+    {{hub- if not $isACM5 hub}}
+
             additionalAlertmanagerConfigs:
             - apiVersion: v2
               bearerToken:
@@ -49,6 +53,31 @@ object-templates-raw: |
                   key: service-ca.crt
                   name: 'hub-alertmanager-router-ca-{{hub index $ManagedClusterAnnotations "hub-cluster-id" hub}}'
                 insecureSkipVerify: false
+
+    {{hub- else hub}}
+
+            additionalAlertmanagerConfigs:
+            - apiVersion: v2
+              bearerToken:
+                key: token
+                name: 'observability-alertmanager-accessor-{{hub index $ManagedClusterAnnotations "hub-cluster-id" hub}}'
+              pathPrefix: /api/alertmanager/v2/default
+              scheme: https
+              staticConfigs:
+                - {{hub index $ManagedClusterAnnotations "hub-alertmanager-url" hub}}
+              tlsConfig:
+                ca:
+                  key: ca.crt
+                  name: 'obs-alertmanager-mtls-ca-{{hub index $ManagedClusterAnnotations "hub-cluster-id" hub}}'
+                cert:
+                  key: tls.crt
+                  name: 'obs-alertmanager-mtls-cert-{{hub index $ManagedClusterAnnotations "hub-cluster-id" hub}}'
+                key:
+                  key: tls.key
+                  name: 'obs-alertmanager-mtls-cert-{{hub index $ManagedClusterAnnotations "hub-cluster-id" hub}}'
+                insecureSkipVerify: false
+
+    {{hub- end hub}}
   {{hub- end hub}}
 
           prometheusOperator:

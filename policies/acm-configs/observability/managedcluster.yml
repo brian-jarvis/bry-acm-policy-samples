@@ -3,5 +3,8 @@ apiVersion: cluster.open-cluster-management.io/v1
 kind: ManagedCluster
 metadata:
   annotations:
-    hub-alertmanager-url: '{{ (lookup "route.openshift.io/v1" "Route" "open-cluster-management-observability" "alertmanager").spec.host }}'
+    hub-alertmanager-url: '{{ (lookup "route.openshift.io/v1" "Route" "open-cluster-management-observability" "observatorium-api").spec.host }}'
     hub-cluster-id: '{{hub $.ManagedClusterLabels.clusterID | replace "-" "" | trunc 19 hub}}'
+    hub-acm-version: '{{ (index (lookup "operators.coreos.com/v1alpha1" "ClusterServiceVersion" 
+                                        "open-cluster-management" "" "operators.coreos.com/advanced-cluster-management.open-cluster-management").items
+                                         0).spec.version }}'
