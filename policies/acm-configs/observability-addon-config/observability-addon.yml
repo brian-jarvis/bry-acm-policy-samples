@@ -13,6 +13,7 @@ object-templates-raw: |
       metadata:
         name: multicluster-observability-addon
       spec:
+        platformMetricsAlerts: enabled
         addOnMeta: '{{ $cma.spec.addOnMeta | toRawJson | toLiteral }}'
         defaultConfigs: '{{ $cma.spec.defaultConfigs | toRawJson | toLiteral }}'
         installStrategy:
