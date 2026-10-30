@@ -33,10 +33,10 @@ policies:
       ## MCOA variant — use when MCOA observability is configured:
       - path: cluster-monitoring-config-mcoa.yml
         name: cluster-monitoring-config-mcoa
-        remediationAction: Enforce
+        remediationAction: InformOnly
       - path: user-workload-monitoring-config-mcoa.yml
         name: user-workload-monitoring-config-mcoa
-        remediationAction: Enforce
+        remediationAction: InformOnly
       ## fix ACM-35500 missing label otherwise not all metrics get scraped by the Prometheus Agent
       - path: addon-namespace-label.yml
         name: addon-namespace-label
