@@ -37,7 +37,7 @@ object-templates-raw: |
 
   ## optionally add additional external labels
   {{- $ex_labels := (dict
-        "prometheusK8s" (dict
+        "prometheus" (dict
           "externalLabels" (dict
             "instance_name" (split "." (lookup "config.openshift.io/v1" "Infrastructure" "" "cluster").status.apiServerURL)._1
             "product" (fromClusterClaim "product.open-cluster-management.io")
