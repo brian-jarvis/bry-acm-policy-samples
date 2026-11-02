@@ -83,4 +83,4 @@ object-templates-raw: |
         namespace: openshift-monitoring
       data:
         config.yaml: |
-          {{ $rendered_config | toRawJson  }}
+          {{ $rendered_config | toYaml | autoindent }}
