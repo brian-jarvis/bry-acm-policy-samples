@@ -83,4 +83,4 @@ object-templates-raw: |
         namespace: openshift-monitoring
       data:
         config.yaml: |
-          {{ $rendered_config | toRawJson | toLiteral }}
+          {{ $rendered_config | toRawJson  }}
