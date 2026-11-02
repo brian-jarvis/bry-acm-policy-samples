@@ -31,8 +31,19 @@ object-templates-raw: |
           storageClassName: gp3-csi
   ` }}
 
+  ## optionally add additional external labels
+  {{- $ex_labels := (dict
+        "prometheusK8s" (dict
+          "externalLabels" (dict
+            "instance_name" (split "." (lookup "config.openshift.io/v1" "Infrastructure" "" "cluster").status.apiServerURL)._1
+            "product" (fromClusterClaim "product.open-cluster-management.io")
+          )
+        )
+      )
+  }}
+
   ## merge the user config ontop of the existing cluster config
-  {{ $rendered_config := merge ($base_config | fromYaml)  ((dig "data" "config.yaml" "{}" $current_cm) | fromYaml) }}
+  {{ $rendered_config := merge ($base_config | fromYaml) $ex_labels ((dig "data" "config.yaml" "{}" $current_cm) | fromYaml) }}
 
   ## set nodeSelector and tolerations for each key
   {{- $keys := (list "alertmanagerMain" "prometheusK8s" "prometheusOperator" "kubeStateMetrics" "openshiftStateMetrics" "telemeterClient" "thanosQuerier") }}
