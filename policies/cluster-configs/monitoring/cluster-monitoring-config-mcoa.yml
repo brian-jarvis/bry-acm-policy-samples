@@ -61,7 +61,7 @@ object-templates-raw: |
       {{- $node_tolerations = (dict
             $key (dict
               "tolerations" (list
-                (dict 
+                (dict
                   "operator" "Exists"
                   "key" "node-role.kubernetes.io/infra"
                 )
