@@ -41,6 +41,11 @@ object-templates-raw: |
 
     {{/* ##  Gather all ManagedClusterAddOn ## */}}
     {{- range $mca := (lookup "addon.open-cluster-management.io/v1alpha1" "ManagedClusterAddOn" $mc.metadata.name "").items }}
+      ## skip observability for now since it is crashing the console when this is applied
+      {{- if eq $mca.metadata.name "multicluster-observability-addon"}}
+        {{- continue }}
+      {{ end }}
+      
       {{- $aodcSpec := ((printf $nodeSelector $roleLabel) | fromYaml) }}
       {{- $aodcName := (dig "annotations" "org_addondeploymentconfig_name" "" $mca.metadata) }}
       {{- if (get $aodc $aodcName) }}
