@@ -45,7 +45,7 @@ object-templates-raw: |
       {{- if eq $mca.metadata.name "multicluster-observability-addon"}}
         {{- continue }}
       {{ end }}
-      
+
       {{- $aodcSpec := ((printf $nodeSelector $roleLabel) | fromYaml) }}
       {{- $aodcName := (dig "annotations" "org_addondeploymentconfig_name" "" $mca.metadata) }}
       {{- if (get $aodc $aodcName) }}
