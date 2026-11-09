@@ -29,7 +29,7 @@ policies:
   - name: ocp-lifecycle-exporter
     description: "Deploys the OCP lifecycle exporter (built and run in-cluster via Shipwright) to every managed cluster"
     consolidateManifests: true
-    complianceType: mustonlyhave
+    complianceType: musthave
     dependencies:
       - name: "openshift-builds-operator"
         compliance: "Compliant"
