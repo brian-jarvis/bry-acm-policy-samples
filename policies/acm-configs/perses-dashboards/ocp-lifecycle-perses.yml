@@ -55,7 +55,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: count(ocp_lifecycle_cluster_info{cluster=~"$cluster"})
+                  query: count(ocp_lifecycle_cluster_info)
                   seriesNameFormat: ''
       '0_1':
         kind: Panel
@@ -79,7 +79,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: count(ocp_lifecycle_operator_status{cluster=~"$cluster"} == 2)
+                  query: count(ocp_lifecycle_operator_status == 2)
                   seriesNameFormat: ''
       '0_2':
         kind: Panel
@@ -103,7 +103,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: count(ocp_lifecycle_operator_status{cluster=~"$cluster"} == 1)
+                  query: count(ocp_lifecycle_operator_status == 1)
                   seriesNameFormat: ''
       '0_3':
         kind: Panel
@@ -127,7 +127,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: count(ocp_lifecycle_operator_status{cluster=~"$cluster"} == 0)
+                  query: count(ocp_lifecycle_operator_status == 0)
                   seriesNameFormat: ''
       '0_4':
         kind: Panel
@@ -151,7 +151,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: count(ocp_lifecycle_operator_status{cluster=~"$cluster"} == -1)
+                  query: count(ocp_lifecycle_operator_status == -1)
                   seriesNameFormat: ''
       '0_5':
         kind: Panel
@@ -312,7 +312,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: max by (cluster, version, ocp_version, channel, target_ocp_version) (ocp_lifecycle_cluster_info{cluster=~"$cluster"})
+                  query: max by (cluster, version, ocp_version, channel, target_ocp_version) (ocp_lifecycle_cluster_info)
                   seriesNameFormat: ''
           - kind: TimeSeriesQuery
             spec:
@@ -322,7 +322,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: max by (cluster, status) (ocp_lifecycle_cluster_status{cluster=~"$cluster"})
+                  query: max by (cluster, status) (ocp_lifecycle_cluster_status)
                   seriesNameFormat: ''
           - kind: TimeSeriesQuery
             spec:
@@ -332,7 +332,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: max by (cluster, phase) (ocp_lifecycle_cluster_support_phase{cluster=~"$cluster"})
+                  query: max by (cluster, phase) (ocp_lifecycle_cluster_support_phase)
                   seriesNameFormat: ''
           - kind: TimeSeriesQuery
             spec:
@@ -342,7 +342,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: (max by (cluster) (ocp_lifecycle_cluster_current_phase_end_timestamp_seconds{cluster=~"$cluster"}) + 43200) * 1000
+                  query: (max by (cluster) (ocp_lifecycle_cluster_current_phase_end_timestamp_seconds) + 43200) * 1000
                   seriesNameFormat: ''
           - kind: TimeSeriesQuery
             spec:
@@ -352,7 +352,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: max by (cluster) ((ocp_lifecycle_cluster_current_phase_end_timestamp_seconds{cluster=~"$cluster"} - time()) / 86400)
+                  query: max by (cluster) ((ocp_lifecycle_cluster_current_phase_end_timestamp_seconds - time()) / 86400)
                   seriesNameFormat: ''
           - kind: TimeSeriesQuery
             spec:
@@ -362,7 +362,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: (max by (cluster) (ocp_lifecycle_cluster_support_end_timestamp_seconds{cluster=~"$cluster"}) + 43200) * 1000
+                  query: (max by (cluster) (ocp_lifecycle_cluster_support_end_timestamp_seconds) + 43200) * 1000
                   seriesNameFormat: ''
           - kind: TimeSeriesQuery
             spec:
@@ -372,7 +372,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: (max by (cluster) (ocp_lifecycle_cluster_extended_support_end_timestamp_seconds{cluster=~"$cluster"}) + 43200) * 1000
+                  query: (max by (cluster) (ocp_lifecycle_cluster_extended_support_end_timestamp_seconds) + 43200) * 1000
                   seriesNameFormat: ''
           - kind: TimeSeriesQuery
             spec:
@@ -382,7 +382,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: count by (cluster) (ocp_lifecycle_operator_status{cluster=~"$cluster"} == 2)
+                  query: count by (cluster) (ocp_lifecycle_operator_status == 2)
                   seriesNameFormat: ''
           - kind: TimeSeriesQuery
             spec:
@@ -392,7 +392,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: count by (cluster) (ocp_lifecycle_operator_status{cluster=~"$cluster"} == 1)
+                  query: count by (cluster) (ocp_lifecycle_operator_status == 1)
                   seriesNameFormat: ''
       '1_0':
         kind: Panel

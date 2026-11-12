@@ -375,11 +375,15 @@ the same cluster-scoping to its variables and panel queries before committing it
 **`ocp-lifecycle` is a deliberate exception to the single-cluster convention above.** It's a fleet-wide
 summary dashboard (cluster counts, operator support tables, compatibility matrices) that only makes
 sense showing multiple clusters at once, so its `cluster` variable keeps `allowMultiple: true` and
-`allowAllValue: true` (defaulting to all clusters), and every panel query uses `cluster=~"$cluster"`
-(regex match) instead of the other five dashboards' `cluster="$cluster"` (exact match) — both of these
-were already present in the upstream Grafana source and were preserved as-is; only the variable's
-datasource/matcher were swapped to the ACM-standard `acm_managed_cluster_labels` source (for
-friendly cluster display names) in place of the original `ocp_lifecycle_cluster_info`-based one.
+`allowAllValue: true` (defaulting to all clusters), and the panel queries below the "Fleet summary"
+section use `cluster=~"$cluster"` (regex match) instead of the other five dashboards' `cluster="$cluster"`
+(exact match) — both of these were already present in the upstream Grafana source and were preserved
+as-is; only the variable's datasource/matcher were swapped to the ACM-standard
+`acm_managed_cluster_labels` source (for friendly cluster display names) in place of the original
+`ocp_lifecycle_cluster_info`-based one.
+
+The "Fleet summary" panels (the five stat panels and the "Clusters" table) intentionally have **no**
+`cluster` matcher: they always show the whole fleet regardless of the `cluster` variable selection.
 
 Unlike the other five dashboards, `ocp-lifecycle`'s metrics don't come from the managed cluster's
 platform Prometheus — they come from
