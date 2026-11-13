@@ -70,6 +70,8 @@ object-templates-raw: |
           )
       }}
     {{- end }}
+
+    ## Remove any existing nodeSelector and tolertations since we don't want these to merge
     {{- if (dig $key "nodeSelector" "" $rendered_config) }}
       {{- $_ := unset (index $rendered_config $key) "nodeSelector" }}
     {{- end }}
