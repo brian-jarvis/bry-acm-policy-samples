@@ -640,6 +640,11 @@ spec:
               legend:
                 mode: table
                 position: bottom
+                values:
+                - mean
+                - min
+                - max
+                - last
               visual:
                 connectNulls: false
               yAxis:
@@ -698,6 +703,11 @@ spec:
               legend:
                 mode: table
                 position: bottom
+                values:
+                - mean
+                - min
+                - max
+                - last
               visual:
                 connectNulls: false
               yAxis:
@@ -818,6 +828,11 @@ spec:
               legend:
                 mode: table
                 position: bottom
+                values:
+                - mean
+                - min
+                - max
+                - last
               visual:
                 connectNulls: false
               yAxis:
