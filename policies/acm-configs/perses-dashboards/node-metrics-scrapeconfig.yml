@@ -18,6 +18,7 @@ spec:
     match[]:
       - '{__name__="container_cpu_usage_seconds_total"}'
       - '{__name__="container_last_seen"}'
+      - '{__name__="container_memory_working_set_bytes",id=~"/system.slice|/system.slice/kubelet.service|/system.slice/ovs-vswitchd.service|/system.slice/crio.service|/system.slice/systemd-journald.service|/system.slice/ovsdb-server.service|/system.slice/systemd-udevd.service|/kubepods.slice"}'
       - '{__name__="container_pressure_cpu_stalled_seconds_total"}'
       - '{__name__="container_pressure_cpu_waiting_seconds_total"}'
       - '{__name__="container_pressure_io_stalled_seconds_total"}'

@@ -18,6 +18,7 @@ spec:
     match[]:
       - '{__name__="container_cpu_usage_seconds_total"}'
       - '{__name__="container_fs_writes_bytes_total"}'
+      - '{__name__="container_memory_working_set_bytes",container="",pod!="",namespace=~"openshift-etcd.*"}'
       - '{__name__="container_network_receive_bytes_total"}'
       - '{__name__="container_network_transmit_bytes_total"}'
       - '{__name__="etcd_cluster_version"}'
