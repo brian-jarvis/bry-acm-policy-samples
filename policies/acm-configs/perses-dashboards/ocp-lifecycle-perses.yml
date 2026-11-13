@@ -764,6 +764,7 @@ spec:
               format:
                 decimalPlaces: 0
                 unit: decimal
+              sort: asc
           queries:
           - kind: TimeSeriesQuery
             spec:
@@ -773,7 +774,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: sort(bottomk(15, max by (cluster, package) ((ocp_lifecycle_operator_support_end_timestamp_seconds{cluster=~"$cluster"} - time()) / 86400)))
+                  query: bottomk(15, max by (cluster, package) ((ocp_lifecycle_operator_support_end_timestamp_seconds{cluster=~"$cluster"} - time()) / 86400))
                   seriesNameFormat: '{{package}} {{cluster}}'
       '1_2':
         kind: Panel
@@ -816,22 +817,22 @@ spec:
                 text: "\u2013"
               columnSettings:
               - header: Operator
-                name: 'package #7'
-                width: 280
-              - header: '4.20'
-                name: 'lifecycle_version #1'
-              - header: '4.21'
-                name: 'lifecycle_version #2'
-              - header: '4.22'
-                name: 'lifecycle_version #3'
-              - header: '4.23'
-                name: 'lifecycle_version #4'
-              - header: '5.0'
-                name: 'lifecycle_version #5'
-              - header: '5.1'
-                name: 'lifecycle_version #6'
-              - hide: true
                 name: 'package #1'
+                width: 280
+                enableSorting: true
+                sort: asc
+              - header: '4.20'
+                name: 'lifecycle_version #2'
+              - header: '4.21'
+                name: 'lifecycle_version #3'
+              - header: '4.22'
+                name: 'lifecycle_version #4'
+              - header: '4.23'
+                name: 'lifecycle_version #5'
+              - header: '5.0'
+                name: 'lifecycle_version #6'
+              - header: '5.1'
+                name: 'lifecycle_version #7'
               - hide: true
                 name: 'package #2'
               - hide: true
@@ -842,6 +843,8 @@ spec:
                 name: 'package #5'
               - hide: true
                 name: 'package #6'
+              - hide: true
+                name: 'package #7'
               - hide: true
                 name: 'value #1'
               - hide: true
@@ -871,6 +874,16 @@ spec:
                   - 'package #6'
                   - 'package #7'
           queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: max by (package) (ocp_lifecycle_operator_info{cluster=~"$cluster"})
+                  seriesNameFormat: ''
           - kind: TimeSeriesQuery
             spec:
               plugin:
@@ -930,16 +943,6 @@ spec:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
                   query: max by (package, lifecycle_version) (ocp_lifecycle_operator_ocp_compatibility{cluster=~"$cluster", ocp_version="5.1"})
-                  seriesNameFormat: ''
-          - kind: TimeSeriesQuery
-            spec:
-              plugin:
-                kind: PrometheusTimeSeriesQuery
-                spec:
-                  datasource:
-                    kind: PrometheusDatasource
-                    name: rbac-query-proxy-datasource
-                  query: max by (package) (ocp_lifecycle_operator_info{cluster=~"$cluster"})
                   seriesNameFormat: ''
       '3_1':
         kind: Panel
