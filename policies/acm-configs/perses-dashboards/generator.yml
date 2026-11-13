@@ -32,8 +32,8 @@ policies:
         name: perses-dashboard-ovn
         complianceType: mustonlyhave
 
-      - path: ocp-performance-perses.yml
-        name: perses-dashboard-ocp-performance
+      - path: ocp-cluster-health-perses.yml
+        name: perses-dashboard-ocp-cluster-health
         complianceType: mustonlyhave
 
       - path: node-perses.yml
@@ -56,8 +56,8 @@ policies:
         name: perses-dashboard-ovn-metrics-scrapeconfig
         complianceType: mustonlyhave
 
-      - path: ocp-performance-metrics-scrapeconfig.yml
-        name: perses-dashboard-ocp-performance-metrics-scrapeconfig
+      - path: ocp-cluster-health-metrics-scrapeconfig.yml
+        name: perses-dashboard-ocp-cluster-health-metrics-scrapeconfig
         complianceType: mustonlyhave
 
       - path: node-metrics-scrapeconfig.yml

@@ -30,11 +30,23 @@ cluster, and every panel's PromQL query is scoped to it as well. See
 | Dashboard | Source JSON | Resource name | ScrapeConfig |
 | --- | --- | --- | --- |
 | OpenShift Networking (OVN) | `ovn-dashboard.json` | `ovn-dashboard` | `ovn-metrics` |
-| OpenShift Performance | `ocp-performance.json` | `ocp-performance` | `ocp-performance-metrics` |
+| OpenShift Cluster Health | originally `ocp-performance.json`, since reworked | `ocp-cluster-health` | `ocp-cluster-health-metrics` |
 | Node Performance | `node.json` | `node-performance` | `node-metrics` |
 | etcd Cluster Info | `etcd-on-cluster-dashboard.json` | `etcd-on-cluster-dashboard` | `etcd-metrics` |
 | API Performance | `api-performance-overview.json` | `api-performance-overview` | `api-performance-metrics` |
 | OpenShift & operator lifecycle | sourced from [brian-jarvis/ocp-lifecycle-dashboard](https://github.com/brian-jarvis/ocp-lifecycle-dashboard) (not vendored here) | `ocp-lifecycle` | `ocp-lifecycle-metrics` |
+
+The "OpenShift Cluster Health" dashboard (formerly "OpenShift Performance") is a high-level single-cluster
+health view rather than a performance deep dive. Per-component and per-node performance lives in
+`node-performance`, `etcd-on-cluster-dashboard`, `api-performance-overview` and `ovn-dashboard`. Sections:
+
+- **Cluster Overview** — firing alerts by severity, a node/namespace/pod summary table, top 10 firing alerts.
+- **Cluster Operators** — ClusterOperator condition summary, reasons, and degraded operators.
+- **etcd Health** — member/leader state, leader changes, failed proposals, DB size vs. quota, top 10 object
+  counts stored in etcd (`apiserver_storage_objects`), and fsync/commit/peer latency.
+- **Cluster Object Counts** — nodes, namespaces, secrets, configmaps, deployments, services and routes.
+- **Monitoring Stack Health** — Prometheus/Alertmanager replicas, config reload, head series, ingestion rate,
+  CPU/memory, scrape targets down, and metrics-server resource use.
 
 The "OpenShift & operator lifecycle" dashboard is a fleet-wide summary (cluster counts, operator
 support tables, OpenShift version compatibility) fed by the
@@ -334,14 +346,13 @@ names are forwarded with. A handful of ACM's built-in ScrapeConfigs forward comm
 process metrics (`process_cpu_seconds_total`, `process_resident_memory_bytes`, `go_goroutines`,
 `workqueue_adds_total`, `workqueue_depth`) but restricted to specific jobs (`job="apiserver"` or
 `job="etcd"`). Several converted dashboards query these same metric names for *different* jobs
-(`node`/`ocp-performance` query `process_cpu_seconds_total`/`process_resident_memory_bytes` with
-`job="kubelet"`/`job="crio"`; `node`/`ocp-performance` query `go_goroutines` unfiltered/aggregated by
-job; `ovn-dashboard` queries `workqueue_adds_total`/`workqueue_depth` with
+(`node` queries `process_cpu_seconds_total`/`process_resident_memory_bytes` with
+`job="kubelet"`/`job="crio"`, and `go_goroutines` unfiltered/aggregated by job; `ovn-dashboard` queries `workqueue_adds_total`/`workqueue_depth` with
 `job=~"ovnkube-controller.*"`), so the name-only diff incorrectly treated them as already covered and
 they were left out of the original `match[]` lists, leaving those specific panels empty while others on
 the same dashboard worked fine. Fixed by adding unrestricted `{__name__="..."}` entries for these 5
 metric names to the relevant ScrapeConfigs (`ovn-metrics`: `workqueue_adds_total`, `workqueue_depth`;
-`node-metrics` and `ocp-performance-metrics`: `go_goroutines`, `process_cpu_seconds_total`,
+`node-metrics`: `go_goroutines`, `process_cpu_seconds_total`,
 `process_resident_memory_bytes`) — the extra unrestricted federation is a harmless superset of what's
 already forwarded under the job-restricted entries. When converting another dashboard, check any
 generic/common metric name against the *label-filtered* match list of ACM's existing ScrapeConfigs, not
@@ -436,7 +447,7 @@ set `jobName`, `metricsPath: /federate`, and `params.match[]` only, and leave `s
 ### Dynamic intervals
 
 Every dashboard that has an `interval` variable (`ovn-dashboard`, `etcd-on-cluster-dashboard`,
-`api-performance-overview`, `node-performance`, `ocp-performance`) uses the same `StaticListVariable`
+`api-performance-overview`, `node-performance`, `ocp-cluster-health`) uses the same `StaticListVariable`
 scale: `1m, 3m, 5m, 10m, 20m, 30m`, defaulting to `10m`. `api-performance-overview` additionally keeps
 an `auto` ($__auto_interval_interval) option as an extra first choice; the others don't.
 
@@ -452,7 +463,7 @@ The other three dashboards already had an `interval` variable wired up for most 
 of panels were missed and still had a hardcoded `[5m]`: one in `api-performance-overview`
 (`apiserver_flowcontrol_request_wait_duration_seconds_bucket`) and four in `node-performance` (three
 `kubelet_cgroup_manager_duration_seconds_bucket` panels plus one `kubelet_pleg_relist_duration_seconds_count`
-panel). These were switched to `[$interval]` as well. `ocp-performance` had no leftover hardcoded
+panel). These were switched to `[$interval]` as well. `ocp-cluster-health` (formerly `ocp-performance`) had no leftover hardcoded
 windows. When converting or auditing another dashboard, grep its queries for `\[[0-9]+[smhd]\]` to find
 any windows that should be tied to the `interval` variable instead.
 
@@ -467,7 +478,7 @@ edits) left stale, duplicate entries on the live object indefinitely, even thoug
 `git diff` looked correct. This was discovered by comparing the live `PersesDashboard` objects
 (`oc get persesdashboard <name> -n open-cluster-management-observability -o json`) against the
 checked-in YAML and finding duplicate variable names (e.g. two `interval` entries on
-`ocp-performance`, two `etcd_pod` entries on `etcd-on-cluster-dashboard`) that didn't exist in the
+`ocp-performance` (since renamed `ocp-cluster-health`), two `etcd_pod` entries on `etcd-on-cluster-dashboard`) that didn't exist in the
 repo. With `mustonlyhave`, the governance framework does an exact replace of every field covered by
 the template instead, so the live object always matches the committed file precisely — this both
 fixes the existing drift (the policy controller will correct it on its next evaluation) and prevents
