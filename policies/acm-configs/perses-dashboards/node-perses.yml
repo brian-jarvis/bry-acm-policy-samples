@@ -33,6 +33,9 @@ spec:
         allowAllValue: true
         allowMultiple: true
         customAllValue: .*
+        defaultValue:
+        - $__all
+        sort: alphabetical-asc
         display:
           hidden: false
           name: role
@@ -50,6 +53,9 @@ spec:
       spec:
         allowAllValue: true
         allowMultiple: true
+        defaultValue:
+        - $__all
+        sort: alphabetical-asc
         display:
           hidden: false
           name: node
