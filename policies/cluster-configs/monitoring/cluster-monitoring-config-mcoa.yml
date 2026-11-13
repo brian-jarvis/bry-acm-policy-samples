@@ -51,7 +51,7 @@ object-templates-raw: |
     {{- $node_selector := (dict
           $key (dict
             "nodeSelector" (dict
-              (printf "node-role.kubernetes.io/%s" (hasNodesWithExactRoles "infra" "storage" | ternary "infra" "worker")) ""
+              (printf "node-role.kubernetes.io/%s" (hasNodesWithExactRoles "infra" | ternary "infra" "worker")) ""
             )
           )
         )
@@ -69,6 +69,12 @@ object-templates-raw: |
             )
           )
       }}
+    {{- end }}
+    {{- if (dig $key "nodeSelector" "" $rendered_config) }}
+      {{- $_ := unset (index $rendered_config $key) "nodeSelector" }}
+    {{- end }}
+    {{- if (dig $key "tolerations" "" $rendered_config) }}
+      {{- $_ := unset (index $rendered_config $key) "tolerations" }}
     {{- end }}
     {{- $rendered_config = merge $node_selector $node_tolerations $rendered_config }}
   {{- end }}
