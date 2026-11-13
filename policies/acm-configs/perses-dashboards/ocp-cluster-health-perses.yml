@@ -72,7 +72,7 @@ spec:
               plugin:
                 kind: PrometheusTimeSeriesQuery
                 spec:
-                  datasource: &id001
+                  datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
                   query: sum by (severity) (ALERTS{cluster="$cluster",alertstate="firing",alertname!="Watchdog",severity!="none"})
@@ -103,6 +103,8 @@ spec:
                 name: condition
               - hide: true
                 name: phase
+              - hide: true
+                name: timestamp
           queries:
           - kind: TimeSeriesQuery
             spec:
@@ -152,15 +154,21 @@ spec:
                     name: rbac-query-proxy-datasource
                   query: topk(10,sum(ALERTS{cluster="$cluster",severity!="none"}) by (alertname, severity))
                   seriesNameFormat: '{{severity}}: {{alertname}}'
-      operators_overview:
+      operators_total:
         kind: Panel
         spec:
           display:
-            name: Cluster operators overview
+            name: Operators
           plugin:
             kind: StatChart
             spec:
-              calculation: last
+              calculation: last-number
+              colorMode: background_solid
+              format:
+                unit: decimal
+              thresholds:
+                defaultColor: '#5794f2'
+                steps: []
           queries:
           - kind: TimeSeriesQuery
             spec:
@@ -170,8 +178,146 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: sum by (condition)(cluster_operator_conditions{cluster="$cluster",condition!=""})
-                  seriesNameFormat: '{{ condition }}'
+                  query: count(count by (name) (cluster_operator_conditions{cluster="$cluster"}))
+                  seriesNameFormat: ''
+      operators_available:
+        kind: Panel
+        spec:
+          display:
+            name: Available
+          plugin:
+            kind: StatChart
+            spec:
+              calculation: last-number
+              colorMode: background_solid
+              format:
+                unit: decimal
+              thresholds:
+                defaultColor: '#73bf69'
+                steps: []
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: count(cluster_operator_conditions{cluster="$cluster",condition="Available"} == 1) or vector(0)
+                  seriesNameFormat: ''
+      operators_not_available:
+        kind: Panel
+        spec:
+          display:
+            name: Not available
+          plugin:
+            kind: StatChart
+            spec:
+              calculation: last-number
+              colorMode: background_solid
+              format:
+                unit: decimal
+              thresholds:
+                defaultColor: '#73bf69'
+                steps:
+                - value: 1
+                  color: '#f2495c'
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: count(cluster_operator_conditions{cluster="$cluster",condition="Available"} == 0) or vector(0)
+                  seriesNameFormat: ''
+      operators_degraded_count:
+        kind: Panel
+        spec:
+          display:
+            name: Degraded
+          plugin:
+            kind: StatChart
+            spec:
+              calculation: last-number
+              colorMode: background_solid
+              format:
+                unit: decimal
+              thresholds:
+                defaultColor: '#73bf69'
+                steps:
+                - value: 1
+                  color: '#f2495c'
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: count(cluster_operator_conditions{cluster="$cluster",condition="Degraded"} == 1) or vector(0)
+                  seriesNameFormat: ''
+      operators_progressing:
+        kind: Panel
+        spec:
+          display:
+            name: Progressing
+          plugin:
+            kind: StatChart
+            spec:
+              calculation: last-number
+              colorMode: background_solid
+              format:
+                unit: decimal
+              thresholds:
+                defaultColor: '#73bf69'
+                steps:
+                - value: 1
+                  color: '#ff9830'
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: count(cluster_operator_conditions{cluster="$cluster",condition="Progressing"} == 1) or vector(0)
+                  seriesNameFormat: ''
+      operators_not_upgradeable:
+        kind: Panel
+        spec:
+          display:
+            name: Not upgradeable
+          plugin:
+            kind: StatChart
+            spec:
+              calculation: last-number
+              colorMode: background_solid
+              format:
+                unit: decimal
+              thresholds:
+                defaultColor: '#73bf69'
+                steps:
+                - value: 1
+                  color: '#ff9830'
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: count(cluster_operator_conditions{cluster="$cluster",condition="Upgradeable"} == 0) or vector(0)
+                  seriesNameFormat: ''
       operators_info:
         kind: Panel
         spec:
@@ -258,7 +404,9 @@ spec:
               plugin:
                 kind: PrometheusTimeSeriesQuery
                 spec:
-                  datasource: *id001
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
                   query: count(etcd_server_has_leader{cluster="$cluster"})
                   seriesNameFormat: ''
       etcd_leader:
@@ -285,7 +433,9 @@ spec:
               plugin:
                 kind: PrometheusTimeSeriesQuery
                 spec:
-                  datasource: *id001
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
                   query: sum(etcd_server_has_leader{cluster="$cluster"})
                   seriesNameFormat: ''
       etcd_leader_changes:
@@ -314,7 +464,9 @@ spec:
               plugin:
                 kind: PrometheusTimeSeriesQuery
                 spec:
-                  datasource: *id001
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
                   query: sum(increase(etcd_server_leader_changes_seen_total{cluster="$cluster"}[1h]))
                   seriesNameFormat: ''
       etcd_failed_proposals:
@@ -343,7 +495,9 @@ spec:
               plugin:
                 kind: PrometheusTimeSeriesQuery
                 spec:
-                  datasource: *id001
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
                   query: sum(increase(etcd_server_proposals_failed_total{cluster="$cluster"}[$interval]))
                   seriesNameFormat: ''
       etcd_health_failures:
@@ -372,7 +526,9 @@ spec:
               plugin:
                 kind: PrometheusTimeSeriesQuery
                 spec:
-                  datasource: *id001
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
                   query: sum(increase(etcd_server_health_failures{cluster="$cluster"}[$interval]))
                   seriesNameFormat: ''
       etcd_quota:
@@ -401,7 +557,9 @@ spec:
               plugin:
                 kind: PrometheusTimeSeriesQuery
                 spec:
-                  datasource: *id001
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
                   query: max(etcd_mvcc_db_total_size_in_bytes{cluster="$cluster"}) / max(etcd_server_quota_backend_bytes{cluster="$cluster"})
                   seriesNameFormat: ''
       etcd_db_size:
@@ -431,7 +589,9 @@ spec:
               plugin:
                 kind: PrometheusTimeSeriesQuery
                 spec:
-                  datasource: *id001
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
                   query: etcd_mvcc_db_total_size_in_bytes{cluster="$cluster"}
                   seriesNameFormat: size - {{pod}}
           - kind: TimeSeriesQuery
@@ -439,7 +599,9 @@ spec:
               plugin:
                 kind: PrometheusTimeSeriesQuery
                 spec:
-                  datasource: *id001
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
                   query: etcd_mvcc_db_total_size_in_use_in_bytes{cluster="$cluster"}
                   seriesNameFormat: in use - {{pod}}
       etcd_objects:
@@ -469,7 +631,9 @@ spec:
               plugin:
                 kind: PrometheusTimeSeriesQuery
                 spec:
-                  datasource: *id001
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
                   query: topk(10, max by (resource) (apiserver_storage_objects{cluster="$cluster"}))
                   seriesNameFormat: '{{resource}}'
       etcd_wal_fsync:
@@ -499,7 +663,9 @@ spec:
               plugin:
                 kind: PrometheusTimeSeriesQuery
                 spec:
-                  datasource: *id001
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
                   query: histogram_quantile(0.99, sum by (le, pod) (rate(etcd_disk_wal_fsync_duration_seconds_bucket{cluster="$cluster"}[$interval])))
                   seriesNameFormat: '{{pod}}'
       etcd_backend_commit:
@@ -529,7 +695,9 @@ spec:
               plugin:
                 kind: PrometheusTimeSeriesQuery
                 spec:
-                  datasource: *id001
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
                   query: histogram_quantile(0.99, sum by (le, pod) (rate(etcd_disk_backend_commit_duration_seconds_bucket{cluster="$cluster"}[$interval])))
                   seriesNameFormat: '{{pod}}'
       etcd_peer_rtt:
@@ -559,7 +727,9 @@ spec:
               plugin:
                 kind: PrometheusTimeSeriesQuery
                 spec:
-                  datasource: *id001
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
                   query: histogram_quantile(0.99, sum by (le, instance) (rate(etcd_network_peer_round_trip_time_seconds_bucket{cluster="$cluster"}[$interval])))
                   seriesNameFormat: '{{instance}}'
       etcd_slow_apply:
@@ -589,7 +759,9 @@ spec:
               plugin:
                 kind: PrometheusTimeSeriesQuery
                 spec:
-                  datasource: *id001
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
                   query: sum by (pod) (rate(etcd_server_slow_apply_total{cluster="$cluster"}[$interval]))
                   seriesNameFormat: '{{pod}}'
       '5_3':
@@ -830,7 +1002,9 @@ spec:
               plugin:
                 kind: PrometheusTimeSeriesQuery
                 spec:
-                  datasource: *id001
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
                   query: sum(up{cluster="$cluster",namespace="openshift-monitoring",job="prometheus-k8s"} == 1) or vector(0)
                   seriesNameFormat: ''
       mon_am_members:
@@ -859,7 +1033,9 @@ spec:
               plugin:
                 kind: PrometheusTimeSeriesQuery
                 spec:
-                  datasource: *id001
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
                   query: max(alertmanager_cluster_members{cluster="$cluster",namespace="openshift-monitoring",job="alertmanager-main"})
                   seriesNameFormat: ''
       mon_targets_down:
@@ -888,7 +1064,9 @@ spec:
               plugin:
                 kind: PrometheusTimeSeriesQuery
                 spec:
-                  datasource: *id001
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
                   query: count(up{cluster="$cluster"} == 0) or vector(0)
                   seriesNameFormat: ''
       mon_reload:
@@ -926,7 +1104,9 @@ spec:
               plugin:
                 kind: PrometheusTimeSeriesQuery
                 spec:
-                  datasource: *id001
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
                   query: min(prometheus_config_last_reload_successful{cluster="$cluster",namespace="openshift-monitoring",job="prometheus-k8s"})
                   seriesNameFormat: ''
       mon_head_series:
@@ -956,7 +1136,9 @@ spec:
               plugin:
                 kind: PrometheusTimeSeriesQuery
                 spec:
-                  datasource: *id001
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
                   query: prometheus_tsdb_head_series{cluster="$cluster",namespace="openshift-monitoring",job="prometheus-k8s"}
                   seriesNameFormat: '{{pod}}'
       mon_ingest:
@@ -986,7 +1168,9 @@ spec:
               plugin:
                 kind: PrometheusTimeSeriesQuery
                 spec:
-                  datasource: *id001
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
                   query: sum by (pod) (rate(prometheus_tsdb_head_samples_appended_total{cluster="$cluster",namespace="openshift-monitoring",job="prometheus-k8s"}[$interval]))
                   seriesNameFormat: '{{pod}}'
       mon_prom_cpu:
@@ -1015,7 +1199,9 @@ spec:
               plugin:
                 kind: PrometheusTimeSeriesQuery
                 spec:
-                  datasource: *id001
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
                   query: sum by (pod) (rate(container_cpu_usage_seconds_total{cluster="$cluster",namespace="openshift-monitoring",pod=~"prometheus-k8s-.*",container="prometheus"}[$interval])) * 100
                   seriesNameFormat: '{{pod}}'
       mon_prom_rss:
@@ -1044,7 +1230,9 @@ spec:
               plugin:
                 kind: PrometheusTimeSeriesQuery
                 spec:
-                  datasource: *id001
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
                   query: sum by (pod) (container_memory_rss{cluster="$cluster",namespace="openshift-monitoring",pod=~"prometheus-k8s-.*",container="prometheus"})
                   seriesNameFormat: '{{pod}}'
       mon_targets_down_by_job:
@@ -1074,7 +1262,9 @@ spec:
               plugin:
                 kind: PrometheusTimeSeriesQuery
                 spec:
-                  datasource: *id001
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
                   query: count by (job) (up{cluster="$cluster"} == 0)
                   seriesNameFormat: '{{job}}'
       mon_adapter_cpu:
@@ -1150,17 +1340,17 @@ spec:
         - x: 0
           "y": 0
           width: 24
-          height: 3
+          height: 6
           content:
             $ref: '#/spec/panels/overview_alerts_stat'
         - x: 0
-          "y": 3
+          "y": 6
           width: 12
           height: 9
           content:
             $ref: '#/spec/panels/overview_summary'
         - x: 12
-          "y": 3
+          "y": 6
           width: 12
           height: 9
           content:
@@ -1174,18 +1364,48 @@ spec:
         items:
         - x: 0
           "y": 0
-          width: 24
-          height: 3
+          width: 4
+          height: 5
           content:
-            $ref: '#/spec/panels/operators_overview'
+            $ref: '#/spec/panels/operators_total'
+        - x: 4
+          "y": 0
+          width: 4
+          height: 5
+          content:
+            $ref: '#/spec/panels/operators_available'
+        - x: 8
+          "y": 0
+          width: 4
+          height: 5
+          content:
+            $ref: '#/spec/panels/operators_not_available'
+        - x: 12
+          "y": 0
+          width: 4
+          height: 5
+          content:
+            $ref: '#/spec/panels/operators_degraded_count'
+        - x: 16
+          "y": 0
+          width: 4
+          height: 5
+          content:
+            $ref: '#/spec/panels/operators_progressing'
+        - x: 20
+          "y": 0
+          width: 4
+          height: 5
+          content:
+            $ref: '#/spec/panels/operators_not_upgradeable'
         - x: 0
-          "y": 3
+          "y": 5
           width: 12
           height: 8
           content:
             $ref: '#/spec/panels/operators_info'
         - x: 12
-          "y": 3
+          "y": 5
           width: 12
           height: 8
           content:
