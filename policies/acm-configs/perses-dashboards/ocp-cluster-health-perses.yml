@@ -318,68 +318,6 @@ spec:
                     name: rbac-query-proxy-datasource
                   query: count(cluster_operator_conditions{cluster="$cluster",condition="Upgradeable"} == 0) or vector(0)
                   seriesNameFormat: ''
-      operators_info:
-        kind: Panel
-        spec:
-          display:
-            name: Cluster operators information
-          plugin:
-            kind: TimeSeriesChart
-            spec:
-              legend:
-                mode: table
-                position: bottom
-                values:
-                - mean
-                - min
-                - max
-              visual:
-                connectNulls: false
-              yAxis:
-                format:
-                  unit: decimal
-          queries:
-          - kind: TimeSeriesQuery
-            spec:
-              plugin:
-                kind: PrometheusTimeSeriesQuery
-                spec:
-                  datasource:
-                    kind: PrometheusDatasource
-                    name: rbac-query-proxy-datasource
-                  query: cluster_operator_conditions{cluster="$cluster",name!="",reason!=""}
-                  seriesNameFormat: '{{name}} - {{reason}}'
-      operators_degraded:
-        kind: Panel
-        spec:
-          display:
-            name: Cluster operators degraded
-          plugin:
-            kind: TimeSeriesChart
-            spec:
-              legend:
-                mode: table
-                position: bottom
-                values:
-                - mean
-                - min
-                - max
-              visual:
-                connectNulls: false
-              yAxis:
-                format:
-                  unit: decimal
-          queries:
-          - kind: TimeSeriesQuery
-            spec:
-              plugin:
-                kind: PrometheusTimeSeriesQuery
-                spec:
-                  datasource:
-                    kind: PrometheusDatasource
-                    name: rbac-query-proxy-datasource
-                  query: cluster_operator_conditions{cluster="$cluster",condition="Degraded",name!="",reason!=""}
-                  seriesNameFormat: '{{name}} - {{reason}}'
       etcd_members:
         kind: Panel
         spec:
@@ -1329,6 +1267,161 @@ spec:
                     name: rbac-query-proxy-datasource
                   query: sum(container_memory_rss{cluster="$cluster",pod=~"metrics-server-.*",namespace="openshift-monitoring"}) by (pod)
                   seriesNameFormat: '{{pod}}'
+      operators_status:
+        kind: Panel
+        spec:
+          display:
+            name: Cluster operator status
+          plugin:
+            kind: Table
+            spec:
+              density: compact
+              columnSettings:
+              - header: Operator
+                name: 'name #1'
+                enableSorting: true
+                sort: asc
+                width: 300
+              - hide: true
+                name: 'name #2'
+              - hide: true
+                name: 'name #3'
+              - cellSettings:
+                - backgroundColor: '#73bf69'
+                  condition:
+                    kind: Value
+                    spec:
+                      value: '1'
+                  text: Available
+                - backgroundColor: '#f2495c'
+                  condition:
+                    kind: Value
+                    spec:
+                      value: '0'
+                  text: Not available
+                enableSorting: true
+                header: Available
+                name: 'value #1'
+                width: 150
+                align: center
+              - cellSettings:
+                - backgroundColor: '#ff9830'
+                  condition:
+                    kind: Value
+                    spec:
+                      value: '1'
+                  text: Progressing
+                - backgroundColor: '#73bf69'
+                  condition:
+                    kind: Value
+                    spec:
+                      value: '0'
+                  text: 'No'
+                enableSorting: true
+                header: Progressing
+                name: 'value #2'
+                width: 150
+                align: center
+              - cellSettings:
+                - backgroundColor: '#f2495c'
+                  condition:
+                    kind: Value
+                    spec:
+                      value: '1'
+                  text: Degraded
+                - backgroundColor: '#73bf69'
+                  condition:
+                    kind: Value
+                    spec:
+                      value: '0'
+                  text: 'No'
+                enableSorting: true
+                header: Degraded
+                name: 'value #3'
+                width: 150
+                align: center
+              - hide: true
+                name: timestamp
+              transforms:
+              - kind: JoinByColumnValue
+                spec:
+                  columns:
+                  - 'name #1'
+                  - 'name #2'
+                  - 'name #3'
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: max by (name) (cluster_operator_conditions{cluster="$cluster",condition="Available",name!=""})
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: max by (name) (cluster_operator_conditions{cluster="$cluster",condition="Progressing",name!=""})
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: max by (name) (cluster_operator_conditions{cluster="$cluster",condition="Degraded",name!=""})
+      operators_changes:
+        kind: Panel
+        spec:
+          display:
+            name: Degraded / progressing operators over time
+          plugin:
+            kind: StatusHistoryChart
+            spec:
+              legend:
+                position: bottom
+              sorting: asc
+              mappings:
+              - kind: Value
+                spec:
+                  value: '1'
+                  result:
+                    value: Progressing
+                    color: '#ff9830'
+              - kind: Value
+                spec:
+                  value: '2'
+                  result:
+                    value: Degraded
+                    color: '#f2495c'
+          queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: (cluster_operator_conditions{cluster="$cluster",condition="Degraded",name!=""} == 1) * 2
+                  seriesNameFormat: '{{name}} - Degraded'
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  datasource:
+                    kind: PrometheusDatasource
+                    name: rbac-query-proxy-datasource
+                  query: cluster_operator_conditions{cluster="$cluster",condition="Progressing",name!=""} == 1
+                  seriesNameFormat: '{{name}} - Progressing'
     layouts:
     - kind: Grid
       spec:
@@ -1401,15 +1494,15 @@ spec:
         - x: 0
           "y": 5
           width: 12
-          height: 8
+          height: 14
           content:
-            $ref: '#/spec/panels/operators_info'
+            $ref: '#/spec/panels/operators_status'
         - x: 12
           "y": 5
           width: 12
-          height: 8
+          height: 14
           content:
-            $ref: '#/spec/panels/operators_degraded'
+            $ref: '#/spec/panels/operators_changes'
     - kind: Grid
       spec:
         display:

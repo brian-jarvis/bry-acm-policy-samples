@@ -41,7 +41,7 @@ health view rather than a performance deep dive. Per-component and per-node perf
 `node-performance`, `etcd-on-cluster-dashboard`, `api-performance-overview` and `ovn-dashboard`. Sections:
 
 - **Cluster Overview** — firing alerts by severity, a node/namespace/pod summary table, top 10 firing alerts.
-- **Cluster Operators** — ClusterOperator condition summary, reasons, and degraded operators.
+- **Cluster Operators** — summary tiles, a per-operator status table (Available / Progressing / Degraded, colored by state), and a status-history timeline of operators that were Degraded or Progressing.
 - **etcd Health** — member/leader state, leader changes, failed proposals, DB size vs. quota, top 10 object
   counts stored in etcd (`apiserver_storage_objects`), and fsync/commit/peer latency.
 - **Cluster Object Counts** — nodes, namespaces, secrets, configmaps, deployments, services and routes.
