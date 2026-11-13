@@ -971,11 +971,28 @@ spec:
         kind: Panel
         spec:
           display:
-            name: Current Node Count
+            name: Cluster summary
           plugin:
-            kind: StatChart
+            kind: Table
             spec:
-              calculation: last
+              density: compact
+              columnSettings:
+              - header: Resource
+                name: resource
+                sort: asc
+                width: 200
+              - header: State
+                name: state
+                sort: asc
+                width: 240
+              - header: Count
+                name: value
+                width: 120
+                align: right
+              - hide: true
+                name: condition
+              - hide: true
+                name: phase
           queries:
           - kind: TimeSeriesQuery
             spec:
@@ -985,58 +1002,14 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: sum(kube_node_info{cluster="$cluster"})
-                  seriesNameFormat: Number of nodes
-          - kind: TimeSeriesQuery
-            spec:
-              plugin:
-                kind: PrometheusTimeSeriesQuery
-                spec:
-                  datasource:
-                    kind: PrometheusDatasource
-                    name: rbac-query-proxy-datasource
-                  query: sum(kube_node_status_condition{cluster="$cluster",status="true"}) by (condition) > 0
-                  seriesNameFormat: 'Node: {{ condition }}'
-      '5_1':
-        kind: Panel
-        spec:
-          display:
-            name: Current Namespace Count
-          plugin:
-            kind: StatChart
-            spec:
-              calculation: last
-          queries:
-          - kind: TimeSeriesQuery
-            spec:
-              plugin:
-                kind: PrometheusTimeSeriesQuery
-                spec:
-                  datasource:
-                    kind: PrometheusDatasource
-                    name: rbac-query-proxy-datasource
-                  query: sum(kube_namespace_status_phase{cluster="$cluster"}) by (phase)
-                  seriesNameFormat: '{{ phase }}'
-      '5_2':
-        kind: Panel
-        spec:
-          display:
-            name: Current Pod Count
-          plugin:
-            kind: StatChart
-            spec:
-              calculation: last
-          queries:
-          - kind: TimeSeriesQuery
-            spec:
-              plugin:
-                kind: PrometheusTimeSeriesQuery
-                spec:
-                  datasource:
-                    kind: PrometheusDatasource
-                    name: rbac-query-proxy-datasource
-                  query: sum(kube_pod_status_phase{cluster="$cluster"}) by (phase) > 0
-                  seriesNameFormat: '{{ phase}} Pods'
+                  query: |-
+                    label_replace(label_replace(sum(kube_node_info{cluster="$cluster"}), "resource", "Nodes", "", ""), "state", "Total", "", "")
+                    or
+                    label_replace(label_replace(sum by (condition) (kube_node_status_condition{cluster="$cluster",status="true"}) > 0, "resource", "Nodes", "", ""), "state", "$1", "condition", "(.*)")
+                    or
+                    label_replace(label_replace(sum by (phase) (kube_namespace_status_phase{cluster="$cluster"}), "resource", "Namespaces", "", ""), "state", "$1", "phase", "(.*)")
+                    or
+                    label_replace(label_replace(sum by (phase) (kube_pod_status_phase{cluster="$cluster"}) > 0, "resource", "Pods", "", ""), "state", "$1", "phase", "(.*)")
       '5_3':
         kind: Panel
         spec:
@@ -1400,22 +1373,10 @@ spec:
         items:
         - x: 0
           "y": 4
-          width: 8
-          height: 3
+          width: 24
+          height: 8
           content:
             $ref: '#/spec/panels/5_0'
-        - x: 8
-          "y": 4
-          width: 8
-          height: 3
-          content:
-            $ref: '#/spec/panels/5_1'
-        - x: 16
-          "y": 4
-          width: 8
-          height: 3
-          content:
-            $ref: '#/spec/panels/5_2'
         - x: 0
           "y": 12
           width: 8
