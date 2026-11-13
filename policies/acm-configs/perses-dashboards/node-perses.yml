@@ -31,23 +31,6 @@ spec:
     - kind: ListVariable
       spec:
         display:
-          name: Namespace
-          hidden: false
-        allowAllValue: true
-        allowMultiple: false
-        plugin:
-          kind: PrometheusLabelValuesVariable
-          spec:
-            labelName: namespace
-            matchers:
-            - kube_pod_info{cluster="$cluster",namespace!="(cluster-density.*|node-density-.*)"}
-            datasource:
-              kind: PrometheusDatasource
-              name: rbac-query-proxy-datasource
-        name: namespace
-    - kind: ListVariable
-      spec:
-        display:
           name: interval
           hidden: false
         defaultValue: 10m
@@ -447,7 +430,7 @@ spec:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
                   query: sum by (id) (( rate(container_cpu_usage_seconds_total{cluster="$cluster", job=~".*", id =~"/system.slice|/system.slice/kubelet.service|/system.slice/ovs-vswitchd.service|/system.slice/crio.service|/system.slice/systemd-journald.service|/system.slice/ovsdb-server.service|/system.slice/systemd-udevd.service|/kubepods.slice"}[$interval])) * 100 * on (node) group_left kube_node_role{cluster="$cluster", role = "worker" } )
-                  seriesNameFormat: '{{instance}}'
+                  seriesNameFormat: '{{id}}'
       '1_1':
         kind: Panel
         spec:
@@ -478,7 +461,7 @@ spec:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
                   query: sum by (id) (( rate(container_cpu_usage_seconds_total{cluster="$cluster", job=~".*", id =~"/system.slice|/system.slice/kubelet.service|/system.slice/ovs-vswitchd.service|/system.slice/crio.service|/system.slice/systemd-journald.service|/system.slice/ovsdb-server.service|/system.slice/systemd-udevd.service|/kubepods.slice"}[$interval])) * 100 * on (node) group_left kube_node_role{cluster="$cluster", role = "control-plane" } )
-                  seriesNameFormat: '{{instance}}'
+                  seriesNameFormat: '{{id}}'
       '1_2':
         kind: Panel
         spec:
@@ -510,7 +493,7 @@ spec:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
                   query: sum by (id) (container_memory_working_set_bytes{cluster="$cluster", job=~".*", id =~"/system.slice|/system.slice/kubelet.service|/system.slice/ovs-vswitchd.service|/system.slice/crio.service|/system.slice/systemd-journald.service|/system.slice/ovsdb-server.service|/system.slice/systemd-udevd.service|/kubepods.slice"} * on (node) group_left kube_node_role{cluster="$cluster", role = "worker" } )
-                  seriesNameFormat: '{{instance}}'
+                  seriesNameFormat: '{{id}}'
       '1_3':
         kind: Panel
         spec:
@@ -542,7 +525,7 @@ spec:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
                   query: sum by (id) (container_memory_working_set_bytes{cluster="$cluster", job=~".*", id =~"/system.slice|/system.slice/kubelet.service|/system.slice/ovs-vswitchd.service|/system.slice/crio.service|/system.slice/systemd-journald.service|/system.slice/ovsdb-server.service|/system.slice/systemd-udevd.service|/kubepods.slice"} * on (node) group_left kube_node_role{cluster="$cluster", role = "control-plane" } )
-                  seriesNameFormat: '{{instance}}'
+                  seriesNameFormat: '{{id}}'
       '1_4':
         kind: Panel
         spec:
@@ -1573,7 +1556,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: topk(10, sum(rate(container_pressure_memory_stalled_seconds_total{cluster="$cluster",container!="POD",name!="",namespace!="",namespace=~"$namespace"}[$interval])) by (node,pod,container,namespace,name,service) * 100)
+                  query: topk(10, sum(rate(container_pressure_memory_stalled_seconds_total{cluster="$cluster",container!="POD",name!="",namespace!=""}[$interval])) by (node,pod,container,namespace,name,service) * 100)
                   seriesNameFormat: '{{node}}: {{ pod }}: {{ container }}'
       '12_1':
         kind: Panel
@@ -1604,7 +1587,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: topk(10, sum(rate(container_pressure_memory_waiting_seconds_total{cluster="$cluster",container!="POD",name!="",namespace!="",namespace=~"$namespace"}[$interval])) by (node,pod,container,namespace,name,service) * 100)
+                  query: topk(10, sum(rate(container_pressure_memory_waiting_seconds_total{cluster="$cluster",container!="POD",name!="",namespace!=""}[$interval])) by (node,pod,container,namespace,name,service) * 100)
                   seriesNameFormat: '{{node}}: {{ pod }}: {{ container }}'
       '12_2':
         kind: Panel
@@ -1635,7 +1618,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: topk(10, sum(irate(container_pressure_cpu_stalled_seconds_total{cluster="$cluster",container!="POD",name!="",namespace!="",namespace=~"$namespace"}[$interval])) by (node,pod,container,namespace,name,service) * 100)
+                  query: topk(10, sum(irate(container_pressure_cpu_stalled_seconds_total{cluster="$cluster",container!="POD",name!="",namespace!=""}[$interval])) by (node,pod,container,namespace,name,service) * 100)
                   seriesNameFormat: '{{node}}: {{ pod }}: {{ container }}'
       '12_3':
         kind: Panel
@@ -1666,7 +1649,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: topk(10, sum(rate(container_pressure_cpu_waiting_seconds_total{cluster="$cluster",container!="POD",name!="",namespace!="",namespace=~"$namespace"}[$interval])) by (node,pod,container,namespace,name,service) * 100)
+                  query: topk(10, sum(rate(container_pressure_cpu_waiting_seconds_total{cluster="$cluster",container!="POD",name!="",namespace!=""}[$interval])) by (node,pod,container,namespace,name,service) * 100)
                   seriesNameFormat: '{{node}}: {{ pod }}: {{ container }}'
       '12_4':
         kind: Panel
@@ -1697,7 +1680,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: topk(10, sum(rate(container_pressure_io_stalled_seconds_total{cluster="$cluster",container!="POD",name!="",namespace!="",namespace=~"$namespace"}[$interval])) by (node,pod,container,namespace,name,service) * 100)
+                  query: topk(10, sum(rate(container_pressure_io_stalled_seconds_total{cluster="$cluster",container!="POD",name!="",namespace!=""}[$interval])) by (node,pod,container,namespace,name,service) * 100)
                   seriesNameFormat: '{{node}}: {{ pod }}: {{ container }}'
       '12_5':
         kind: Panel
@@ -1728,7 +1711,7 @@ spec:
                   datasource:
                     kind: PrometheusDatasource
                     name: rbac-query-proxy-datasource
-                  query: topk(10, sum(rate(container_pressure_io_waiting_seconds_total{cluster="$cluster",container!="POD",name!="",namespace!="",namespace=~"$namespace"}[$interval])) by (node,pod,container,namespace,name,service) * 100)
+                  query: topk(10, sum(rate(container_pressure_io_waiting_seconds_total{cluster="$cluster",container!="POD",name!="",namespace!=""}[$interval])) by (node,pod,container,namespace,name,service) * 100)
                   seriesNameFormat: '{{node}}: {{ pod }}: {{ container }}'
       '13_0':
         kind: Panel
