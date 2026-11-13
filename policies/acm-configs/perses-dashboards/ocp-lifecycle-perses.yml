@@ -163,11 +163,14 @@ spec:
             kind: Table
             spec:
               columnSettings:
-              - header: Cluster
+              - enableSorting: true
+                header: Cluster
                 name: 'cluster #1'
-              - header: Version
+              - enableSorting: true
+                header: Version
                 name: 'version #1'
-              - header: Minor
+              - enableSorting: true
+                header: Minor
                 name: 'ocp_version #1'
               - header: Channel
                 name: 'channel #1'
@@ -246,6 +249,7 @@ spec:
                     spec:
                       value: '-1'
                   text: Unknown
+                enableSorting: true
                 header: Support level
                 name: 'value #3'
                 width: 140
@@ -404,7 +408,8 @@ spec:
             kind: Table
             spec:
               columnSettings:
-              - header: Cluster
+              - enableSorting: true
+                header: Cluster
                 name: 'cluster #1'
               - hide: true
                 name: 'cluster #2'
@@ -420,7 +425,8 @@ spec:
                 name: 'cluster #7'
               - hide: true
                 name: 'cluster #8'
-              - header: Package
+              - enableSorting: true
+                header: Package
                 name: 'package #1'
                 width: 260
               - hide: true
@@ -437,7 +443,8 @@ spec:
                 name: 'package #7'
               - hide: true
                 name: 'package #8'
-              - header: Namespace
+              - enableSorting: true
+                header: Namespace
                 name: 'operator_namespace #1'
               - hide: true
                 name: 'operator_namespace #2'
