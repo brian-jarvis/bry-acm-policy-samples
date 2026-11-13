@@ -20,6 +20,7 @@ spec:
       - '{__name__="container_fs_writes_bytes_total"}'
       - '{__name__="container_network_receive_bytes_total"}'
       - '{__name__="container_network_transmit_bytes_total"}'
+      - '{__name__="etcd_cluster_version"}'
       - '{__name__="etcd_debugging_mvcc_db_compaction_keys_total"}'
       - '{__name__="etcd_debugging_mvcc_db_compaction_total_duration_milliseconds_sum"}'
       - '{__name__="etcd_debugging_mvcc_keys_total"}'
