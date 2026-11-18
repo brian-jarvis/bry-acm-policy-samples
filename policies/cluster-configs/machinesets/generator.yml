@@ -37,6 +37,14 @@ policies:
       - path: infra-storage-machineset.yml
         name: create-storage-machineset
 
+  - name: vsphere-static-machinesets
+    description: "Creates one MachineSet per node (replicas 1) on vSphere with a static IP address, using the node data from an annotation on the ManagedCluster"
+    policySets:
+      - cluster-configs-vsphere-static-machinesets
+    manifests:
+      - path: vsphere-static-machinesets.yml
+        name: create-vsphere-static-machinesets
+
 policySets:
   - name: cluster-configs-infra-machinesets
     placement:
@@ -45,3 +53,7 @@ policySets:
   - name: cluster-configs-storage-machinesets
     placement:
       placementName: "ft-storage--odf"
+
+  - name: cluster-configs-vsphere-static-machinesets
+    placement:
+      placementName: "ft-vsphere-static-machinesets--enabled"

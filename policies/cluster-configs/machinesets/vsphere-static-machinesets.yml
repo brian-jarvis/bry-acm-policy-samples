@@ -1,0 +1,89 @@
+---
+object-templates-raw: |
+  {{/* ##  Read the node data from the annotation on this cluster's ManagedCluster (resolved on the hub) ## */}}
+  {{hub- $mc := lookup "cluster.open-cluster-management.io/v1" "ManagedCluster" "" $.ManagedClusterName hub}}
+  {{hub- $nodes_json := dig "metadata" "annotations" "bry-tam.io/vsphere-nodes" "{}" $mc hub}}
+  {{- $data := `{{hub $nodes_json | base64enc hub}}` | base64dec | fromJson }}
+
+  {{/* ##  Capture some existing data from the cluster for reuse ## */}}
+  {{- $infrastructure_id := (lookup "config.openshift.io/v1" "Infrastructure" "" "cluster").status.infrastructureName }}
+
+  {{/* ##  Use an existing worker Machine as the baseline providerSpec. ## */}}
+  {{/* ##  Static IP workers created by the installer are standalone Machines (no MachineSet), so a Machine is the only source ## */}}
+  {{- $worker_machine := (index (lookup "machine.openshift.io/v1beta1" "Machine" "openshift-machine-api" "" "machine.openshift.io/cluster-api-machine-role=worker").items 0) }}
+  {{- $base_ps := $worker_machine.spec.providerSpec }}
+  {{- $base_device := index $base_ps.value.network.devices 0 }}
+
+  {{/* ##  Remove the network section (addressesFromPools) from the baseline, we replace it with a static ipAddrs ## */}}
+  {{- $_ := unset $base_ps.value "network" }}
+
+  {{/* ##  ps_raw holds a template to override the providerSpec of the baseline worker Machine ## */}}
+  {{- $ps_raw := `
+  value:
+    numCPUs: %[1]v
+    numCoresPerSocket: %[2]v
+    memoryMiB: %[3]v
+    diskGiB: %[4]v
+    network:
+      devices:
+        - networkName: '%[5]s'
+          ipAddrs:
+            - '%[6]s/%[7]v'
+          gateway: '%[8]s'
+          nameservers: %[9]s
+  ` }}
+
+  {{/* ##  Process each node defined in the ManagedCluster annotation, one MachineSet (replicas: 1) per node ## */}}
+  {{- range $node := $data.nodes }}
+    {{- $ms_name := printf "%s-%s" $infrastructure_id $node.name }}
+    {{- $role := $node.role | default "worker" }}
+
+    {{/* ##  Node values are optional, anything not specified is inherited from the baseline worker Machine ## */}}
+    {{- $cpus := $node.cpus | default $base_ps.value.numCPUs }}
+    {{- $cores_per_socket := $node.coresPerSocket | default $base_ps.value.numCoresPerSocket }}
+    {{- $memory_mib := $node.memoryMiB | default $base_ps.value.memoryMiB }}
+    {{- $disk_gib := $node.diskGiB | default $base_ps.value.diskGiB }}
+
+    {{/* ##  Network values are shared by all nodes, nameservers and networkName fall back to the baseline worker Machine ## */}}
+    {{- $network_name := $data.network.networkName | default $base_device.networkName }}
+    {{- $nameservers := $data.network.nameservers | default $base_device.nameservers }}
+
+    {{/* ##  Build the new providerSpec merging our settings with the existing ## */}}
+    {{- $rendered_ps := (printf $ps_raw $cpus $cores_per_socket $memory_mib $disk_gib $network_name $node.ipAddress $data.network.prefixLength $data.network.gateway ($nameservers | toRawJson)) | fromYaml }}
+    {{- $merged_ps := merge $rendered_ps $base_ps }}
+
+  - complianceType: musthave
+    objectDefinition:
+      apiVersion: machine.openshift.io/v1beta1
+      kind: MachineSet
+      metadata:
+        name: {{ $ms_name }}
+        namespace: openshift-machine-api
+        labels:
+          machine.openshift.io/cluster-api-cluster: {{ $infrastructure_id }}
+      spec:
+        deletePolicy: Oldest
+        replicas: 1
+        selector:
+          matchLabels:
+            machine.openshift.io/cluster-api-cluster: {{ $infrastructure_id }}
+            machine.openshift.io/cluster-api-machineset: {{ $ms_name }}
+        template:
+          metadata:
+            labels:
+              machine.openshift.io/cluster-api-cluster: {{ $infrastructure_id }}
+              machine.openshift.io/cluster-api-machine-role: {{ $role }}
+              machine.openshift.io/cluster-api-machine-type: {{ $role }}
+              machine.openshift.io/cluster-api-machineset: {{ $ms_name }}
+          spec:
+            metadata:
+              labels:
+                node-role.kubernetes.io/{{ $role }}: ""
+                {{- range $key, $value := $node.labels }}
+                {{ $key }}: '{{ $value }}'
+                {{- end }}
+            {{- if $node.taints }}
+            taints: '{{ $node.taints | toRawJson | toLiteral }}'
+            {{- end }}
+            providerSpec: '{{ $merged_ps | toRawJson | toLiteral }}'
+  {{- end }}
